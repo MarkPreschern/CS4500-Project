@@ -14,8 +14,8 @@
 	- `xyes [-limit] [arg1 arg2 .. ]`
 - Examples:
 	- `xyes hello` → prints *hello* on a new line forever
-	- `xyes` → prints *helloworld* on a new line forever
-	- `xyes -limit around the world` → prints *aroundtheworld* on a new line 20x times
+	- `xyes` → prints *hello world* on a new line forever
+	- `xyes -limit around the world` → prints *around the world* on a new line 20x times
 
 - To run tests:
 	- In **Other /** run:

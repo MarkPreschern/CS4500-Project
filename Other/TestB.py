@@ -30,7 +30,7 @@ class TestB(unittest.TestCase):
 			# Run test
 			xyes()
 			# Make assertions
-			self.assertEqual(mocked_stdout.getvalue(), "".join(['catapple\n'] * 20))
+			self.assertEqual(mocked_stdout.getvalue(), "".join(['cat apple\n'] * 20))
 
 	def test_nolimit_with_arg(self):
 		sys.argv = [sys.argv[0], 'cat', 'apple']
@@ -40,7 +40,7 @@ class TestB(unittest.TestCase):
 			# Run test
 			xyes(120)
 			# Make assertions
-			self.assertEqual(mocked_stdout.getvalue(), "".join(['catapple\n'] * 120))
+			self.assertEqual(mocked_stdout.getvalue(), "".join(['cat apple\n'] * 120))
 
 	def test_nolimit_no_arg(self):
 		sys.argv = [sys.argv[0]]

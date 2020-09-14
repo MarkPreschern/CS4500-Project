@@ -14,7 +14,7 @@ def xyes(remaining_runs = -1):
 
 	# If no arguments follow, use "hello world"
 	if len(args) > 0:
-		to_print = ''.join(args)
+		to_print = ' '.join(args)
 	else:
 		to_print = 'hello world'
 
