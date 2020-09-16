@@ -1,0 +1,4 @@
+"hello"123  {"name": "asdf","age" : 21,"number" : 1.234567,"other" : 1.23e10} ♪[true,false,null, -29, {"hello":false, "goodbye": "hello"}]
+"\n"["\\", "\r"]"\/""\b""\f""\t""""\u0020""\u000A""\u000D""\u0009"1.23e-92.19e+21.23E41.23E-24.56E+3
+
+1.9e+21.9e1
