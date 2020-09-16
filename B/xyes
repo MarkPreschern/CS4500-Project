@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append("../Other/")
+sys.path.append("Other/")
 
 from xyes import xyes
 

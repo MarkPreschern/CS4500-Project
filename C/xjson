@@ -1,0 +1,65 @@
+#!/usr/bin/python3
+
+import sys
+import json
+
+DEBUG = True
+
+
+def get_json_vals(str):
+    """
+    Returns all JSON values from string sequence.
+
+    :param str: string of JSON values
+    """
+    start_index = 0
+    objects = []
+
+    # Scan down string and extract JSON values
+    for k in range(len(str)):
+        # Check to see if current character is a digit and
+        # is followed by digits, . or e
+        if str[k].isdigit() and k < len(str) - 1 and (
+                str[k + 1].isdigit() or (str[k + 1] in ['e', '.'])):
+            # Have not read entire number, continue
+            continue
+
+        # Try to parse from last index JSON object was found + 1
+        # to k-th element
+        obj = try_parse_json(str[start_index:k + 1])
+
+        # If the object was parsed successfully as JSON, then append
+        # to return []
+        if obj is not None:
+            start_index = k + 1
+            objects.append(obj)
+
+    return objects
+
+
+def try_parse_json(str):
+    """
+    Tries to parse given string into JSON object.
+
+    :param str: string to parse
+    :return: resulting JSON object if successful and None otherwise
+    """
+    try:
+        return json.loads(str)
+    except ValueError:
+        return None
+
+
+objects = []
+
+# Read lines from STDIN indefinitely until
+# stream is closed
+for k in sys.stdin:
+    objects += get_json_vals(k)
+
+# Make up the objects
+obj1 = {"count": len(objects), "seq": objects}
+obj2 = [len(objects), objects[::-1]]
+
+# Print the two objects
+print(json.dumps(obj1), json.dumps(obj2))

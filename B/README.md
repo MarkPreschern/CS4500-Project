@@ -4,9 +4,8 @@
 
 ## Project structure
 
-- **/B**
-	- contains **xyes** (program entry point)
-- **/Other**
+- **xyes** (program entry point)
+- **Other**
 	- contains program logic and tests
 
 ## Usage
@@ -23,4 +22,4 @@
 		- `python3 TestB.py` to run test suite for solution B
 
 - To alter program logic:
-	- Edit `xyes.py` in **/Other**
+	- Edit `xyes.py` in **Other**
