@@ -4,14 +4,16 @@
 
 ## Project structure
 
-- **xjson** (program entry point)
+- **xjson** (program entry point + program logic)
 - **Test**
-	- contains program logic and tests
+	- contains test files
+    - `1-in.json`: contains mock input
+    - `1-out.json`: contains expected output
 
 ## Usage
 - General usage: 
 	- `xjson` + any JSON input to stdin after execution + `ctrl-D`
 
 - To run tests:
-	- In **Test /** run:
+	- In **C/** run:
 		- `./xjson < Test/1-in.json | diff - Test/1-out.json`
