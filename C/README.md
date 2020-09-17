@@ -15,5 +15,7 @@
 	- `xjson` + any JSON input to stdin after execution + `ctrl-D`
 
 - To run tests:
-	- In **C/** run:
-		- `./xjson < Test/1-in.json | diff - Test/1-out.json`
+	- `./xjson < Test/1-in.json | diff - Test/1-out.json`
+    
+- To alter program logic:
+	- Edit `xjson`
