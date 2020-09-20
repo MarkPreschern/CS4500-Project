@@ -1,0 +1,9 @@
+#!/usr/bin/python
+
+import sys
+
+sys.path.append("Other/")
+
+from xgui import xgui
+
+xgui()
