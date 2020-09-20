@@ -1,0 +1,73 @@
+#!/usr/bin/python
+
+import sys
+import unittest
+
+from io import StringIO
+
+import xgui
+from Hexagon import Hexagon
+
+from MockHelper import MockHelper
+
+
+class TestD(unittest.TestCase):
+    def test_xgui_no_arg(self):
+        # No arguments supplied
+        sys.argv = [sys.argv[0]]
+
+        # Make sure show_usage() is called as a result
+        with MockHelper(xgui, "show_usage"):
+            xgui.xgui()
+
+    def test_xgui_good_arg1(self):
+        # Good arguments supplied
+        sys.argv = [sys.argv[0], 1]
+
+        # Make sure render_hex() was called with the right params
+        with MockHelper(xgui, "render_hex", [1]):
+            xgui.xgui()
+
+    def test_xgui_good_arg2(self):
+        # Good arguments supplied
+        sys.argv = [sys.argv[0], 13]
+
+        # Make sure render_hex() was called with the right params
+        with MockHelper(xgui, "render_hex", [13]):
+            xgui.xgui()
+
+    def test_xgui_bad_arg1(self):
+        # Bad arguments supplied (0)
+        sys.argv = [sys.argv[0], 0]
+
+        # Make sure show_usage() is called as a result
+        with MockHelper(xgui, "show_usage"):
+            xgui.xgui()
+
+    def test_xgui_bad_arg2(self):
+        # Bad arguments supplied (-12)
+        sys.argv = [sys.argv[0], -12]
+
+        # Make sure show_usage() is called as a result
+        with MockHelper(xgui, "show_usage"):
+            xgui.xgui()
+
+    def test_xgui_bad_arg3(self):
+        # Bad arguments supplied (3 2)
+        sys.argv = [sys.argv[0], 3, 2]
+
+        # Make sure show_usage() is called as a result
+        with MockHelper(xgui, "show_usage"):
+            xgui.xgui()
+
+    def test_xgui_bad_arg4(self):
+        # Bad arguments supplied ('ok')
+        sys.argv = [sys.argv[0], "ok"]
+
+        # Make sure show_usage() is called as a result
+        with MockHelper(xgui, "show_usage"):
+            xgui.xgui()
+
+
+if __name__ == '__main__':
+    unittest.main()
