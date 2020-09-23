@@ -2,3 +2,4 @@ B/Other/__pycache__/*
 B/Other/*.pyc
 D/Other/__pycache__/*
 D/Other/*.pyc
+.vscode
