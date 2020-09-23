@@ -4,13 +4,15 @@
 import argparse
 import json
 import socket
+import time
 
 # Local Imports
 from xjson import get_json_vals
 
 # Constants
 DEFAULT_PORT = 4567
-WAIT_TIME = 3
+SERVER_TIMEOUT = 3
+CLIENT_TIMEOUT = 1
 HOSTNAME = 'localhost'
 
 
@@ -20,24 +22,28 @@ def initialize_socket(port):
 
     :return: a socket object that is ready for TCP communication or None if unsuccessful.
     """
-    global WAIT_TIME, HOSTNAME
+    global SERVER_TIMEOUT, CLIENT_TIMEOUT, HOSTNAME
 
     # Initialize a socket that is capable of TCP communication and has the specified wait time
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(WAIT_TIME)
+    sock.settimeout(SERVER_TIMEOUT)
 
     try:
         # Bind the socket to a specific host/port and listen for new connections
         sock.bind((HOSTNAME, port))
+
         sock.listen(1)
 
         # Attempt to connect after listening
         connection = sock.accept()[0]
+        connection.settimeout(CLIENT_TIMEOUT)
 
         # Return a new socket that is connected to the host at the specified port
         return connection
     except ConnectionRefusedError:
-        print("Error: connection refused. Try running the script on a Khoury machine.")
+        print("Error: connection refused.")
+    except socket.timeout:
+        print("Error: timeout")
 
     return None
 
@@ -50,7 +56,7 @@ def initialize_arg_parser():
     """
     parser = argparse.ArgumentParser(
         description="Parse JSON values from an input stream over a TCP connection.")
-    parser.add_argument("port", nargs="?",
+    parser.add_argument("port", nargs="?", type=int,
                         help="The port used by the script for communication.")
 
     return parser
@@ -67,10 +73,12 @@ def receive_json(sock):
 
     # Listen for data and add to the string until all data has been received from the client.
     while True:
-        new_data = str(sock.recv(1024))
-        json_data = json_data + new_data
+        try:
+            new_data = sock.recv(1024).decode("utf-8")
+            json_data = json_data + new_data
 
-        if new_data == "":
+            time.sleep(0.1)
+        except socket.timeout:
             break
 
     return json_data
@@ -100,8 +108,8 @@ def send_json(sock, data):
     :param data: the data to be sent 
     """
     # Send all data from the JSON object and the JSON list
-    sock.sendall(data[0])
-    sock.sendall(data[1])
+    sock.sendall(bytes(data[0], 'utf-8'))
+    sock.sendall(bytes(data[1], 'utf-8'))
 
 
 def xtcp():
