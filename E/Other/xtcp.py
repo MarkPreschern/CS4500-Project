@@ -11,7 +11,7 @@ from xjson import get_json_vals
 
 # Constants
 DEFAULT_PORT = 4567
-SERVER_TIMEOUT = 3
+SERVER_TIMEOUT = 10
 CLIENT_TIMEOUT = 1
 HOSTNAME = 'localhost'
 
@@ -31,12 +31,11 @@ def initialize_socket(port):
     try:
         # Bind the socket to a specific host/port and listen for new connections
         sock.bind((HOSTNAME, port))
-
         sock.listen(1)
 
         # Attempt to connect after listening
         connection = sock.accept()[0]
-        connection.settimeout(CLIENT_TIMEOUT)
+        connection.settimeout(CLIENT_TIMEOUT) 
 
         # Return a new socket that is connected to the host at the specified port
         return connection
@@ -69,15 +68,17 @@ def receive_json(sock):
     :param sock: the socket object from which data will be received.
     :return: a string containing all of the well-formed JSON values received.
     """
-    json_data = ""
+    json_data = b''
 
     # Listen for data and add to the string until all data has been received from the client.
     while True:
         try:
-            new_data = sock.recv(1024).decode("utf-8")
+            new_data = sock.recv(1)
             json_data = json_data + new_data
 
-            time.sleep(0.1)
+            if new_data == b'':
+                break
+
         except socket.timeout:
             break
 
@@ -128,9 +129,9 @@ def xtcp():
     if sock:
         # Accept string data from the socket
         incoming_json = receive_json(sock)
-        
+
         # Parse the string data received from the socket into distinct JSON values
-        json_vals = get_json_vals(incoming_json)
+        json_vals = get_json_vals(incoming_json.decode("utf-8"))
 
         # Process the JSON values into the proper JSON object/list
         outgoing_json = convert_json_vals(json_vals)
@@ -140,3 +141,4 @@ def xtcp():
 
         # Close the socket connection
         sock.close()
+
