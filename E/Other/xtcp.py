@@ -4,45 +4,54 @@
 import argparse
 import json
 import socket
-import time
 
 # Local Imports
 from xjson import get_json_vals
 
 # Constants
 DEFAULT_PORT = 4567
-SERVER_TIMEOUT = 10
+SERVER_TIMEOUT = 3
 CLIENT_TIMEOUT = 1
 HOSTNAME = 'localhost'
-
+DEBUG = True
 
 def initialize_socket(port):
     """
     Return a socket that is capable of TCP communication.
 
-    :return: a socket object that is ready for TCP communication or None if unsuccessful.
+    :return: a socket object that is ready for TCP communication
+             or None if unsuccessful.
     """
     global SERVER_TIMEOUT, CLIENT_TIMEOUT, HOSTNAME
 
-    # Initialize a socket that is capable of TCP communication and has the specified wait time
+    # Initialize a socket that is capable of TCP communication and has
+    # the specified wait time
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(SERVER_TIMEOUT)
 
     try:
-        # Bind the socket to a specific host/port and listen for new connections
+        # Bind the socket to a specific host/port and listen for new
+        # connections
         sock.bind((HOSTNAME, port))
         sock.listen(1)
 
         # Attempt to connect after listening
         connection = sock.accept()[0]
-        connection.settimeout(CLIENT_TIMEOUT) 
+        connection.settimeout(CLIENT_TIMEOUT)
 
-        # Return a new socket that is connected to the host at the specified port
+        # Return a new socket that is connected to the host at the
+        # specified port
         return connection
     except ConnectionRefusedError:
-        print("Error: connection refused.")
+        if DEBUG:
+            print("Error: connection refused.")
+        else:
+            pass
     except socket.timeout:
-        print("Error: timeout")
+        if DEBUG:
+            print("Error: timeout")
+        else:
+            pass
 
     return None
 
@@ -54,7 +63,8 @@ def initialize_arg_parser():
     :return: a parser that accepts the desired arguments (i.e. port)
     """
     parser = argparse.ArgumentParser(
-        description="Parse JSON values from an input stream over a TCP connection.")
+        description="Parse JSON values from an input \
+        stream over a TCP connection.")
     parser.add_argument("port", nargs="?", type=int,
                         help="The port used by the script for communication.")
 
@@ -70,12 +80,16 @@ def receive_json(sock):
     """
     json_data = b''
 
-    # Listen for data and add to the string until all data has been received from the client.
+    # Listen for data and add to the string until all data has been
+    # received from the client.
     while True:
         try:
+            # Receive one chunk at a time
             new_data = sock.recv(1)
+            # Concatenate to end result
             json_data = json_data + new_data
 
+            # If we didn't receive anything, break out
             if new_data == b'':
                 break
 
@@ -87,10 +101,12 @@ def receive_json(sock):
 
 def convert_json_vals(vals):
     """
-    Convert the provided list of JSON values into JSON objects describing their count/sequence.
+    Convert the provided list of JSON values into JSON objects describing their
+    count/sequence.
 
     : param vals: a list of well-formed JSON values
-    : return: a tuple containing a JSON object and a JSON list both describing sequence/count
+    : return: a tuple containing a JSON object and a JSON list both describing
+              sequence/count
     """
     # Create the JSON object / list
     obj1 = {"count": len(vals), "seq": vals}
@@ -104,9 +120,9 @@ def convert_json_vals(vals):
 def send_json(sock, data):
     """
     Send data through the socket connection.
-    
+
     :param sock: a socket object connected to a port
-    :param data: the data to be sent 
+    :param data: the data to be sent
     """
     # Send all data from the JSON object and the JSON list
     sock.sendall(bytes(data[0], 'utf-8'))
@@ -123,14 +139,15 @@ def xtcp():
     parser = initialize_arg_parser()
     args = vars(parser.parse_args())
 
-    # Initialize the TCP socket
+    # Initialize the client TCP socket
     sock = initialize_socket(args['port'] if args['port'] else DEFAULT_PORT)
 
     if sock:
         # Accept string data from the socket
         incoming_json = receive_json(sock)
 
-        # Parse the string data received from the socket into distinct JSON values
+        # Parse the string data received from the socket into distinct JSON
+        # values
         json_vals = get_json_vals(incoming_json.decode("utf-8"))
 
         # Process the JSON values into the proper JSON object/list
@@ -141,4 +158,3 @@ def xtcp():
 
         # Close the socket connection
         sock.close()
-

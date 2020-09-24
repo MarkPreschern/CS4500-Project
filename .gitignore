@@ -2,4 +2,7 @@ B/Other/__pycache__/*
 B/Other/*.pyc
 D/Other/__pycache__/*
 D/Other/*.pyc
+E/Other/__pycache__/*
+E/Other/*.pyc
+.DS_Store
 .vscode
