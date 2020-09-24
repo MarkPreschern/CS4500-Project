@@ -13,7 +13,7 @@ DEFAULT_PORT = 4567
 SERVER_TIMEOUT = 3
 CLIENT_TIMEOUT = 1
 HOSTNAME = 'localhost'
-DEBUG = True
+DEBUG = False
 
 def initialize_socket(port):
     """
