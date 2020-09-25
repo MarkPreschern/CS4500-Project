@@ -1,1 +1,1 @@
-{"count": 4, "seq": [1337, "that on which you so pride yourself will be your ruin", [[], {}], -213]}[4, -213, [[], {}], "that on which you so pride yourself will be your ruin", 1337]
+{"count": 6, "seq": [1337, "that on which you so pride yourself will be your ruin", [[], {}], -213, [12, "okay", {"quote": "montaigne", "bool": false, "name": null}], {"{}": {}}]}[6, {"{}": {}}, [12, "okay", {"quote": "montaigne", "bool": false, "name": null}], -213, [[], {}], "that on which you so pride yourself will be your ruin", 1337]
