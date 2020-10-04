@@ -1,0 +1,2 @@
+class AbstractTile(object):
+    pass
