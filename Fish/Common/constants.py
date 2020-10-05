@@ -1,3 +1,9 @@
 MIN_FISH_PER_TILE = 1
 MAX_FISH_PER_TILE = 5
-TILE_SIZE = 24
+
+# Dimensions in pixels
+TILE_WIDTH  = 100
+TILE_HEIGHT = 64
+
+SPRITE_PATH = 'sprites'
+SPRITE_FORMAT = 'png'
