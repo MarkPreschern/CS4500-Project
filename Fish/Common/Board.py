@@ -111,10 +111,27 @@ class Board(object):
     def get_reachable_positions(self):
         pass
 
-    def remove_tile(self, pt):
-        pass
+    def remove_tile(self, pt) -> None:
+        """
+        Removes a tile at the given position (if one exists) by
+        replacing it with a Hole instead.
+        :param pt: point at to remove tile
+        :return: None
+        """
+        # Validate point
+        if not isinstance(pt, tuple):
+            raise ValueError('Expected tuple object for pt!')
 
-    def get_tile(self, pt) -> tk.PhotoImage:
+        # Retrieve tile at point
+        tile = self.get_tile(pt)
+
+        # Check tile type
+        if tile.is_tile:
+            self.__tiles.update({pt: Hole()})
+        else:
+            raise ValueError('No tile at given location!')
+
+    def get_tile(self, pt) -> AbstractTile:
         """
         Returns the tile at the given point.
 
@@ -163,7 +180,7 @@ class Board(object):
             canvas.grid(row=0, column=0)
 
             # Check if tile is a full tile
-            if isinstance(tile, Tile):
+            if tile.is_tile:
                 # Add tile
                 canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
                 # Add correct fish sprite
