@@ -1,5 +1,3 @@
-import random
-import constants as ct
 from AbstractTile import AbstractTile
 
 
