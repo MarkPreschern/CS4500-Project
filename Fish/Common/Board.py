@@ -171,7 +171,7 @@ class Board(object):
         :return: new homogeneous Board designed to spec
         """
         # Validate params
-        if not isinstance(tile_fish_no, int) or tile_fish_no < ct.MIN_FISH_PER_TILE\
+        if not isinstance(tile_fish_no, int) or tile_fish_no < ct.MIN_FISH_PER_TILE \
                 or tile_fish_no > ct.MAX_FISH_PER_TILE:
             raise ValueError('Expected int >=0 for tile_fish_no')
 
@@ -187,7 +187,7 @@ class Board(object):
         # Add x-fish tiles to each pointer
         for r in range(rows):
             for c in range(cols):
-                tiles.update({ (r, c): Tile(tile_fish_no)})
+                tiles.update({(r, c): Tile(tile_fish_no)})
 
         # Return resulting board
         return cls(tiles)
@@ -239,55 +239,41 @@ class Board(object):
         """
         return tk.PhotoImage(file=self.__root_path.joinpath(f'{ct.SPRITE_PATH}/{sprite_name}.{ct.SPRITE_FORMAT}'))
 
-    def render(self, parent_frame) -> tk.Canvas:
-        print(f'rows = {self.__rows} cols = {self.__cols}')
+    def render(self, parent_frame):
+        """
+        Renders board to provided frame.
+        :param parent_frame: frame to render board on
+        :return: resulting Canvas object
+        """
+        # Validate params
+        if not isinstance(parent_frame, tk.Frame):
+            raise TypeError('Expected Frame for parent_frame!')
 
-        canvas = tk.Canvas(parent_frame, bd=0, highlightthickness=0)
-        canvas.place(x=0, y=0, height=self.__rows*ct.TILE_HEIGHT, width=self.__cols*ct.TILE_WIDTH*2)
+        # Determine total frame size
+        total_width = self.__cols * ct.DELTA * 2 + ct.DELTA / 2
+        total_height = (self.__rows + 1) * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
 
+        # Set geometry
+        canvas = tk.Canvas(parent_frame, bd=0, highlightthickness=0,
+                           height=total_height, width=total_width)
+        canvas.place(x=0, y=0)
+        # Render one tile at a time
         for pt, tile in self.__tiles.items():
+            # Determine x
+            x = (0 if pt[0] % 2 == 0 else ct.DELTA) + (2 * ct.DELTA * pt[1])
+            # Determine y
+            y = pt[0] * ct.TILE_HEIGHT / 2
             # Check if tile is a full tile
             if tile.is_tile:
                 # Add tile
                 tile_sprite = canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
-                canvas.move(tile_sprite, pt[0] * ct.TILE_WIDTH, pt[1] * ct.TILE_HEIGHT)
+                # Move tile to corresponding position
+                canvas.move(tile_sprite, x, y)
                 # Add correct fish sprite
-                # fish_sprite = canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
+                fish_sprite = canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
+                # Move fish to corresponding position
+                canvas.move(fish_sprite, x, y)
             else:
                 # Add hole
                 hole_sprite = canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
-                canvas.move(hole_sprite, pt[0] * ct.TILE_WIDTH, pt[1] * ct.TILE_HEIGHT)
-
-    def render_tile(self, parent_frame, pt) -> tk.Canvas:
-        """
-        Returns an image of the tile at the given point.
-
-        :param parent_frame: frame to render it to
-        :param pt: xy tuple the tile lives
-        :return: Canvas object of the tile
-        """
-        # Validate params
-        if not isinstance(pt, tuple):
-            raise TypeError('Expected tuple object for pt!')
-
-        if not isinstance(parent_frame, tk.Frame):
-            raise TypeError('Expected Frame for parent_frame!')
-
-        # Retrieve tile at point
-        tile = self.get_tile(pt)
-        # Create canvas in parent window unto which to render tile
-        canvas = tk.Canvas(parent_frame, width=ct.TILE_WIDTH, height=ct.TILE_HEIGHT, bd=0, highlightthickness=0)
-        # Set canvas to use grid
-        canvas.grid(row=0, column=0)
-
-        # Check if tile is a full tile
-        if tile.is_tile:
-            # Add tile
-            canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
-            # Add correct fish sprite
-            canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
-        else:
-            # Add hole
-            canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
-        # Return resulting canvas
-        return canvas
+                canvas.move(hole_sprite, x, y)

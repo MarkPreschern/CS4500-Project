@@ -227,20 +227,9 @@ class BoardTests(unittest.TestCase):
             self.assertEqual(b.get_tile((0, 0)), tile1)
             self.assertEqual(b.get_tile((0, 1)), tile2)
 
-    def test_render_tile_fail1(self):
-        # Tests failing render_tile due to an invalid point being
+    def test_render_fail1(self):
+        # Tests failing render due to an invalid frame being
         # provided
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.render_tile(tk.Frame(), [])
+            self.__no_hole_board1.render('ohai')
 
-    def test_render_tile_fail2(self):
-        # Tests failing render_tile due to an invalid frame being
-        # provided
-        with self.assertRaises(TypeError):
-            self.__no_hole_board1.render_tile('ohai', (0, 0))
-
-    def test_render_tile_success(self):
-        # Tests successful render_tile
-        canvas = self.__no_hole_board1.render_tile(tk.Frame(), (0, 0))
-
-        self.assertIsInstance(canvas, tk.Canvas)
