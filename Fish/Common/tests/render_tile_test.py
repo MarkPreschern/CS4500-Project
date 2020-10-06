@@ -14,7 +14,7 @@ frame = Frame(_window)
 frame.grid(row=0, column=0)
 
 # Build board
-b = Board(2, 2).build_min_one_fish_tiles_with_holes(2, 1)
+b = Board.min_oft_and_holes(2, 1)
 # Render tile at position (0,0)
 b.render_tile(frame, (0, 0))
 

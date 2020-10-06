@@ -8,6 +8,7 @@ import tkinter as tk
 import pathlib
 import inspect
 import os
+import itertools
 
 
 class Board(object):
@@ -15,30 +16,50 @@ class Board(object):
     Represents the board on which the game is played.
     """
 
-    def __init__(self, rows, cols):
+    def __init__(self, tiles):
         """
         Initializes board with given parameters.
-        :param rows:
-        :param cols:
+        :param tiles: dictionary of tiles
         :return: None
         """
         # Validate params
-        if not isinstance(rows, int) or rows < 1:
-            raise ValueError('Invalid row - expected positive integer!')
+        if not isinstance(tiles, dict):
+            raise ValueError('Invalid tiles - expected dictionary!')
 
-        if not isinstance(cols, int) or cols < 1:
-            raise ValueError('Invalid col - expected positive integer!')
+        # Make sure the values are of either Hole or Tile
+        for val in tiles.values():
+            if not isinstance(val, AbstractTile):
+                raise ValueError(f'Invalid tile value: {type(val)}. Must be either'
+                                 f'Hole or Tile!')
+
+        # Validate tiles
+        xs, ys = zip(*list(tiles.keys()))
+        # Strip out duplicates
+        xs = list(set(xs))
+        ys = list(set(ys))
+
+        # Infer rows and columns by inspect the largest element of either
+        # array
+        rows = max(xs) + 1
+        cols = max(ys) + 1
+
+        # Generate cartesian product of [0..rows] x [0...cols]
+        compl_coord = [k for k in itertools.product(list(range(rows)), list(range(cols)))]
+
+        # Make sure all points are covered (completeness check)
+        if list(tiles.keys()) != compl_coord:
+            raise ValueError(f'Invalid tiles dict - cannot have missing points!')
+
+        # Initialize tile container
+        self.__tiles = tiles
 
         # Set fields
         self.__rows = rows
         self.__cols = cols
-        self.__tiles_no = self.__rows * self.__cols
+        self.__tile_no = self.__rows * self.__cols
 
-        # Initialize empty tile container
-        self.__tiles = {}
-
-        # Initialize empty sprite container
-        # Reason: prevent tkinter from garbage collecting our sprites
+        # Initialize empty sprite container to hold our sprites
+        # as to prevent tkinter from garbage collecting them
         self.__sprites = {}
 
         # Set root path (path to this class' parent folder)
@@ -46,6 +67,27 @@ class Board(object):
 
         # Set root path (path to this class' parent folder)
         self.__load_sprites()
+
+    @property
+    def rows(self) -> int:
+        """
+        Returns the number of rows on the board.
+        """
+        return self.__rows
+
+    @property
+    def cols(self) -> int:
+        """
+        Returns the number of cols on the board.
+        """
+        return self.__cols
+
+    @property
+    def tile_no(self) -> int:
+        """
+        Returns the number of tiles on the board.
+        """
+        return self.__tile_no
 
     def __load_sprites(self) -> None:
         """
@@ -63,15 +105,14 @@ class Board(object):
             # Add to sprite collection
             self.__sprites.update({file_name_tokens[0]: self.__get_sprite(file_name_tokens[0])})
 
-    def build_min_one_fish_tiles_with_holes(self,
-                                            min_one_fish_tile_no: int,
-                                            holes_no: int):
+    @classmethod
+    def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes_no: int):
         """
         Builds a board with at least min_one_fish_tiles one-fish tiles and holes_no
         holes.
-        :param min_one_fish_tile_no:
-        :param holes_no:
-        :return: None
+        :param min_one_fish_tile_no: minimum number of one-fish tiles
+        :param holes_no: number of holes
+        :return: instance of Board configured to spec
         """
         # Check params
         if not isinstance(min_one_fish_tile_no, int) or min_one_fish_tile_no < 0:
@@ -80,33 +121,41 @@ class Board(object):
         if not isinstance(holes_no, int) or holes_no < 0:
             raise ValueError('Expected integer >= 0 for holes_no!')
 
-        # Ensure that theyre not building a board that could not be fit within the boundaries
-        # determined by rows and cols
-        if self.__tiles_no < holes_no + min_one_fish_tile_no:
-            raise ValueError('Given parameters exceed the maximum supported number of tiles for the board!')
+        # Generate a board large enough to accommodate the given minimum
+        # number of one fish tiles and number of holes
+        rows, cols = (min_one_fish_tile_no + 1), (holes_no + 1)
 
+        tile_lst = []
         # Add holes to tile list
-        tile_lst = [Hole() for _ in range(holes_no)]
+        tile_lst.extend([Hole() for _ in range(holes_no)])
         # Add 1-fish tiles to tile list
         tile_lst.extend([Tile(1) for _ in range(min_one_fish_tile_no)])
         # Add random number-fish tiles to tile list
-        tile_lst.extend([Tile(randint(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE))
-                         for _ in range(self.__tiles_no - holes_no - min_one_fish_tile_no)])
+        rand_no_fish_tile_no = rows * cols - holes_no - min_one_fish_tile_no
+
+        for _ in range(rand_no_fish_tile_no):
+            # Generate an arbitrary number of fish
+            fish_no = randint(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE)
+            # Create and append tile
+            tile_lst.append(Tile(fish_no))
 
         # Shuffle list
         random.shuffle(tile_lst)
 
+        # Initialize empty dict to disseminate list into
+        tiles = {}
+
         # Disseminate list onto dictionary
-        for row in range(self.__rows):
-            for col in range(self.__cols):
-                self.__tiles.update({(row, col): tile_lst.pop(0)})
+        for row in range(rows):
+            for col in range(cols):
+                tiles.update({(row, col): tile_lst.pop(0)})
 
-        return self
+        # return new instance of Board with built board
+        return cls(tiles)
 
-    def build_homogeneous(self, tile_fish_no: int):
-        self.__holes = []
-        self.__tiles = []
-        return self
+    @classmethod
+    def homogeneous(cls, tile_fish_no: int):
+        pass
 
     def get_reachable_positions(self):
         pass
@@ -172,23 +221,20 @@ class Board(object):
 
         # Retrieve tile at point
         tile = self.get_tile(pt)
+        # Create canvas in parent window unto which to render tile
+        canvas = tk.Canvas(parent_frame, width=ct.TILE_WIDTH, height=ct.TILE_HEIGHT)
+        # Set canvas to use grid
+        canvas.grid(row=0, column=0)
 
-        if isinstance(tile, AbstractTile):
-            # Create canvas in parent window unto which to render tile
-            canvas = tk.Canvas(parent_frame, width=ct.TILE_WIDTH, height=ct.TILE_HEIGHT)
-            # Set canvas to use grid
-            canvas.grid(row=0, column=0)
-
-            # Check if tile is a full tile
-            if tile.is_tile:
-                # Add tile
-                canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
-                # Add correct fish sprite
-                canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
-            else:
-                # Add hole
-                canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
-            # Return resulting canvas
-            return canvas
+        # Check if tile is a full tile
+        if tile.is_tile:
+            # Add tile
+            canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
+            # Add correct fish sprite
+            canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
         else:
-            raise TypeError(f'Tile is neither hole nor tile: {type(tile)}!')
+            # Add hole
+            canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
+        # Return resulting canvas
+        return canvas
+
