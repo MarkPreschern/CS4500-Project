@@ -14,10 +14,12 @@ Tiles will be represented in their own unique format via a Python object/class. 
 
 The **tile** representation as a Python dictionary / JSON object will look something like this:
 
+```
 {  
     "type": 0
     "fish_no": 2  
 }
+```
 
 Please note that the current version of our project already has a Tile class that keeps track of the above information.
 
@@ -30,6 +32,7 @@ The game state will be represented in its own unique format via a Python object/
   
 The **game state** representation as a Python dictionary / JSON object will look something like the following:  
 
+```
 {  
    "players": {  
         "id" : {  
@@ -57,6 +60,7 @@ The **game state** representation as a Python dictionary / JSON object will look
    "gameStatus": 0,    
    "timestamp": 12321424.14  
 }  
+```
 
 ## External Interface ##
 Our interface will consist of the following functionality:  
