@@ -1,18 +1,19 @@
 from AbstractTile import AbstractTile
+import constants as ct
 
 
 class Tile(AbstractTile):
     """
-    Represents a tile in the game onto which fish rest.
+    Represents a tile in the game onto which fish or players rest.
     """
+
     def __init__(self, fish_no):
         super().__init__()
         # Validate params
-        if not isinstance(fish_no, int) or fish_no < 1:
+        if not isinstance(fish_no, int) or fish_no < ct.MIN_FISH_PER_TILE \
+                or fish_no > ct.MAX_FISH_PER_TILE:
             raise ValueError('Invalid fish_no - expected a positive integer!')
 
-        # Set type
-        self.__type = 'tile'
         # Set # of fish
         self.__fish_no = fish_no
 

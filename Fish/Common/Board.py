@@ -1,5 +1,4 @@
 from random import randint
-import random
 import constants as ct
 from Hole import Hole
 from Tile import Tile

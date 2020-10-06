@@ -8,9 +8,6 @@ class Hole(AbstractTile):
     def __init__(self):
         super().__init__()
 
-        # Set type
-        self.__type = 'hole'
-
     @property
     def is_hole(self):
         return True

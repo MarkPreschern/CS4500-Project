@@ -116,7 +116,7 @@ class BoardTests(unittest.TestCase):
             tiles = board.tiles
 
             # Make sure we have a large enough board to
-            # accomodate tiles asked for
+            # accommodate tiles asked for
             self.assertGreaterEqual(len(tiles), 10)
 
             # Initialize counts

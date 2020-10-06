@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, mainloop, Frame
+from tkinter import Tk, Frame
 import sys
 
 sys.path.append('../')

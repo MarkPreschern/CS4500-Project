@@ -1,11 +1,7 @@
 class AbstractTile(object):
-    def __init__(self):
-        self.__type = 'abstract'
-
-    @property
-    def type(self):
-        return self.__type
-
+    """
+    Represents the base to either a hole or a tile.
+    """
     @property
     def is_hole(self):
         """
