@@ -1,4 +1,4 @@
-from tkinter import Tk, Label, mainloop, Frame
+from tkinter import Tk, Frame
 import sys
 
 sys.path.append('../')
@@ -7,16 +7,17 @@ from Board import Board
 
 # Make up window
 _window = Tk()
+_window.wm_title('Tile test')
 
 # Make up frame within window
-frame = Frame(_window)
+frame = Frame(_window, width=505, height=400)
 # Set window to use gridview
 frame.grid(row=0, column=0)
 
 # Build board
-b = Board(2, 2).build_min_one_fish_tiles_with_holes(2, 1)
-# Render tile at position (0,0)
-b.render_tile(frame, (0, 0))
+b = Board.min_oft_and_holes(5, [(0, 0), (1, 1), (1, 0)])
+# Render board
+b.render(frame)
 
 # Run tk mainloop
 _window.mainloop()
