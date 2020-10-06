@@ -10,12 +10,12 @@ _window = Tk()
 _window.wm_title('Tile test')
 
 # Make up frame within window
-frame = Frame(_window, width=405, height=180)
+frame = Frame(_window, width=505, height=400)
 # Set window to use gridview
 frame.grid(row=0, column=0)
 
 # Build board
-b = Board.min_oft_and_holes(3, 1)
+b = Board.min_oft_and_holes(5, [(0, 0), (1, 1), (1, 0)])
 # Render board
 b.render(frame)
 

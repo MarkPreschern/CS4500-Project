@@ -112,49 +112,74 @@ class Board(object):
             self.__sprites.update({file_name_tokens[0]: self.__get_sprite(file_name_tokens[0])})
 
     @classmethod
-    def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes_no: int):
+    def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes: [tuple]):
         """
-        Builds a board with at least min_one_fish_tiles one-fish tiles and holes_no
+        Builds a board with at least min_one_fish_tiles one-fish tiles and given
         holes.
         :param min_one_fish_tile_no: minimum number of one-fish tiles
-        :param holes_no: number of holes
+        :param holes: holes in the form of a list of tuple points
         :return: instance of Board configured to spec
         """
         # Check params
         if not isinstance(min_one_fish_tile_no, int) or min_one_fish_tile_no < 0:
             raise ValueError('Expected integer >= 0 for min_one_fish_tile_no!')
 
-        if not isinstance(holes_no, int) or holes_no < 0:
-            raise ValueError('Expected integer >= 0 for holes_no!')
+        if not isinstance(holes, list):
+            raise ValueError('Expected list for holes!')
 
-        # Generate a board large enough to accommodate the given minimum
-        # number of one fish tiles and number of holes
-        rows, cols = (min_one_fish_tile_no + 1), (holes_no + 1)
+        # Remove duplicate holes (if any)
+        holes = list(set([k for k in holes]))
 
-        tile_lst = []
-        # Add holes to tile list
-        tile_lst.extend([Hole() for _ in range(holes_no)])
-        # Add 1-fish tiles to tile list
-        tile_lst.extend([Tile(1) for _ in range(min_one_fish_tile_no)])
-        # Add random number-fish tiles to tile list
-        rand_no_fish_tile_no = rows * cols - holes_no - min_one_fish_tile_no
+        # Determine maximum hole coordinates (if any)
+        if len(holes) > 0:
+            # Extract hole coordinates
+            xs, ys = zip(*holes)
 
-        for _ in range(rand_no_fish_tile_no):
-            # Generate an arbitrary number of fish
-            fish_no = randint(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE)
-            # Create and append tile
-            tile_lst.append(Tile(fish_no))
+            # Determine max coordinates
+            max_x = max(xs)
+            max_y = max(ys)
+        else:
+            # Set them if no holes
+            max_x = 1
+            max_y = 1
 
-        # Shuffle list
-        random.shuffle(tile_lst)
+        # Set tentative rows and cols
+        rows, cols = max_y + 1, max_x + 1
 
-        # Initialize empty dict to disseminate list into
+        # Determine remaining open slots after adding holes and one-fish tiles
+        remaining_slots = rows * cols - min_one_fish_tile_no - len(holes)
+
+        # Continue adding columns and rows until both holes and the minimum number of
+        # one-fish tiles can be accommodated
+        while remaining_slots < 0:
+            # Randomly determine whether to add row or column, with more
+            # weight being assigned to row
+            if randint(0, ct.ROW_TO_COLUMN_PROBABILITY) == 0:
+                cols += 1
+            else:
+                rows += 1
+            # Recalculate remaining_slots
+            remaining_slots = rows * cols - min_one_fish_tile_no - len(holes)
+
+        # Initialize empty tile container
         tiles = {}
-
+        # Initialize one-fish tile count
+        one_fish_tile_cnt = 0
         # Disseminate list onto dictionary
         for row in range(rows):
             for col in range(cols):
-                tiles.update({(row, col): tile_lst.pop(0)})
+                # Check if it's a hole
+                if (row, col) in holes:
+                    tiles.update({(row, col): Hole()})
+                elif one_fish_tile_cnt < min_one_fish_tile_no:
+                    # Add one-fish tile
+                    tiles.update({(row, col) : Tile(1)})
+                    one_fish_tile_cnt += 1
+                else:
+                    # Generate an arbitrary number of fish
+                    fish_no = randint(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE)
+                    # Add random fish-tile
+                    tiles.update({(row, col): Tile(fish_no)})
 
         # return new instance of Board with built board
         return cls(tiles)

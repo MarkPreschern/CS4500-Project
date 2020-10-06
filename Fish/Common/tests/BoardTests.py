@@ -20,7 +20,7 @@ class BoardTests(unittest.TestCase):
         # prevent __get_sprite from getting called as
         # tkinter is not initialized
         with MockHelper(Board, "_Board__get_sprite"):
-            self.__no_hole_board1 = Board.min_oft_and_holes(10, 0)
+            self.__no_hole_board1 = Board.min_oft_and_holes(4, [(2,3), (1,2)])
 
     def test_init_fail1(self):
         # Tests constructor failing due to invalid tiles collection
@@ -59,13 +59,13 @@ class BoardTests(unittest.TestCase):
         # Tests min_oft_and_holes failing due to an invalid
         # minimum number of one fish tiles being provided.
         with self.assertRaises(ValueError):
-            Board.min_oft_and_holes(-10, 10)
+            Board.min_oft_and_holes(-10, [])
 
     def test_min_oft_and_holes_fail2(self):
         # Tests min_oft_and_holes failing due to an invalid
         # minimum number of one fish tiles being provided.
         with self.assertRaises(ValueError):
-            Board.min_oft_and_holes(10, -10)
+            Board.min_oft_and_holes(10, (1, 2))
 
     def test_min_oft_and_holes_success1(self):
         # Tests successful min_oft_and_holes with holes
@@ -73,14 +73,14 @@ class BoardTests(unittest.TestCase):
         # prevent __load_sprites from getting called as
         # tkinter is not initialized
         with MockHelper(Board, "_Board__load_sprites"):
-            board = Board.min_oft_and_holes(10, 2)
+            board = Board.min_oft_and_holes(4, [(1, 0)])
 
             # Retrive tiles
             tiles = board.tiles
 
             # Make sure we have a large enough board to
             # accomodate tiles asked for
-            self.assertGreaterEqual(len(tiles), 12)
+            self.assertGreaterEqual(len(tiles), 5)
 
             # Initialize counts
             hole_cnt = 0
@@ -99,10 +99,10 @@ class BoardTests(unittest.TestCase):
                     raise ValueError(f'Tile is neither hole nor tile: {type(tile)}!')
 
             # Make sure we have the right number of holes
-            self.assertEqual(hole_cnt, 2)
+            self.assertEqual(hole_cnt, 1)
             # Make sure we have at least min # provided
             # of one fish tiles
-            self.assertGreaterEqual(one_fish_tile_cnt, 10)
+            self.assertGreaterEqual(one_fish_tile_cnt, 4)
 
     def test_min_oft_and_holes_success2(self):
         # Tests successful min_oft_and_holes with no holes
@@ -110,7 +110,7 @@ class BoardTests(unittest.TestCase):
         # prevent __load_sprites from getting called as
         # tkinter is not initialized
         with MockHelper(Board, "_Board__load_sprites"):
-            board = Board.min_oft_and_holes(10, 0)
+            board = Board.min_oft_and_holes(10, [])
 
             # Retrive tiles
             tiles = board.tiles
