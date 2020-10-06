@@ -141,6 +141,51 @@ class BoardTests(unittest.TestCase):
             # of one fish tiles
             self.assertGreaterEqual(one_fish_tile_cnt, 10)
 
+    def test_homogeneous_fail1(self):
+        # Tests failing homogeneous due to an invalid number
+        # of tile_fish no
+        with self.assertRaises(ValueError):
+            Board.homogeneous('ok')
+
+        with self.assertRaises(ValueError):
+            Board.homogeneous(0)
+
+        with self.assertRaises(ValueError):
+            Board.homogeneous(210)
+
+    def test_homogeneous_fail2(self):
+        # Tests failing homogeneous due to an invalid number
+        # of rows
+        with self.assertRaises(ValueError):
+            Board.homogeneous(1, -1)
+
+    def test_homogeneous_fail3(self):
+        # Tests failing homogeneous due to an invalid number
+        # of cols
+        with self.assertRaises(ValueError):
+            Board.homogeneous(1, 1, -1)
+
+    def test_homogeneous_success1(self):
+        # Tests successful homogeneous with no given size
+        b = Board.homogeneous(3)
+
+        for tile in b.tiles.values():
+            self.assertTrue(tile.is_tile)
+            self.assertTrue(tile.fish_no, 3)
+
+    def test_homogeneous_success2(self):
+        # Tests successful homogeneous with given size
+        b = Board.homogeneous(3, 12, 3)
+
+        self.assertEqual(b.rows, 12)
+        self.assertEqual(b.cols, 3)
+        self.assertEqual(b.tile_no, 12 * 3)
+        self.assertEqual(len(b.tiles.values()), 12 * 3)
+
+        for tile in b.tiles.values():
+            self.assertTrue(tile.is_tile)
+            self.assertTrue(tile.fish_no, 3)
+
     def test_remove_tile_fail1(self):
         # Tests failing remove_tile due to point provided
         # being invalid

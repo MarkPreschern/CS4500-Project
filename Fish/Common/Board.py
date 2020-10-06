@@ -173,13 +173,13 @@ class Board(object):
         # Validate params
         if not isinstance(tile_fish_no, int) or tile_fish_no < ct.MIN_FISH_PER_TILE\
                 or tile_fish_no > ct.MAX_FISH_PER_TILE:
-            raise TypeError('Expected int >=0 for tile_fish_no')
+            raise ValueError('Expected int >=0 for tile_fish_no')
 
         if not isinstance(rows, int) or rows < 0:
-            raise TypeError('Expected int >=0 for rows')
+            raise ValueError('Expected int >=0 for rows')
 
         if not isinstance(cols, int) or cols < 0:
-            raise TypeError('Expected int >=0 for rows')
+            raise ValueError('Expected int >=0 for rows')
 
         # Initialize empty tiles container
         tiles = {}
@@ -239,6 +239,25 @@ class Board(object):
         """
         return tk.PhotoImage(file=self.__root_path.joinpath(f'{ct.SPRITE_PATH}/{sprite_name}.{ct.SPRITE_FORMAT}'))
 
+    def render(self, parent_frame) -> tk.Canvas:
+        print(f'rows = {self.__rows} cols = {self.__cols}')
+
+        canvas = tk.Canvas(parent_frame, bd=0, highlightthickness=0)
+        canvas.place(x=0, y=0, height=self.__rows*ct.TILE_HEIGHT, width=self.__cols*ct.TILE_WIDTH*2)
+
+        for pt, tile in self.__tiles.items():
+            # Check if tile is a full tile
+            if tile.is_tile:
+                # Add tile
+                tile_sprite = canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
+                canvas.move(tile_sprite, pt[0] * ct.TILE_WIDTH, pt[1] * ct.TILE_HEIGHT)
+                # Add correct fish sprite
+                # fish_sprite = canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
+            else:
+                # Add hole
+                hole_sprite = canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
+                canvas.move(hole_sprite, pt[0] * ct.TILE_WIDTH, pt[1] * ct.TILE_HEIGHT)
+
     def render_tile(self, parent_frame, pt) -> tk.Canvas:
         """
         Returns an image of the tile at the given point.
@@ -257,7 +276,7 @@ class Board(object):
         # Retrieve tile at point
         tile = self.get_tile(pt)
         # Create canvas in parent window unto which to render tile
-        canvas = tk.Canvas(parent_frame, width=ct.TILE_WIDTH, height=ct.TILE_HEIGHT)
+        canvas = tk.Canvas(parent_frame, width=ct.TILE_WIDTH, height=ct.TILE_HEIGHT, bd=0, highlightthickness=0)
         # Set canvas to use grid
         canvas.grid(row=0, column=0)
 
