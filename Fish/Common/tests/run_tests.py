@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import unittest
 from BoardTests import BoardTests
 from TileTests import TileTests

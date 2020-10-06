@@ -22,9 +22,10 @@ The **tile** representation as a Python dictionary / JSON object will look somet
 Please note that the current version of our project already has a Tile class that keeps track of the above information.
 
 ### Game state ####  
-The game state will be represented in its own unique format via a Python object/class. The game state class will contain three fields:  
+The game state will be represented in its own unique format via a Python object/class. The game state class will contain four fields:  
 - Players: this will be a dictionary of all of the players that are currently participating in the game. Each entry of the dictionary will use the player_id as a key and a dictionary of relevant player information as the value.
 - Board: this will be a dictionary that keeps track of all of the tiles and player positions on the board. This includes tile objects and their coordinates, as well as player ids and their positions.
+- Game Status: this will be an enum that represent the current status of the game (i.e. is the game still accepting players, is the game active, is the game over)
 - Timestamp: this will be a double that represents the current system timestamp of the game.
   
 The **game state** representation as a Python dictionary / JSON object will look something like the following:  
@@ -32,9 +33,10 @@ The **game state** representation as a Python dictionary / JSON object will look
 {  
    "players": {  
         "id" : {  
-            "name": ''   
-            "color": ''  
-            "status": ''  
+            "name": '',   
+            "color": '',  
+            "status": '',  
+            "score": ''  
         },  
         ...  
    },  
@@ -50,11 +52,25 @@ The **game state** representation as a Python dictionary / JSON object will look
             "player_id2": [x, y],  
             ...  
         }  
-   },
-   
+   },  
+
+   "gameStatus": 0,    
    "timestamp": 12321424.14  
 }  
 
 ## External Interface ##
 Our interface will consist of the following functionality:  
-- Pong / Heartbeat:
+- `get_gamestate`: allow players to get the current gamestate (will be rate limited to prevent players from abusing the network)
+  - Args: *none*
+  - Returns: gamestate object
+- `place_player`: allow players to make their initial placements and execute moves
+  - Args: `x: int, y: int` to represent desired position
+  - Returns: boolean flag to indicate a successful placement or a failue (e.g. if another player has already placed their penguin in the specified position, if the move is invalid, etc.)
+- `send_heartbeat`: sends a hash that corresponds to a gamestate; if the client gamestate does not match the server's gamestate, then the server will send a gamestate that matches the current one; will be sent intermittently; will be mandatory by having the server expect a heartbeat from each client and removing clients that do not send a heartbeat after a given timeout; will also remove clients that refuse to accept the current gamestate
+  - Args: *none*
+  - Returns: *none*
+- `get_tournamentstate`: allows players to receive information on the current tournament
+  - Args: *none*
+  - Returns: relevant information on the tournament (i.e. player ranks, current round, other information that will likely be defined in a future assignment)
+
+In terms of the required functionality of our external interface, the `get_gamestate` method will let players take turns by allowing players to check if their status is "active" or "inactive". The `get_gamestate` method will also allow players to receive information about the end of the game via the "gameStatus" field in the gamestate object. The `place_player` method will allow players to make their initial placements on the board and will let them replace their penguins if another player has already placed in the spot that they selected. 

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from tkinter import Tk, Frame
 import sys
 
