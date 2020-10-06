@@ -40,8 +40,7 @@ class Board(object):
 
         # Infer rows and columns by inspect the largest element of either
         # array
-        rows = max(xs) + 1
-        cols = max(ys) + 1
+        rows, cols = max(xs) + 1, max(ys) + 1
 
         # Generate cartesian product of [0..rows] x [0...cols]
         compl_coord = [k for k in itertools.product(list(range(rows)), list(range(cols)))]
@@ -88,6 +87,13 @@ class Board(object):
         Returns the number of tiles on the board.
         """
         return self.__tile_no
+
+    @property
+    def tiles(self) -> dict:
+        """
+        Returns immutable copy of tile collection.
+        """
+        return self.__tiles.copy()
 
     def __load_sprites(self) -> None:
         """
@@ -154,8 +160,37 @@ class Board(object):
         return cls(tiles)
 
     @classmethod
-    def homogeneous(cls, tile_fish_no: int):
-        pass
+    def homogeneous(cls, tile_fish_no: int, rows: int = ct.DEFAULT_BOARD_ROWS,
+                    cols: int = ct.DEFAULT_BOARD_COLS):
+        """
+        Builds a homogeneous board with tiles laden with
+        the number of fish provided.
+        :param tile_fish_no: number of fish to each tile
+        :param rows: number of rows to board
+        :param cols: number of cols to board
+        :return: new homogeneous Board designed to spec
+        """
+        # Validate params
+        if not isinstance(tile_fish_no, int) or tile_fish_no < ct.MIN_FISH_PER_TILE\
+                or tile_fish_no > ct.MAX_FISH_PER_TILE:
+            raise TypeError('Expected int >=0 for tile_fish_no')
+
+        if not isinstance(rows, int) or rows < 0:
+            raise TypeError('Expected int >=0 for rows')
+
+        if not isinstance(cols, int) or cols < 0:
+            raise TypeError('Expected int >=0 for rows')
+
+        # Initialize empty tiles container
+        tiles = {}
+
+        # Add x-fish tiles to each pointer
+        for r in range(rows):
+            for c in range(cols):
+                tiles.update({ (r, c): Tile(tile_fish_no)})
+
+        # Return resulting board
+        return cls(tiles)
 
     def get_reachable_positions(self):
         pass
@@ -189,7 +224,7 @@ class Board(object):
         """
         # Validate point
         if not isinstance(pt, tuple):
-            raise ValueError('Expected tuple object for pt!')
+            raise TypeError('Expected tuple object for pt!')
 
         if pt not in self.__tiles.keys():
             raise ValueError('No tile exists at given point!')
@@ -214,7 +249,7 @@ class Board(object):
         """
         # Validate params
         if not isinstance(pt, tuple):
-            raise ValueError('Expected tuple object for pt!')
+            raise TypeError('Expected tuple object for pt!')
 
         if not isinstance(parent_frame, tk.Frame):
             raise TypeError('Expected Frame for parent_frame!')
@@ -237,4 +272,3 @@ class Board(object):
             canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
         # Return resulting canvas
         return canvas
-
