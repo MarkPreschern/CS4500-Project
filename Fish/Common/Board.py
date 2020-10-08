@@ -8,6 +8,7 @@ import pathlib
 import inspect
 import os
 import itertools
+from enum import Enum
 
 
 class Board(object):
@@ -216,9 +217,6 @@ class Board(object):
         # Return resulting board
         return cls(tiles)
 
-    def get_reachable_positions(self):
-        pass
-
     def remove_tile(self, pt) -> None:
         """
         Removes a tile at the given position (if one exists) by
@@ -301,3 +299,156 @@ class Board(object):
                 # Add hole
                 hole_sprite = canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
                 canvas.move(hole_sprite, x, y)
+
+    def get_reachable_positions(self, pos: (int, int)) -> [(int, int)]:
+        """
+        Create a list of all tiles that are reachable within a straight line path of the given position.
+
+        :param pos: the starting position for which reachable positions will be computed
+        :return: a list of tuples that contains all reachable positions
+        """
+        # Validate params
+        if not isinstance(pos, tuple):
+            raise TypeError('Expected tuple for pos.')
+        if pos not in self.tiles.keys():
+            raise ValueError('Expected pos to be a position on the game board.')
+
+        # Compute edge list for determining reachable positions
+        edge_list = self.__compute_reachable_edge_list()
+
+        # Store reachable positions
+        reachable_positions = []
+
+        # Use out-edges from the tile at the given pos
+        edges_to_adj_tiles = edge_list[pos]
+
+        # Look at all adjacent tiles for straight line paths
+        for movement_dir in edges_to_adj_tiles:
+            # Find all of the tiles in the same direction as the current direction
+            tiles_in_path = self.__find_straight_path(pos, movement_dir, edge_list=edge_list)
+            
+            # Add all tiles above to the overall list of reachable positions
+            reachable_positions.extend(tiles_in_path)
+
+        return reachable_positions
+
+    def __compute_reachable_edge_list(self) -> dict:
+        """
+        Return an edge dict for all of the tiles on the board. The graph in question
+        is directed. Edges exist between all adjacent tiles, and each edge has a weight
+        that represents the direction of said edge (i.e each weight is a MovementDirection)
+
+        Note that edges cannot be created between a hole and a tile, nor can they be created
+        between two holes.
+
+        As an example, an edge between a starting tile A and its neighboring tile to the
+        top left will have a weight of MovementDirection.TopLeft, or 0.
+        
+        :return: a dict whose keys are tuples representing positions
+                 and whose values are dicts containing adjacent tiles with weights
+        """
+        # Store the edges
+        edges = {}
+
+        # Compute a list of edges for all tiles on the board
+        for pos in self.tiles:
+            # Store the edges to adjacent tiles with directions as weights 
+            adjacent_tiles_dict = {}
+
+            # Current row/col position
+            row = pos[0]
+            col = pos[1]
+
+            # Locations of surrounding tiles
+            top_left = (row - 1, col - 1) if row % 2 == 0 else (row - 1, col)
+            top = (row - 2, col)
+            top_right = (row - 1, col) if row % 2 == 0 else (row - 1, col + 1)
+            bottom_right = (row + 1, col) if row % 2 == 0 else (row + 1, col + 1)
+            bottom = (row + 2, col)
+            bottom_left = (row + 1, col - 1) if row % 2 == 0 else (row + 1, col)
+
+            # For all possible directions, check if the computed position exists on the board
+            # and add to the current adjacent tiles dict with 
+            if top_left in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.TopLeft] = top_left
+
+            if top in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.Top] = top
+
+            if top_right in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.TopRight] = top_right
+
+            if bottom_right in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.BottomRight] = bottom_right
+
+            if bottom in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.Bottom] = bottom
+
+            if bottom_left in self.tiles.keys():
+                adjacent_tiles_dict[self.MovementDirection.BottomLeft] = bottom_left
+            
+            # Set the edges list for the current position
+            edges[pos] = adjacent_tiles_dict
+        
+        return edges
+
+    def __find_straight_path(self, start_pos, direction, edge_list=None) -> [(int, int)]:
+        """
+        Find the positions of all tiles in the straight line path starting from the
+        given position and moving in the given direction.
+
+        :param start_pos: starting position of the straight line path
+        :param direction: direction of the straight line path
+        :param edge_list: list of edges between tiles/nodes in the directed graph described 
+                          in compute_reachable_edge_list
+        :return: a list of tuples representing the positions of tiles that are in the straight line path
+        """
+
+        # Validate params
+        if not isinstance(start_pos, tuple):
+            raise TypeError('Expected tuple for start_pos.')
+        if not isinstance(direction, self.MovementDirection):
+            raise TypeError('Expected MovementDirection for direction.')
+        if edge_list and not isinstance(edge_list, dict):
+            raise TypeError('Expected dict for edge_list')
+        
+        # If an edge list was not provided, recompute the edges for this board
+        if not edge_list:
+            edge_list = self.__compute_reachable_edge_list()
+        
+        # Store tiles in the current straight line path
+        tiles_in_path = []
+
+        # Keep track of the current position and the next position in the path
+        current_pos = start_pos
+        next_pos = None
+
+        # Iterate until the end of the path is reached or a hole is encountered
+        while current_pos is not None:
+            # Get the position of the next tile in the path
+            next_pos = edge_list.get(current_pos, {}).get(direction, None)
+
+            # If the next tile in the path is a hole, break
+            if next_pos and self.tiles[next_pos].is_hole:
+                break
+            
+            # If there is a next position, append that position to the list
+            if next_pos:
+                tiles_in_path.append(next_pos)           
+
+            # Update current pos and proceed down the straight line path or
+            # break out of loop
+            current_pos = next_pos
+        
+        return tiles_in_path
+
+    class MovementDirection(Enum):
+        """
+        Represents the potential movement directions between tiles.
+        """
+        TopLeft = 0
+        Top = 1
+        TopRight = 2
+        BottomRight = 3
+        Bottom = 4
+        BottomLeft = 5

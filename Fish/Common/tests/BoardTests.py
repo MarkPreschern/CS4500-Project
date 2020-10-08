@@ -232,4 +232,103 @@ class BoardTests(unittest.TestCase):
         # provided
         with self.assertRaises(TypeError):
             self.__no_hole_board1.render('ohai')
+    
+    def test_get_reachable_positions_homogenous(self):
+        # Test get_reachable_positions for a homogenous board
 
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            # Create a board with 5 rows and 2 columns
+            b = Board.homogeneous(3, 5, 2)
+
+            # Reachable positions from (0, 0)
+            expected_1 = [(1, 0), (2, 1), (3, 1), (2, 0), (4, 0)]
+            actual_1 = b.get_reachable_positions((0, 0))
+
+            # Reachable positions from (3, 0)
+            expected_2 = [(2, 0), (1, 0), (2, 1), (1, 1), (4, 1), (4, 0)]
+            actual_2 = b.get_reachable_positions((3, 0))
+
+            # Reachable positions from (2, 1)
+            expected_3 = [(1, 0), (0, 0), (0, 1), (1, 1), (3, 1), (4, 1), (3, 0), (4, 0)]
+            actual_3 = b.get_reachable_positions((2, 1))
+
+            # Assert that both the expected lists and actual output have the same
+            # elements the same number of times (i.e. lists are equal ignoring order)
+            self.assertCountEqual(expected_1, actual_1)
+            self.assertCountEqual(expected_2, actual_2)
+            self.assertCountEqual(expected_3, actual_3)
+
+    def test_get_reachable_positions_with_holes(self):
+        # Test get_reachable_positions for a board with holes
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            # Create a board with 5 rows and 2 columns
+            b = Board.homogeneous(3, 5, 2)
+            b.remove_tile((1, 0))
+
+            # Reachable positions from (0, 0)
+            # Hole removes (1, 0), (2, 1), and (3, 1)
+            expected_1 = [(2, 0), (4, 0)]
+            actual_1 = b.get_reachable_positions((0, 0))
+
+            # Reachable positions from (3, 0)
+            # Hole removes (1, 0)
+            expected_2 = [(2, 0), (2, 1), (1, 1), (4, 1), (4, 0)]
+            actual_2 = b.get_reachable_positions((3, 0))
+
+            # Reachable positions from (2, 1)
+            # Hole removes (1, 0) and (0, 0)
+            expected_3 = [(0, 1), (1, 1), (3, 1), (4, 1), (3, 0), (4, 0)]
+            actual_3 = b.get_reachable_positions((2, 1))
+            
+            # Assert that inserting a hole interrupts the straight line paths
+            # and reduces the number of reachable positions
+            self.assertCountEqual(expected_1, actual_1)
+            self.assertCountEqual(expected_2, actual_2)
+            self.assertCountEqual(expected_3, actual_3)
+    
+    def test_get_reachable_positions_with_all_holes(self):
+        # Test get_reachable_positions on a board with all holes
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            # Create board with 2 rows and 1 column
+            b = Board.homogeneous(3, 2, 1)
+
+            # Verify that there are reachable tiles prior to removal
+            expected_1 = [(1, 0)]
+            actual_1 = b.get_reachable_positions((0, 0))
+
+            expected_2 = [(0, 0)]
+            actual_2 = b.get_reachable_positions((1, 0))
+
+            self.assertCountEqual(expected_1, actual_1)
+            self.assertCountEqual(expected_2, actual_2)
+
+            # Remove all tiles
+            b.remove_tile((0, 0))
+            b.remove_tile((1, 0))
+
+            expected_3_4 = []
+            actual_3 = b.get_reachable_positions((0, 0))
+            actual_4 = b.get_reachable_positions((1, 0))
+
+            # Verify that get_reachable_tiles does not include/traverse over
+            # holes when building the list of reachable positions
+            self.assertEqual(expected_3_4, actual_3)
+            self.assertEqual(expected_3_4, actual_4)
+
+    def test_get_reachable_positions_fail1(self):
+        # Test failed reachable position computation due to invalid position typing
+        with self.assertRaises(TypeError):
+            self.__no_hole_board1.get_reachable_positions([0])
+    
+    def test_get_reachable_positions_fail2(self):
+        # Test failed reachable position computation due to invalid position on board
+        with self.assertRaises(ValueError):
+            self.__no_hole_board1.get_reachable_positions((100, -5))
