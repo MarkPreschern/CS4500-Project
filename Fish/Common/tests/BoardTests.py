@@ -8,6 +8,7 @@ from Tile import Tile
 from Hole import Hole
 from ext.MockHelper import MockHelper
 import tkinter as tk
+from MovementDirection import MovementDirection
 
 
 class BoardTests(unittest.TestCase):
@@ -332,3 +333,112 @@ class BoardTests(unittest.TestCase):
         # Test failed reachable position computation due to invalid position on board
         with self.assertRaises(ValueError):
             self.__no_hole_board1.get_reachable_positions((100, -5))
+    
+    def test_get_reachable_positions_on_single_tile(self):
+        # Test get_reachable_positions on a board with one tile
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            b = Board.homogeneous(3, 1, 1)
+
+            self.assertEqual(b.get_reachable_positions((0, 0)), [])
+    
+    def test_compute_edge_list(self):
+        # Test compute edge list on a standard board
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            b = Board.homogeneous(3, 3, 2)
+
+            expected = {
+                (0, 0) : {
+                    MovementDirection.BottomRight : (1, 0),
+                    MovementDirection.Bottom : (2, 0)},
+                (0, 1) : {
+                    MovementDirection.BottomLeft : (1, 0),
+                    MovementDirection.Bottom : (2, 1),
+                    MovementDirection.BottomRight : (1, 1)
+                },
+                (1, 0) : {
+                    MovementDirection.BottomLeft : (2, 0),
+                    MovementDirection.TopLeft : (0, 0),
+                    MovementDirection.BottomRight : (2, 1),
+                    MovementDirection.TopRight : (0, 1)
+                },
+                (1, 1) : {
+                    MovementDirection.BottomLeft : (2, 1),
+                    MovementDirection.TopLeft : (0, 1)
+                }, 
+                (2, 0) : {
+                    MovementDirection.Top : (0, 0),
+                    MovementDirection.TopRight : (1, 0)
+                },
+                (2, 1) : {
+                    MovementDirection.TopLeft : (1, 0),
+                    MovementDirection.Top : (0, 1),
+                    MovementDirection.TopRight : (1, 1)
+                }
+            }
+
+            self.assertDictEqual(b._Board__compute_reachable_edge_list(), expected)
+
+            # Should also be the same after removing one tile
+            b.remove_tile((0, 0))
+
+            self.assertDictEqual(b._Board__compute_reachable_edge_list(), expected)
+
+    def test_compute_edge_list_one_tile(self):
+        # Test compute edge list on a board with one tile
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            b = Board.homogeneous(3, 1, 1)
+
+            self.assertDictEqual(b._Board__compute_reachable_edge_list(), {(0, 0) : {}})
+
+    def test_find_straight_path(self):
+        # Test find straight path on a standard board
+
+        # Prevent load sprites from being called because
+        # tkinter is not initialized
+        with MockHelper(Board, "_Board__load_sprites"):
+            b = Board.homogeneous(3, 3, 2)
+
+            # Test a tile with multiple tiles in a row - we already know finding neighbors works
+            # from testing edge list
+            top_right = b._Board__find_straight_path((2, 0), MovementDirection.TopRight)
+            
+            self.assertCountEqual(top_right, [(1, 0), (0, 1)])
+
+            # See path shorten after removing a tile
+            b.remove_tile((1, 0))
+
+            top_right = b._Board__find_straight_path((2, 0), MovementDirection.TopRight)
+
+            self.assertEqual(top_right, [])
+
+            # Verify empty path for direction that (2, 0) does not have neighbors
+            top_left = b._Board__find_straight_path((2, 0), MovementDirection.TopLeft)
+            self.assertEqual(top_left, [])
+
+            # Verify invalid board positions return no straight path
+            no_path = b._Board__find_straight_path((100, -5), MovementDirection.TopRight)
+            self.assertEqual(no_path, [])
+    
+    def test_find_straight_path_fail1(self):
+        # Test failed find straight path due to invalid pos
+        with self.assertRaises(TypeError):
+            self.__no_hole_board1._Board__find_straight_path([100, -5], MovementDirection.Top)
+    
+    def test_find_straight_path_fail2(self):
+        # Test failed find straight path due to invalid direction
+        with self.assertRaises(TypeError):
+            self.__no_hole_board1._Board__find_straight_path((0, 0), "TopRight")
+
+    def test_find_straight_path_fail3(self):
+        # Test failed find straight path due to invalid edge list
+        with self.assertRaises(TypeError):
+            self.__no_hole_board1._Board__find_straight_path((0, 0), MovementDirection.TopRight, edge_list = [(0, 0), (1, 0)])

@@ -8,7 +8,7 @@ import pathlib
 import inspect
 import os
 import itertools
-from enum import Enum
+from MovementDirection import MovementDirection
 
 
 class Board(object):
@@ -370,22 +370,22 @@ class Board(object):
             # For all possible directions, check if the computed position exists on the board
             # and add to the current adjacent tiles dict with 
             if top_left in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.TopLeft] = top_left
+                adjacent_tiles_dict[MovementDirection.TopLeft] = top_left
 
             if top in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.Top] = top
+                adjacent_tiles_dict[MovementDirection.Top] = top
 
             if top_right in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.TopRight] = top_right
+                adjacent_tiles_dict[MovementDirection.TopRight] = top_right
 
             if bottom_right in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.BottomRight] = bottom_right
+                adjacent_tiles_dict[MovementDirection.BottomRight] = bottom_right
 
             if bottom in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.Bottom] = bottom
+                adjacent_tiles_dict[MovementDirection.Bottom] = bottom
 
             if bottom_left in self.tiles.keys():
-                adjacent_tiles_dict[self.MovementDirection.BottomLeft] = bottom_left
+                adjacent_tiles_dict[MovementDirection.BottomLeft] = bottom_left
             
             # Set the edges list for the current position
             edges[pos] = adjacent_tiles_dict
@@ -407,7 +407,7 @@ class Board(object):
         # Validate params
         if not isinstance(start_pos, tuple):
             raise TypeError('Expected tuple for start_pos.')
-        if not isinstance(direction, self.MovementDirection):
+        if not isinstance(direction, MovementDirection):
             raise TypeError('Expected MovementDirection for direction.')
         if edge_list and not isinstance(edge_list, dict):
             raise TypeError('Expected dict for edge_list')
@@ -441,14 +441,3 @@ class Board(object):
             current_pos = next_pos
         
         return tiles_in_path
-
-    class MovementDirection(Enum):
-        """
-        Represents the potential movement directions between tiles.
-        """
-        TopLeft = 0
-        Top = 1
-        TopRight = 2
-        BottomRight = 3
-        Bottom = 4
-        BottomLeft = 5
