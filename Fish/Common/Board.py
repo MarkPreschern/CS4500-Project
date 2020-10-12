@@ -10,6 +10,7 @@ import os
 import itertools
 from MovementDirection import MovementDirection
 from exceptions.InvalidPosition import InvalidPosition
+from PIL import ImageTk, Image
 
 
 class Board(object):
@@ -260,7 +261,8 @@ class Board(object):
         :param sprite_name: sprite to retrieve
         :return: resulting PhotoImage object
         """
-        return tk.PhotoImage(file=self.__root_path.joinpath(f'{ct.SPRITE_PATH}/{sprite_name}.{ct.SPRITE_FORMAT}'))
+        return ImageTk.PhotoImage(Image.open(self.__root_path.joinpath(
+            f'{ct.SPRITE_PATH}/{sprite_name}.{ct.SPRITE_FORMAT}')))
 
     def render(self, parent_frame):
         """
