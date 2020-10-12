@@ -1,6 +1,8 @@
 import unittest
 import sys
 
+from exceptions.InvalidPosition import InvalidPosition
+
 sys.path.append('../')
 
 from Board import Board
@@ -196,7 +198,7 @@ class BoardTests(unittest.TestCase):
     def test_remove_tile_fail2(self):
         # Tests failing remove_tile due to point provided
         # not existing
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidPosition):
             self.__no_hole_board1.remove_tile((32, 23))
 
     def test_remove_tile_success(self):
@@ -212,7 +214,7 @@ class BoardTests(unittest.TestCase):
 
     def test_get_tile_fail2(self):
         # Tests failing get_tile due to non-existent point
-        with self.assertRaises(ValueError):
+        with self.assertRaises(InvalidPosition):
             self.__no_hole_board1.get_tile((120, 10))
 
     def test_get_tile_success(self):

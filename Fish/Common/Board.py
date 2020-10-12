@@ -9,6 +9,7 @@ import inspect
 import os
 import itertools
 from MovementDirection import MovementDirection
+from exceptions.InvalidPosition import InvalidPosition
 
 
 class Board(object):
@@ -249,7 +250,7 @@ class Board(object):
             raise TypeError('Expected tuple object for pt!')
 
         if pt not in self.__tiles.keys():
-            raise ValueError('No tile exists at given point!')
+            raise InvalidPosition('No tile exists at given position!')
 
         return self.__tiles.get(pt)
 
