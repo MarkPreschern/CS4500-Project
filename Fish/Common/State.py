@@ -65,11 +65,30 @@ class State(object):
         # Validate type of player id
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player id!')
+            
+        # Validate type of position
+        if not isinstance(position, tuple):
+            raise TypeError('Expected tuple for position!')
+            
+        # Make sure player id is in player list
+        if player_id not in self.__players.keys():
+            raise ValueError('Player id not in player list!')
 
         # Make sure player has not already placed avatar
         if player_id in self.__placements.keys():
             raise AvatarAlreadyPlacedException()
+            
+        # Make sure a player cannot place an avatar where another player has
+        if position in self.__placements.values():
+            raise InvalidPosition()
+    
+        # Validate position (throws InvalidPosition if it's not)
+        tile = self.__board.get_tile(position)
 
+        # Make sure it is not a hole
+        if tile.is_hole:
+            raise InvalidPosition('Cannot place avatar on a Hole!')
+            
         # Place avatar to desired position
         self.__placements.update({player_id: position})
 
