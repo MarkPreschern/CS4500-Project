@@ -2,10 +2,12 @@ from Board import Board
 from Player import Player
 import constants as ct
 from collections import OrderedDict
+import tkinter as tk
 
 from exceptions.AvatarAlreadyPlacedException import AvatarAlreadyPlacedException
 from exceptions.AvatarNotPlacedException import AvatarNotPlacedException
 from exceptions.InvalidPosition import InvalidPosition
+from SpriteManager import SpriteManager
 
 
 class State(object):
@@ -65,30 +67,15 @@ class State(object):
         # Validate type of player id
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player id!')
-            
-        # Validate type of position
-        if not isinstance(position, tuple):
-            raise TypeError('Expected tuple for position!')
-            
-        # Make sure player id is in player list
-        if player_id not in self.__players.keys():
-            raise ValueError('Player id not in player list!')
 
         # Make sure player has not already placed avatar
         if player_id in self.__placements.keys():
             raise AvatarAlreadyPlacedException()
-            
-        # Make sure a player cannot place an avatar where another player has
-        if position in self.__placements.values():
-            raise InvalidPosition()
-    
-        # Validate position (throws InvalidPosition if it's not)
-        tile = self.__board.get_tile(position)
 
-        # Make sure it is not a hole
-        if tile.is_hole:
-            raise InvalidPosition('Cannot place avatar on a Hole!')
-            
+        # Make sure target position is not occupied by another player
+        if position in self.__players.values():
+            raise InvalidPosition("Position already occupied!")
+
         # Place avatar to desired position
         self.__placements.update({player_id: position})
 
@@ -125,28 +112,99 @@ class State(object):
         if tile.is_hole:
             raise InvalidPosition('Cannot place avatar on a Hole!')
 
-        # Make sure target position is reachable from current position
+        # Retrieve player's current position
         current_pos = self.__placements.get(player_id)
+
+        # Make sure target position is within reach
         reachable_pos = self.__board.get_reachable_positions(current_pos)
 
         if position not in reachable_pos:
             raise InvalidPosition('Target position is not reachable from'
                                   ' player\'s current position!')
 
+        # Make sure target position is not occupied by another player
+        if position in self.__players.values():
+            raise InvalidPosition("Position already occupied!")
+
         # Update position
         self.__placements.update({player_id: position})
 
-    def can_anyone_move(self) -> bool:
+    def can_player_move(self, player_id) -> bool:
         """
-        Tells if any player can perform a move.
+        Tells if player with given player_id can perform a move.
         :return: boolean indicating whether anyone
                  can move
         """
-        # Cycle over placements see if any move is possible
+        # Validate player_id
+        if not isinstance(player_id, int) or player_id <= 0:
+            raise ValueError('Expected positive int for player_id!')
+
+        # Make sure player has placed their avatar
+        if player_id not in self.__placements:
+            return False
+
+        # See if any move is possible
         # from current position
-        for _, position in self.__placements.items():
-            if len(self.__board.get_reachable_positions(position)) > 0:
+        reachable_pos = self.__board.get_reachable_positions(self.__placements.get(player_id))
+
+        # Try to find at least one reachable position that is
+        # not occupied by a fellow player
+        for pos in reachable_pos:
+            if pos not in self.__placements.values():
                 return True
+
         # If we haven't returned thus far, no positions are reachable
         # for anyone
         return False
+
+    def render(self, parent_frame):
+        """
+        Renders game state to provided Frame.
+        :param parent_frame: frame to render board on
+        :return: resulting Canvas object
+        """
+        # Validate params
+        if not isinstance(parent_frame, tk.Frame):
+            raise TypeError('Expected Frame for parent_frame!')
+
+        # Calculate frame width and height based on board size
+        frame_w = (self.__board.cols * 2 - 1) * ct.DELTA \
+                  + ct.TILE_WIDTH + ct.MARGIN_OFFSET
+        frame_h = (self.__board.rows - 1) * ct.TILE_HEIGHT / 2 \
+                  + ct.TILE_HEIGHT + ct.MARGIN_OFFSET * 2
+
+        # Make up frame
+        frame = tk.Frame(parent_frame, width=frame_w, height=frame_h)
+        # Set window to use grid view
+        frame.grid(row=0, column=0)
+
+        # Render board and retrieve canvas on which it was rendered
+        canvas = self.__board.render(frame)
+
+        # Render players to board
+        for player_id, pos in self.__placements.items():
+            # Retrieve player
+            player = self.__players.get(player_id)
+            # Retrieve sprite's name based on player color
+            player_sprite_name = player.color.name.lower()
+
+            # Demultiplex player position into x & y
+            player_x, player_y = pos
+
+            # Figure out avatar x y
+            avatar_x_offset = ct.TILE_WIDTH / 2 - ct.AVATAR_WIDTH / 2 + ct.MARGIN_OFFSET
+
+            avatar_x = (0 if player_x % 2 == 0 else ct.DELTA) + (2 * ct.DELTA * player_y) + avatar_x_offset
+            avatar_y = player_x * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
+
+            # Figure out avatar's name x y
+            avatar_name_x = avatar_x + ct.AVATAR_WIDTH / 2.0
+            avatar_name_y = avatar_y + ct.AVATAR_HEIGHT + ct.MARGIN_OFFSET
+
+            # Add avatar
+            canvas.create_image(avatar_x, avatar_y, image=SpriteManager.get_sprite(player_sprite_name),
+                                anchor=tk.NW)
+
+            # Add avatar name
+            canvas.create_text(avatar_name_x, avatar_name_y, fill="black", font="Arial 10",
+                               text=player.name)
