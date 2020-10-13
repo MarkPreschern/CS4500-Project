@@ -6,6 +6,9 @@ TILE_WIDTH = 100
 TILE_HEIGHT = 64
 TILE_SIDE = 45
 
+AVATAR_WIDTH = 37
+AVATAR_HEIGHT = 42
+
 # DELTA = (total_width - straight_edge) / 2 + straight_edge
 DELTA = TILE_SIDE + (TILE_WIDTH - TILE_SIDE) / 2
 MARGIN_OFFSET = 5

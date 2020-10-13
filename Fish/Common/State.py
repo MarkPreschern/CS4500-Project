@@ -168,9 +168,9 @@ class State(object):
             raise TypeError('Expected Frame for parent_frame!')
 
         # Calculate frame width and height based on board size
-        frame_w = (self.__board.cols * 2 - 1) * ct.DELTA\
+        frame_w = (self.__board.cols * 2 - 1) * ct.DELTA \
                   + ct.TILE_WIDTH + ct.MARGIN_OFFSET
-        frame_h = (self.__board.rows - 1) * ct.TILE_HEIGHT / 2\
+        frame_h = (self.__board.rows - 1) * ct.TILE_HEIGHT / 2 \
                   + ct.TILE_HEIGHT + ct.MARGIN_OFFSET * 2
 
         # Make up frame
@@ -181,16 +181,30 @@ class State(object):
         # Render board and retrieve canvas on which it was rendered
         canvas = self.__board.render(frame)
 
-        # Use same canvas to draw players
-        penguin = canvas.create_image(3, 3, image=SpriteManager.get_sprite('blue'), anchor=tk.NW)
-        canvas.move(penguin, ct.TILE_WIDTH / 2, ct.TILE_HEIGHT / 2)
-
         # Render players to board
-        for player, pos in self.__placements.items():
+        for player_id, pos in self.__placements.items():
+            # Retrieve player
+            player = self.__players.get(player_id)
+            # Retrieve sprite's name based on player color
             player_sprite_name = player.color.name.lower()
-            # Add tile
-            penguin = canvas.create_image(3, 3, image=SpriteManager.get_sprite('blue'), anchor=tk.NW)
-            # Move tile to corresponding position
-            canvas.move(penguin, 40, 40)
 
+            # Demultiplex player position into x & y
+            player_x, player_y = pos
 
+            # Figure out avatar x y
+            avatar_x_offset = ct.TILE_WIDTH / 2 - ct.AVATAR_WIDTH / 2 + ct.MARGIN_OFFSET
+
+            avatar_x = (0 if player_x % 2 == 0 else ct.DELTA) + (2 * ct.DELTA * player_y) + avatar_x_offset
+            avatar_y = player_x * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
+
+            # Figure out avatar's name x y
+            avatar_name_x = avatar_x + ct.AVATAR_WIDTH / 2.0
+            avatar_name_y = avatar_y + ct.AVATAR_HEIGHT + ct.MARGIN_OFFSET
+
+            # Add avatar
+            canvas.create_image(avatar_x, avatar_y, image=SpriteManager.get_sprite(player_sprite_name),
+                                anchor=tk.NW)
+
+            # Add avatar name
+            canvas.create_text(avatar_name_x, avatar_name_y, fill="black", font="Arial 10",
+                               text=player.name)

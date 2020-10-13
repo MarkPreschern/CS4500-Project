@@ -24,8 +24,12 @@ frame.grid(row=0, column=0)
 b = Board.min_oft_and_holes(5, [(0, 0), (1, 1), (1, 0)])
 
 # Build state
-s = State(b, [Player(2, 'ok', 20, Color.RED),
-              Player(3, 'ok', 20, Color.RED)])
+s = State(b, [Player(2, 'Bob', 20, Color.RED),
+              Player(3, 'Larry', 20, Color.BLACK)])
+
+s.place_avatar(2, (0, 0))
+s.place_avatar(3, (1, 0))
+
 
 s.render(frame)
 # Run tk mainloop
