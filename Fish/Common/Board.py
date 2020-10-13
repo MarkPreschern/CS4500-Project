@@ -4,19 +4,17 @@ from Hole import Hole
 from Tile import Tile
 from AbstractTile import AbstractTile
 import tkinter as tk
-import pathlib
-import inspect
-import os
 import itertools
 from MovementDirection import MovementDirection
 from exceptions.InvalidPosition import InvalidPosition
-from PIL import ImageTk, Image
+from SpriteManager import SpriteManager
 
 
 class Board(object):
     """
     Represents the board on which the game is played.
     """
+    DISABLE_SPRITE_MANAGER = False
 
     def __init__(self, tiles):
         """
@@ -59,15 +57,9 @@ class Board(object):
         self.__cols = cols
         self.__tile_no = self.__rows * self.__cols
 
-        # Initialize empty sprite container to hold our sprites
-        # as to prevent tkinter from garbage collecting them
-        self.__sprites = {}
-
-        # Set root path (path to this class' parent folder)
-        self.__root_path = pathlib.Path(inspect.getfile(self.__class__)).parent
-
-        # Set root path (path to this class' parent folder)
-        self.__load_sprites()
+        if not Board.DISABLE_SPRITE_MANAGER:
+            # Loads sprites
+            SpriteManager.load_sprites()
 
     @property
     def rows(self) -> int:
@@ -96,22 +88,6 @@ class Board(object):
         Returns immutable copy of tile collection.
         """
         return self.__tiles.copy()
-
-    def __load_sprites(self) -> None:
-        """
-        Loads sprites from sprites folder.
-        :return: None
-        """
-        for file_name in os.listdir(self.__root_path.joinpath(ct.SPRITE_PATH)):
-            # Break up file name & extension (if it exists)
-            file_name_tokens = os.path.splitext(file_name)
-
-            # Validate file type if there is one
-            if file_name_tokens[1] != f'.{ct.SPRITE_FORMAT}':
-                continue
-
-            # Add to sprite collection
-            self.__sprites.update({file_name_tokens[0]: self.__get_sprite(file_name_tokens[0])})
 
     @classmethod
     def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes: [tuple]):
@@ -255,15 +231,6 @@ class Board(object):
 
         return self.__tiles.get(pt)
 
-    def __get_sprite(self, sprite_name: str) -> tk.PhotoImage:
-        """
-        Retrieves the PhotoImage object of the given sprite.
-        :param sprite_name: sprite to retrieve
-        :return: resulting PhotoImage object
-        """
-        return ImageTk.PhotoImage(Image.open(self.__root_path.joinpath(
-            f'{ct.SPRITE_PATH}/{sprite_name}.{ct.SPRITE_FORMAT}')))
-
     def render(self, parent_frame):
         """
         Renders board to provided frame.
@@ -291,17 +258,19 @@ class Board(object):
             # Check if tile is a full tile
             if tile.is_tile:
                 # Add tile
-                tile_sprite = canvas.create_image(3, 3, image=self.__sprites['tile'], anchor=tk.NW)
+                tile_sprite = canvas.create_image(3, 3, image=SpriteManager.get_sprite('tile'), anchor=tk.NW)
                 # Move tile to corresponding position
                 canvas.move(tile_sprite, x, y)
                 # Add correct fish sprite
-                fish_sprite = canvas.create_image(24, 20, image=self.__sprites[f'fish-{tile.fish_no}'], anchor=tk.NW)
+                fish_sprite = canvas.create_image(24, 20, image=SpriteManager.get_sprite(f'fish-{tile.fish_no}'), anchor=tk.NW)
                 # Move fish to corresponding position
                 canvas.move(fish_sprite, x, y)
             else:
                 # Add hole
-                hole_sprite = canvas.create_image(3, 3, image=self.__sprites['hole'], anchor=tk.NW)
+                hole_sprite = canvas.create_image(3, 3, image=SpriteManager.get_sprite('hole'), anchor=tk.NW)
                 canvas.move(hole_sprite, x, y)
+
+        return canvas
 
     def get_reachable_positions(self, pos: (int, int)) -> [(int, int)]:
         """
