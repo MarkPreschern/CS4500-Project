@@ -1,9 +1,9 @@
 import unittest
 import sys
 
-from exceptions.InvalidPosition import InvalidPosition
-
 sys.path.append('../')
+
+from exceptions.InvalidPosition import InvalidPosition
 
 from Board import Board
 from Tile import Tile
