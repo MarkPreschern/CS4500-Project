@@ -33,7 +33,6 @@ s.place_avatar(2, (5, 3))
 s.place_avatar(3, (5, 0))
 s.place_avatar(4, (5, 2))
 
-
 s.move_avatar(0, (3, 1))
 
 s.render(frame)

@@ -322,7 +322,6 @@ class State(object):
             # Demultiplex avatar position into x & y
             avatar_x, avatar_y = pos
 
-            print(avatar_x, avatar_y)
             # Figure out avatar x y
             sprite_x_offset = ct.TILE_WIDTH / 2 - ct.AVATAR_WIDTH / 2 + ct.MARGIN_OFFSET
 
