@@ -1,4 +1,6 @@
 from Color import Color
+import constants as ct
+from Avatar import Avatar
 
 
 class Player(object):
@@ -18,7 +20,7 @@ class Player(object):
 
         # Validate params
         if not isinstance(id, int) or id <= 0:
-            raise TypeError('Expected positive int for id!')
+            raise ValueError('Expected positive int for id!')
 
         if not isinstance(name, str):
             raise TypeError('Expected string for name!')
