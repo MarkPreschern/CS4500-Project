@@ -267,7 +267,7 @@ class State(object):
 
         return avatar_ids
 
-    def __get_player_by_avatar_id(self, avatar_id) -> Player:
+    def __get_player_by_avatar_id(self, avatar_id: int) -> Player:
         """
         Retrieves player by way of provided avatar_id.
         :param avatar_id: avatar id used to retrieve player

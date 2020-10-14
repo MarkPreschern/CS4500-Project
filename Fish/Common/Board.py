@@ -12,7 +12,9 @@ from SpriteManager import SpriteManager
 
 class Board(object):
     """
-    Represents the board on which the game is played.
+    Represents the board on which the game is played. The board is encompasses
+    a collection of Tile(s) and Hole(s) that determine what straight line
+    paths that can be traversed  from any arbitrary position.
     """
     DISABLE_SPRITE_MANAGER = False
 

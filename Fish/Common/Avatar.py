@@ -1,5 +1,4 @@
 from Color import Color
-import uuid
 
 
 class Avatar(object):

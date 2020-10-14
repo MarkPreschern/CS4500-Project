@@ -20,7 +20,7 @@ class Player(object):
 
         # Validate params
         if not isinstance(id, int) or id <= 0:
-            raise ValueError('Expected positive int for id!')
+            raise TypeError('Expected positive int for id!')
 
         if not isinstance(name, str):
             raise TypeError('Expected string for name!')
