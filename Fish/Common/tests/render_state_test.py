@@ -28,11 +28,11 @@ s = State(b, [Player(2, 'Bob', 20, Color.RED),
               Player(3, 'Larry', 20, Color.BLACK)])
 
 s.place_avatar(0, (0, 0))
-# s.place_avatar(1, (1, 0))
-# s.place_avatar(2, (2, 0))
-# s.place_avatar(3, (2, 1))
-# s.place_avatar(4, (4, 2))
-# s.place_avatar(5, (6, 1))
+s.place_avatar(1, (1, 2))
+s.place_avatar(2, (5, 3))
+s.place_avatar(3, (5, 0))
+s.place_avatar(4, (5, 2))
+
 
 s.move_avatar(0, (3, 1))
 
