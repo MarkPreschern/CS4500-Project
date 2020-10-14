@@ -1,14 +1,18 @@
 #!/usr/bin/python3
 
 import unittest
+import sys
 
-from Fish.Common.tests.BoardTests import BoardTests
-from Fish.Common.tests.TileTests import TileTests
-from Fish.Common.tests.HoleTests import HoleTests
-from Fish.Common.tests.AbstractTileTests import AbstractTileTests
-from Fish.Common.tests.StateTests import StateTests
-from Fish.Common.tests.AvatarTests import AvatarTests
-from Fish.Common.tests.PlayerTests import PlayerTests
+sys.path.append('Common/tests')
+
+
+from BoardTests import BoardTests
+from TileTests import TileTests
+from HoleTests import HoleTests
+from AbstractTileTests import AbstractTileTests
+from StateTests import StateTests
+from AvatarTests import AvatarTests
+from PlayerTests import PlayerTests
 
 
 def _create_test_suite(test_cases: [unittest.TestCase]) -> unittest.TestSuite:

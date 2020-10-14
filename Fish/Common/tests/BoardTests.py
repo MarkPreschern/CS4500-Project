@@ -1,7 +1,7 @@
 import unittest
 import sys
 
-sys.path.append('../')
+sys.path.append('Common/')
 
 from exceptions.InvalidPositionException import InvalidPositionException
 
