@@ -172,7 +172,7 @@ class State(object):
         # Update position
         self.__placements.update({avatar_id: position})
 
-    def __is_path_clear(self, pos1, pos2) -> bool:
+    def __is_path_clear(self, pos1: (int, int), pos2: (int, int)) -> bool:
         """
         Checks if the path is clear of holes and avatars
         from pos1 to pos2.
@@ -288,7 +288,7 @@ class State(object):
 
         return self.__players.get(player_id)
 
-    def render(self, parent_frame):
+    def render(self, parent_frame: tk.Frame):
         """
         Renders game state to provided Frame.
         :param parent_frame: frame to render board on

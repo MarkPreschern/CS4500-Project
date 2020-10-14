@@ -18,7 +18,7 @@ class Board(object):
     """
     DISABLE_SPRITE_MANAGER = False
 
-    def __init__(self, tiles):
+    def __init__(self, tiles: dict):
         """
         Initializes board with given parameters.
         :param tiles: dictionary of tiles
@@ -197,7 +197,7 @@ class Board(object):
         # Return resulting board
         return cls(tiles)
 
-    def remove_tile(self, pt) -> None:
+    def remove_tile(self, pt: (int, int)) -> None:
         """
         Removes a tile at the given position (if one exists) by
         replacing it with a Hole instead.
@@ -217,7 +217,7 @@ class Board(object):
         else:
             raise ValueError('No tile at given location!')
 
-    def get_tile(self, pt) -> AbstractTile:
+    def get_tile(self, pt: (int, int)) -> AbstractTile:
         """
         Returns the tile at the given point.
 
@@ -233,7 +233,7 @@ class Board(object):
 
         return self.__tiles.get(pt)
 
-    def render(self, parent_frame):
+    def render(self, parent_frame: tk.Frame):
         """
         Renders board to provided frame.
         :param parent_frame: frame to render board on

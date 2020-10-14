@@ -3,6 +3,7 @@
 import unittest
 import sys
 
+# Added folder containing test classes to path
 sys.path.append('Common/tests')
 
 

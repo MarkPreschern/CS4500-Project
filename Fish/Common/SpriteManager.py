@@ -6,7 +6,8 @@ from PIL import ImageTk, Image
 
 class SpriteManager(object):
     """
-    The SpriteManager manages game sprites.
+    The SpriteManager manages game sprites. It loads sprites from the SPRITE_PATH
+    and provisions them on command.
     """
 
     # Initialize empty sprite container to hold our sprites
