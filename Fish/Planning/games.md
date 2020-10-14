@@ -11,14 +11,16 @@ The representation will be constructed from a game state after all players have 
 A potential game representation in JSON (or Python) could look like this:
 
 ```json
-{
-  [0, 0]: {"SE": [[1, 0], [2, 1], [3, 1]], "S": [[2, 0], [4, 0]]},
-  [1, 0]: {"SE": [[2, 1], [3, 1]], "S": [[3, 0]], "NE": [[0, 1]], "NW": [[0, 0]], "SW": [[2, 0]]}
+[
+  [{"SE": [[1, 0], [2, 1], [3, 1]], "S": [[2, 0], [4, 0]]}, ..]
+  [{"SE": [[2, 1], [3, 1]], "S": [[3, 0]], "NE": [[0, 1]], "NW": [[0, 0]], "SW": [[2, 0]], ..]
   ..
-}
+]
 ```
 
-Each entry in the dictionary above is a position that is associated with a dictionary keyed with the directions in which moves are possibles from that position. Each direction in the dictionary (denoted using stringified shorthands for north (N), south (S), etc. ) is in turn an array containing all the positions that are accessible in that direction from the position key.
+In the two-dimensional array above, each entry can be identified by two indices representing the row and column location of the entry in the overall matrix. For example, ```arr[2][3]``` refers to position  row = 2 and column = 3.
+
+Content-wise, each entry is a dictionary keyed with the directions in which moves are possibles from that position. Each direction in the dictionary (denoted using stringified shorthands for north (N), south (S), etc. ) is in turn an array containing all the positions that are accessible in that direction from the position key.
 
 ### External interface
 
@@ -38,9 +40,9 @@ This method returns a list of all reachable positions from the given position.
 
 - pos is a tuple of the form (x, y), where x represents a row, and col represents a column.
 
->  get_map() -> {}
+>  get_map() -> []
 
-This method returns a dictionary of the entire game representation. Each entry in the representation is a start position that corresponds to a dictionary of directions and positions that are accessible from that start direction. See above for an example of what this may look like.
+This method returns an 2D array of the entire game representation. Each entry in the array is a dictionary of directions and positions that are accessible from a start direction. The start location of each entry is evinced by the row and column location of the entry in the overall array. See above for an example of what this may look like.
 
 The referee may use get_map() to periodically retrieve a master copy of the game to ensure game rules (i.e. that the moves being are valid).
 
