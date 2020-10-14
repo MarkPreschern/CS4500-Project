@@ -10,7 +10,7 @@ The representation will be constructed from a game state after all players have 
 
 A potential game representation in JSON (or Python) could look like this:
 
-```json
+```
 [
   [{"SE": [[1, 0], [2, 1], [3, 1]], "S": [[2, 0], [4, 0]]}, ..]
   [{"SE": [[2, 1], [3, 1]], "S": [[3, 0]], "NE": [[0, 1]], "NW": [[0, 0]], "SW": [[2, 0]], ..]
