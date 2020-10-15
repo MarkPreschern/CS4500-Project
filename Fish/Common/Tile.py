@@ -7,7 +7,7 @@ class Tile(AbstractTile):
     Represents a tile in the game onto which fish or players rest.
     """
 
-    def __init__(self, fish_no):
+    def __init__(self, fish_no: int):
         super().__init__()
         # Validate params
         if not isinstance(fish_no, int) or fish_no < ct.MIN_FISH_PER_TILE \

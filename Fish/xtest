@@ -1,0 +1,52 @@
+#!/usr/bin/python3
+
+import unittest
+import sys
+
+# Added folder containing test classes to path
+sys.path.append('Common/tests')
+
+
+from BoardTests import BoardTests
+from TileTests import TileTests
+from HoleTests import HoleTests
+from AbstractTileTests import AbstractTileTests
+from StateTests import StateTests
+from AvatarTests import AvatarTests
+from PlayerTests import PlayerTests
+
+
+def _create_test_suite(test_cases: [unittest.TestCase]) -> unittest.TestSuite:
+    """
+    Creates a test suite based on provided test cases.
+    :param test_cases: list of test cases to added to suite
+    :return: resulting test suite
+    """
+    suite = unittest.TestSuite()
+
+    # Add each test case to suite
+    for case in test_cases:
+        # Load tests of current test case
+        case_tests = unittest.defaultTestLoader.loadTestsFromTestCase(case)
+        # Add tests to suite
+        suite.addTest(case_tests)
+
+    return suite
+
+
+if __name__ == '__main__':
+    # Make up collection of test cases
+    tests = [BoardTests, TileTests, HoleTests, AbstractTileTests, StateTests,
+             AvatarTests, PlayerTests]
+
+    # Make up runner to run suite
+    runner = unittest.TextTestRunner()
+    # Run suite
+    result = runner.run(_create_test_suite(tests))
+
+    # Determine # of tests passed
+    tests_passed_no = result.testsRun - len(result.failures) \
+                      - len(result.skipped) - len(result.errors)
+    # Print results
+    print(f'\nTotal: {result.testsRun} Passed: {tests_passed_no} Failed:'
+          f' {len(result.errors + result.failures)}')

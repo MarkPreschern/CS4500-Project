@@ -1,4 +1,6 @@
 from Color import Color
+import constants as ct
+from Avatar import Avatar
 
 
 class Player(object):

@@ -1,4 +1,4 @@
-class InvalidPosition(Exception):
+class InvalidPositionException(Exception):
     """
     An exception signaling that the position
     is invalid.

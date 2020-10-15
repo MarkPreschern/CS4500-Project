@@ -6,17 +6,19 @@ from AbstractTile import AbstractTile
 import tkinter as tk
 import itertools
 from MovementDirection import MovementDirection
-from exceptions.InvalidPosition import InvalidPosition
+from exceptions.InvalidPositionException import InvalidPositionException
 from SpriteManager import SpriteManager
 
 
 class Board(object):
     """
-    Represents the board on which the game is played.
+    Represents the board on which the game is played. The board is encompasses
+    a collection of Tile(s) and Hole(s) that determine what straight line
+    paths that can be traversed  from any arbitrary position.
     """
     DISABLE_SPRITE_MANAGER = False
 
-    def __init__(self, tiles):
+    def __init__(self, tiles: dict):
         """
         Initializes board with given parameters.
         :param tiles: dictionary of tiles
@@ -151,7 +153,7 @@ class Board(object):
                     tiles.update({(row, col): Hole()})
                 elif one_fish_tile_cnt < min_one_fish_tile_no:
                     # Add one-fish tile
-                    tiles.update({(row, col) : Tile(1)})
+                    tiles.update({(row, col): Tile(1)})
                     one_fish_tile_cnt += 1
                 else:
                     # Generate an arbitrary number of fish
@@ -195,7 +197,7 @@ class Board(object):
         # Return resulting board
         return cls(tiles)
 
-    def remove_tile(self, pt) -> None:
+    def remove_tile(self, pt: (int, int)) -> None:
         """
         Removes a tile at the given position (if one exists) by
         replacing it with a Hole instead.
@@ -215,7 +217,7 @@ class Board(object):
         else:
             raise ValueError('No tile at given location!')
 
-    def get_tile(self, pt) -> AbstractTile:
+    def get_tile(self, pt: (int, int)) -> AbstractTile:
         """
         Returns the tile at the given point.
 
@@ -227,11 +229,11 @@ class Board(object):
             raise TypeError('Expected tuple object for pt!')
 
         if pt not in self.__tiles.keys():
-            raise InvalidPosition('No tile exists at given position!')
+            raise InvalidPositionException('No tile exists at given position!')
 
         return self.__tiles.get(pt)
 
-    def render(self, parent_frame):
+    def render(self, parent_frame: tk.Frame):
         """
         Renders board to provided frame.
         :param parent_frame: frame to render board on
@@ -262,7 +264,8 @@ class Board(object):
                 # Move tile to corresponding position
                 canvas.move(tile_sprite, x, y)
                 # Add correct fish sprite
-                fish_sprite = canvas.create_image(24, 20, image=SpriteManager.get_sprite(f'fish-{tile.fish_no}'), anchor=tk.NW)
+                fish_sprite = canvas.create_image(24, 20, image=SpriteManager.get_sprite(f'fish-{tile.fish_no}'),
+                                                  anchor=tk.NW)
                 # Move fish to corresponding position
                 canvas.move(fish_sprite, x, y)
             else:
@@ -298,11 +301,64 @@ class Board(object):
         for movement_dir in edges_to_adj_tiles:
             # Find all of the tiles in the same direction as the current direction
             tiles_in_path = self.__find_straight_path(pos, movement_dir, edge_list=edge_list)
-            
+
             # Add all tiles above to the overall list of reachable positions
             reachable_positions.extend(tiles_in_path)
 
         return reachable_positions
+
+    def get_connecting_positions(self, pos1: (int, int), pos2: (int, int)) -> [(int, int)]:
+        """
+        Retrieves a list of all point tuples connecting
+        the provided positions.
+
+        :param pos1: tuple of first position
+        :param pos2: tuple of second position
+        :return: resulting list
+        """
+        if not isinstance(pos1, tuple):
+            raise TypeError('Expected tuple for pos1')
+
+        if not isinstance(pos2, tuple):
+            raise TypeError('Expected tuple for pos2')
+
+        # Demultiplex positions into x,y coordinates
+        x1, y1 = pos1
+        x2, y2 = pos2
+
+        # No connecting points if the two are equal
+        if pos1 == pos2:
+            return []
+
+        # Determine direction
+        if y1 == y2:
+            if x2 > x1:
+                direction = MovementDirection.Bottom
+            else:
+                direction = MovementDirection.Top
+        elif y1 > y2:
+            if x1 == x2:
+                return []  # cannot move across corners
+            elif x1 > x2:
+                direction = MovementDirection.TopLeft
+            else:
+                direction = MovementDirection.BottomLeft
+        else:
+            if x2 > x1:
+                direction = MovementDirection.BottomRight
+            elif x1 > x2:
+                direction = MovementDirection.TopRight
+            else:
+                return []  # cannot move across corners
+
+        # Retrieves all positions in said direction from pos1
+        positions = self.__find_straight_path(pos1, direction)
+
+        # Check if pos2 is among the points in direct line path
+        if pos2 in positions:
+            return positions[:positions.index(pos2)]
+        else:
+            return []
 
     def __compute_reachable_edge_list(self) -> dict:
         """
@@ -358,10 +414,10 @@ class Board(object):
 
             if bottom_left in self.tiles.keys():
                 adjacent_tiles_dict[MovementDirection.BottomLeft] = bottom_left
-            
+
             # Set the edges list for the current position
             edges[pos] = adjacent_tiles_dict
-        
+
         return edges
 
     def __find_straight_path(self, start_pos, direction, edge_list=None) -> [(int, int)]:
@@ -383,17 +439,16 @@ class Board(object):
             raise TypeError('Expected MovementDirection for direction.')
         if edge_list and not isinstance(edge_list, dict):
             raise TypeError('Expected dict for edge_list')
-        
+
         # If an edge list was not provided, recompute the edges for this board
         if not edge_list:
             edge_list = self.__compute_reachable_edge_list()
-        
+
         # Store tiles in the current straight line path
         tiles_in_path = []
 
         # Keep track of the current position and the next position in the path
         current_pos = start_pos
-        next_pos = None
 
         # Iterate until the end of the path is reached or a hole is encountered
         while current_pos is not None:
@@ -403,13 +458,13 @@ class Board(object):
             # If the next tile in the path is a hole, break
             if next_pos and self.tiles[next_pos].is_hole:
                 break
-            
+
             # If there is a next position, append that position to the list
             if next_pos:
-                tiles_in_path.append(next_pos)           
+                tiles_in_path.append(next_pos)
 
-            # Update current pos and proceed down the straight line path or
+                # Update current pos and proceed down the straight line path or
             # break out of loop
             current_pos = next_pos
-        
+
         return tiles_in_path
