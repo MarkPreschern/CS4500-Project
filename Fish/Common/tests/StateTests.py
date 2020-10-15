@@ -17,6 +17,11 @@ from exceptions.NonExistentAvatarException import NonExistentAvatarException
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
+from exceptions.PlaceOutOfTurnException import PlaceOutOfTurnException
+from exceptions.NoMoreTurnsException import NoMoreTurnsException
+from exceptions.GameNotStartedException import GameNotStartedException
+from exceptions.NoMoreTurnsException import NoMoreTurnsException
+from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 
 
 class StateTests(unittest.TestCase):
@@ -221,7 +226,7 @@ class StateTests(unittest.TestCase):
 
     def test_move_avatar_fail3(self):
         # Test failure of move_avatar due to avatar id not being in game
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NonExistentAvatarException):
             state = State(self.__b, players=[
                 self.__p1,
                 self.__p2,
@@ -596,7 +601,6 @@ class StateTests(unittest.TestCase):
         # No one should be able to move
         self.assertFalse(state.can_anyone_move())
 
-
     def test_can_player_move_success3(self):
         # Tests successful can_player_move where one of
         # player's avatars is completely surrounded
@@ -670,3 +674,182 @@ class StateTests(unittest.TestCase):
         self.assertSequenceEqual(state.get_player_order(),
                                  [self.__p1.id, self.__p2.id,
                                   self.__p3.id, self.__p5.id])
+
+    def test_place_out_of_turn(self):
+        # Test the case where the player places out of turn
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Have player 2 place when it's player 1's turn
+        with self.assertRaises(PlaceOutOfTurnException):
+            state.place_avatar(3, (0, 0))
+
+    def test_move_out_of_turn(self):
+        # Test the case where the player moves out of turn
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Set up the board with placements
+        state.place_avatar(0, (0, 0))
+        state.place_avatar(2, (1, 0))
+        state.place_avatar(4, (0, 1))
+        state.place_avatar(6, (1, 1))
+        state.place_avatar(1, (2, 0))
+        state.place_avatar(3, (2, 1))
+        state.place_avatar(5, (3, 0))
+        state.place_avatar(7, (3, 1))
+
+        # Have player 2 place when it's player 1's turn
+        with self.assertRaises(MoveOutOfTurnException):
+            state.move_avatar(4, (4, 0))
+
+    def test_game_started(self):
+        # Test successful progress of game started field based on player placements
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Ensure the game hasn't started until all avatars are placed
+        self.assertFalse(state.game_started)
+
+        # Set up the board with placements
+        state.place_avatar(0, (0, 0))
+        state.place_avatar(2, (1, 0))
+        state.place_avatar(4, (0, 1))
+        state.place_avatar(6, (1, 1))
+
+        # Ensure again that the game hasn't started until all avatars are placed
+        self.assertFalse(state.game_started)
+
+        state.place_avatar(1, (2, 0))
+        state.place_avatar(3, (2, 1))
+        state.place_avatar(5, (3, 0))
+        state.place_avatar(7, (3, 1))
+
+        # Game should be started
+        self.assertTrue(state.game_started)
+
+    def test_current_player_updates(self):
+        # Test the proper updates of the current_player field based
+        # on valid game movements and player order
+        # Test successful progress of game started field based on player placements
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Set up the board with placements
+        state.place_avatar(0, (0, 0))
+        state.place_avatar(2, (1, 0))
+        state.place_avatar(4, (0, 1))
+        state.place_avatar(6, (1, 1))
+        state.place_avatar(1, (2, 0))
+        state.place_avatar(3, (2, 1))
+        state.place_avatar(5, (3, 0))
+        state.place_avatar(7, (3, 1))
+
+        # Current order is p1, p2, p3, p4
+        self.assertEqual(state.current_player, 1)
+
+        # Valid move that should trigger no exceptions and cause current player to
+        # increment
+        state.move_avatar(1, (4, 0))
+
+        # Play moves to p2
+        self.assertNotEqual(state.current_player, 1)
+        self.assertEqual(state.current_player, 2)
+
+        # Make move for p2
+        state.move_avatar(3, (4, 1))
+
+        # Play moves to p3
+        self.assertNotEqual(state.current_player, 2)
+        self.assertEqual(state.current_player, 3)
+
+        # Make move for p3
+        state.move_avatar(5, (5, 0))
+
+        # Play moves to p4
+        self.assertNotEqual(state.current_player, 3)
+        self.assertEqual(state.current_player, 4)
+
+        # Make move for p4
+        state.move_avatar(7, (5, 1))
+
+        # Play moves to p1
+        self.assertNotEqual(state.current_player, 4)
+        self.assertEqual(state.current_player, 1)
+
+    def test_player_skip_when_no_moves(self):
+        # Test the functionality of skipping players when they cannot make any moves
+        new_b = Board.homogeneous(3, 5, 2)
+        state = State(new_b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Set up the board with placements s.t. all of player 2's avatars are
+        # blocked
+        state.place_avatar(0, (3, 0))
+        state.place_avatar(2, (0, 0))
+        state.place_avatar(4, (1, 0))
+        state.place_avatar(6, (2, 0))
+        state.place_avatar(1, (3, 1))
+        state.place_avatar(3, (0, 1))
+        state.place_avatar(5, (1, 1))
+        state.place_avatar(7, (2, 1))
+
+        # Verify that it is player 1's turn
+        self.assertEqual(state.current_player, 1)
+
+        # Move one of player 1's avatars
+        state.move_avatar(1, (4, 1))
+
+        # Verify that it is not p1, p2, nor p3's turn
+        self.assertNotEqual(state.current_player, 1)
+        self.assertNotEqual(state.current_player, 2)
+        self.assertNotEqual(state.current_player, 3)
+
+        # Verify that it is actually player 4's turn and that p2 and p3 have been skipped
+        self.assertEqual(state.current_player, 4)
+
+    def test_game_over(self):
+        # Test the game until the game is over
+
+        # This exception will be thrown when the game ends
+        with self.assertRaises(NoMoreTurnsException):
+            new_b = Board.homogeneous(3, 5, 2)
+            state = State(new_b, players=[
+                self.__p1,
+                self.__p2,
+                self.__p3,
+                self.__p4])
+
+            # Set up the board with placements s.t. only 2 moves can be made
+            state.place_avatar(0, (3, 0))
+            state.place_avatar(2, (0, 0))
+            state.place_avatar(4, (1, 0))
+            state.place_avatar(6, (2, 0))
+            state.place_avatar(1, (3, 1))
+            state.place_avatar(3, (0, 1))
+            state.place_avatar(5, (1, 1))
+            state.place_avatar(7, (2, 1))
+
+            # Make move 1 for p1
+            state.move_avatar(1, (4, 1))
+
+            # Mave move 2 for p3, meaning game should end because all tiles are either
+            # occupied or holes
+            state.move_avatar(6, (4, 0))

@@ -218,15 +218,15 @@ class State(object):
         :param position: tuple position to move avatar
         :return: None
         """
-        # Validate type of player id
+        # Validate type of avatar id
         if not isinstance(avatar_id, int) or avatar_id < 0:
             raise TypeError('Expected integer for avatar id!')
 
-        # Make sure player id is in player list
+        # Make sure avatar id is in avatar list
         if avatar_id not in self.__avatars.keys():
-            raise ValueError('Avatar id not in avatar list!')
+            raise NonExistentAvatarException('Avatar id not in avatar list!')
 
-        # Make sure player has already placed their avatar
+        # Make sure avatar has already placed their avatar
         if avatar_id not in self.__placements:
             raise AvatarNotPlacedException()
 
@@ -254,6 +254,9 @@ class State(object):
 
         # Update position
         self.__placements.update({avatar_id: position})
+
+        # Replace previous position on the board with a hole
+        self.__board.remove_tile(current_pos)
 
         # Trigger next turn
         self.__trigger_next_turn()
