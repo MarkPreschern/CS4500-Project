@@ -14,6 +14,7 @@
 - General usage: 
 	- To be implemented in a future assignment
 
+- Before you run anything, run `make`
 - To run tests:
     - Unit tests:
         - run `./xtest`: doing so will run non-visual unit tests
