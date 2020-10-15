@@ -5,13 +5,19 @@ from Color import Color
 import constants as ct
 from collections import OrderedDict
 import tkinter as tk
+from itertools import cycle
+
 
 from exceptions.AvatarAlreadyPlacedException import AvatarAlreadyPlacedException
 from exceptions.AvatarNotPlacedException import AvatarNotPlacedException
+from exceptions.GameNotStartedException import GameNotStartedException
 from exceptions.InvalidPositionException import InvalidPositionException
 from SpriteManager import SpriteManager
+from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
+from exceptions.NoMoreTurnsException import NoMoreTurnsException
 from exceptions.NonExistentAvatarException import NonExistentAvatarException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
+from exceptions.PlaceOutOfTurnException import PlaceOutOfTurnException
 from exceptions.UnclearPathException import UnclearPathException
 
 
@@ -69,6 +75,57 @@ class State(object):
             # Create avatars for player
             self.__create_avatars(player_id=player.id, color=player.color)
 
+        # Create a circular list of player ids in order in which they go
+        self.__player_order = cycle(list(self.__players.keys()))
+
+        # Define variable to keep track of whose turn it is by player_id.
+        # It is initialized to be the first player in the collection's id
+        # as the collection is sorted in increasing order of age.
+        self.__current_player_id = next(self.__player_order)
+
+        # Indicates whether everyone has finished placing their avatar
+        # and the game has started
+        self.__game_started = False
+
+    @property
+    def current_player(self) -> int:
+        """
+        Returns the id of the player whose turn it is.
+        """
+        return self.__current_player_id
+
+    @property
+    def game_started(self) -> bool:
+        """
+        Returns a boolean indicating if game has started.
+        """
+        return self.__game_started
+
+    def __trigger_next_turn(self):
+        """
+        Triggers next turn by giving the next player
+        a turn.
+        """
+        if not self.can_anyone_move() and self.__game_started:
+            raise NoMoreTurnsException()
+
+        # Cycle over ordered circular list until a player who
+        # can move or is still placing has been found
+        for player_id in self.__player_order:
+            if not self.__game_started:
+                self.__current_player_id = player_id
+                break
+            elif self.__game_started and self.can_player_move(player_id):
+                self.__current_player_id = player_id
+                break
+
+    def get_player_order(self) -> []:
+        """
+        Returns the order in which the players go in
+        a sorted collection of player ids.
+        """
+        return list(self.__players.keys())
+
     def __create_avatars(self, player_id: int, color: Color) -> None:
         """
         Generates avatars of provided color for given player id.
@@ -108,6 +165,13 @@ class State(object):
         if avatar_id not in self.__avatars.keys():
             raise NonExistentAvatarException()
 
+        # Get player id for this avatar
+        player_id = self.__get_player_by_avatar_id(avatar_id).id
+
+        # Make sure they are not placing out of turn
+        if self.__current_player_id != player_id:
+            raise PlaceOutOfTurnException(f'{self.__current_player_id} {player_id}')
+
         # Make sure target position is not occupied by another player or
         # a hole
         if self.__is_position_occupied_or_hole(position):
@@ -115,6 +179,13 @@ class State(object):
 
         # Update placement to reflect updated avatar's position
         self.__placements.update({avatar_id: position})
+
+        # If everyone has placed, start game
+        if self.__has_everyone_placed():
+            self.__game_started = True
+
+        # Trigger next turn
+        self.__trigger_next_turn()
 
     def __is_position_occupied_or_hole(self, position: (int, int)) -> bool:
         """
@@ -162,6 +233,17 @@ class State(object):
         if not isinstance(position, tuple):
             raise TypeError('Expected tuple for position!')
 
+        # If not everyone has placed, then no one can move
+        if not self.__game_started:
+            raise GameNotStartedException()
+
+        # Get player for this avatar
+        player_id = self.__get_player_by_avatar_id(avatar_id)
+
+        # Make sure it's their turn
+        if self.__current_player_id != player_id.id:
+            raise MoveOutOfTurnException(f'{self.__current_player_id} {player_id}')
+
         # Retrieve avatar's current position
         current_pos = self.__placements.get(avatar_id)
 
@@ -171,6 +253,9 @@ class State(object):
 
         # Update position
         self.__placements.update({avatar_id: position})
+
+        # Trigger next turn
+        self.__trigger_next_turn()
 
     def __is_path_clear(self, pos1: (int, int), pos2: (int, int)) -> bool:
         """
@@ -206,10 +291,37 @@ class State(object):
 
         return True
 
+    def __has_everyone_placed(self) -> bool:
+        """
+        Returns boolean indicating if everyone has placed their
+        avatars.
+        :return: resulting boolean
+        """
+
+        return len(self.__placements) == self.__avatars_per_player * len(self.__players)
+
+    def can_anyone_move(self) -> bool:
+        """
+        Tells if any player can move any of their avatars.
+        :return: boolean indicating whether anyone can move
+        """
+        # If the game hasn't started, no one can move
+        if not self.__game_started:
+            return False
+
+        # Cycle over players and return true if any of them
+        # can move
+        for player_id in self.__players.keys():
+            if self.can_player_move(player_id):
+                return True
+
+        return False
+
     def can_player_move(self, player_id: int) -> bool:
         """
         Tells if player with given player_id can perform a move.
-        :return: boolean indicating whether anyone
+        :param player_id: id of player for whom to check
+        :return: boolean indicating whether player
                  can move
         """
         # Validate player_id
@@ -219,6 +331,10 @@ class State(object):
         # Make sure player_id is in player collection
         if player_id not in self.__players.keys():
             raise NonExistentPlayerException()
+
+        # If the game hasn't started, no one can move
+        if not self.__game_started:
+            return False
 
         # Get avatar ids for this player
         avatar_ids = self.get_avatars_by_player_id(player_id)

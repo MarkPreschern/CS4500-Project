@@ -5,8 +5,6 @@ sys.path.append('Common/')
 
 from exceptions.InvalidPositionException import InvalidPositionException
 
-from exceptions.InvalidPosition import InvalidPosition
-
 from Board import Board
 from Tile import Tile
 from Hole import Hole
