@@ -106,6 +106,7 @@ class State(object):
         Triggers next turn by giving the next player
         a turn.
         """
+        # Check if game over
         if not self.can_anyone_move() and self.__game_started:
             raise NoMoreTurnsException()
 
@@ -261,6 +262,7 @@ class State(object):
         """
         Checks if the path is clear of holes and avatars
         from pos1 to pos2.
+
         :param pos1: start position
         :param pos2: end position
         :return: boolean indicating if condition is fulfilled
