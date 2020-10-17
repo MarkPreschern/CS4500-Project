@@ -4,14 +4,34 @@ Under each of the following elements below, indicate below where your
 TAs can find:
 
 - the data description of states, including an interpretation:
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/State.py#L24-L29
+  - The referenced snippet includes a description of what a state is. It lacks a thorough interpretation, however.
 
 - a signature/purpose statement of functionality that creates states 
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/State.py#L31-L37
+  - The referenced snippet includes a constructor of State with type-annotated parameters, as well as a brief purpose statement beneath it.
 
-- unit tests for functionality of taking a turn 
+- unit tests for functionality of taking a turn
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L207-L458
+  - The tests referenced above test a player's successful and unsuccessful attempts at taking a turn by moving their avatar.
 
-- unit tests for functionality of placing an avatar 
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L690-L710
+  - The snippet referenced above is a test of player trying to take a turn (make a move) out of turn.
+
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L741-L792
+  - The snippet above tests a series of players taking turns and ensures that the state correctly assigns the next player to go.
+
+- unit tests for functionality of placing an avatar
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L103-L205
+
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L678-L688
+  - The two snippets above test a series of erroneous and valid avatar placements.
 
 - unit tests for functionality of final-state test
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L540
+  - The above code performs a final-state test to ascertain whether anyone can move after a player has made a move.
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L828-L855
+  - The test referenced above tests a game-over scenario where no more moves are possible. Internally, can_anyone_move() is leveraged to throw the *NoMoreTurnsException* exception, which is telling of the "final state".
 
 The ideal feedback is a GitHub perma-link to the range of lines in specific
 file or a collection of files for each of the above bullet points.
@@ -33,13 +53,9 @@ the specified code snippets answers the request.
 
 Select ONE of the following choices by deleting the other two options.
 
-A) My partner and I contributed equally to this assignment. 
-
 B) My partner and I contributed not *exactly* equally, but *roughly*
    equally to this assignment.
 
-C) My partner and I did not contribute roughly equally to this
-   assignment; one of us contributed significantly more.
 
 If you chose C, please give some further explanation below describing
 the state of your partnership and whether and how you have been or are
