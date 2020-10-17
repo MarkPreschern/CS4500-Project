@@ -9,7 +9,7 @@ TAs can find:
 
 - a signature/purpose statement of functionality that creates states 
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/State.py#L31-L37
-  - The referenced snippet includes a constructor of State with type-annotated parameters, as well as a brief purpose statement beneath it.
+  - The referenced snippet includes a constructor of State with type-annotated parameters, parameter descriptions, as well as a brief purpose statement.
 
 - unit tests for functionality of taking a turn
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L207-L458
@@ -28,7 +28,7 @@ TAs can find:
   - The two snippets above test a series of erroneous and valid avatar placements.
 
 - unit tests for functionality of final-state test
-  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L540
+  - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L540-L569
   - The above code performs a final-state test to ascertain whether anyone can move after a player has made a move.
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L828-L855
   - The test referenced above tests a game-over scenario where no more moves are possible. Internally, can_anyone_move() is leveraged to throw the *NoMoreTurnsException* exception, which is telling of the "final state".
