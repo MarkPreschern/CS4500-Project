@@ -23,9 +23,10 @@ TAs can find:
 
 - unit tests for functionality of placing an avatar
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L103-L205
+  - The snippet of tests above test a series of erroneous and valid avatar placements.
 
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L678-L688
-  - The two snippets above test a series of erroneous and valid avatar placements.
+  - The test referenced above tests the case of a player attempting to place their avatar out of turn.
 
 - unit tests for functionality of final-state test
   - https://github.ccs.neu.edu/CS4500-F20/wellman/blob/4b53e5a0aa2f4d3cea2909980670791909cc48c9/Fish/Common/tests/StateTests.py#L540-L569
