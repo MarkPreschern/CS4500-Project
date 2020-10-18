@@ -1,4 +1,4 @@
-from AbstractTile import AbstractTile
+from abstract_tile import AbstractTile
 
 
 class Hole(AbstractTile):

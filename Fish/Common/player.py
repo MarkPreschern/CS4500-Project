@@ -1,4 +1,4 @@
-from Color import Color
+from color import Color
 
 
 class Player(object):

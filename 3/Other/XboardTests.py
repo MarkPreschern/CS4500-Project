@@ -10,9 +10,9 @@ import xboard
 
 sys.path.append("../Fish/Common")
 
-from Board import Board
-from Tile import Tile
-from Hole import Hole
+from board import Board
+from tile import Tile
+from hole import Hole
 
 
 class XboardTests(unittest.TestCase):

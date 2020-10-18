@@ -8,9 +8,9 @@ import sys
 
 sys.path.append("../Fish/Common/")
 
-from Tile import Tile
-from Hole import Hole
-from Board import Board
+from tile import Tile
+from hole import Hole
+from board import Board
 
 # The pattern for the input filepaths
 INPUT_FILEPATH = "Tests/*-in.json"

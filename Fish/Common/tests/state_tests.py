@@ -1,29 +1,23 @@
-import unittest
 import sys
+import unittest
 
-from Position import Position
+from game_status import GameStatus
 
 sys.path.append('../')
 
-from State import State
-from Player import Player
-from Board import Board
-from Color import Color
+from state import State
+from player import Player
+from board import Board
+from color import Color
 from collections import OrderedDict
-import tkinter as tk
-from ext.MockHelper import MockHelper
+from position import Position
 
-from exceptions.AvatarAlreadyPlacedException import AvatarAlreadyPlacedException
-from exceptions.AvatarNotPlacedException import AvatarNotPlacedException
-from exceptions.NonExistentAvatarException import NonExistentAvatarException
+from exceptions.InvalidActionException import InvalidActionException
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
-from exceptions.PlaceOutOfTurnException import PlaceOutOfTurnException
+from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.NoMoreTurnsException import NoMoreTurnsException
-from exceptions.GameNotStartedException import GameNotStartedException
-from exceptions.NoMoreTurnsException import NoMoreTurnsException
-from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 
 
 class StateTests(unittest.TestCase):
@@ -124,8 +118,8 @@ class StateTests(unittest.TestCase):
 
     def test_place_avatar_fail3(self):
         # Test failure of place_avatar due to there being no more
-        # avatars too place
-        with self.assertRaises(NonExistentAvatarException):
+        # avatars to place
+        with self.assertRaises(InvalidActionException):
             state = State(self.__b, players=[
                 self.__p1,
                 self.__p2,
@@ -141,7 +135,6 @@ class StateTests(unittest.TestCase):
             state.place_avatar(Position(3, 1))
             state.place_avatar(Position(1, 1))
             state.place_avatar(Position(3, 2))
-
 
     def test_place_avatar_fail4(self):
         # Test failure of place_avatar due invalid position
@@ -162,14 +155,14 @@ class StateTests(unittest.TestCase):
 
         state.place_avatar(Position(1, 0))
 
-        expected = {0: Position(1, 0)}
+        expected = {Position(1, 0) : 1}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
         # Test a second placement
         state.place_avatar(Position(0, 0))
 
-        expected = {0: Position(1, 0), 3: Position(0, 0)}
+        expected = {Position(1, 0) : 1, Position(0, 0): 2}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
@@ -284,21 +277,21 @@ class StateTests(unittest.TestCase):
 
         # Test a move
         state.move_avatar(Position(1, 0), Position(0, 0))
-        expected = {0: Position(4, 0), 1: Position(0, 0),
-                    2: Position(1, 1), 3: Position(0, 1),
-                    4: Position(2, 0), 5: Position(4, 1),
-                    6: Position(2, 2), 7: Position(3, 2),
-                    8: Position(3, 0)}
+        expected = {Position(4, 0) : 1, Position(0, 0): 1,
+                    Position(1, 1) : 1, Position(0, 1) : 2,
+                    Position(2, 0) : 2, Position(4, 1) : 2,
+                    Position(2, 2) : 3, Position(3, 2) : 3,
+                    Position(3, 0) : 3}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
         # Test a second move
         state.move_avatar(Position(0, 1), Position(2, 1))
-        expected = {0: Position(4, 0), 1: Position(0, 0),
-                    2: Position(1, 1), 3: Position(2, 1),
-                    4: Position(2, 0), 5: Position(4, 1),
-                    6: Position(2, 2), 7: Position(3, 2),
-                    8: Position(3, 0)}
+        expected = {Position(4, 0) : 1, Position(0, 0): 1,
+                    Position(1, 1) : 1, Position(2, 1) : 2,
+                    Position(2, 0) : 2, Position(4, 1) : 2,
+                    Position(2, 2) : 3, Position(3, 2) : 3,
+                    Position(3, 0) : 3}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
@@ -364,7 +357,7 @@ class StateTests(unittest.TestCase):
     def test_move_avatar_no_placement(self):
         # Test failure of move_avatar when a player tries to move
         # without an initial placement
-        with self.assertRaises(NonExistentAvatarException):
+        with self.assertRaises(GameNotRunningException):
             state = State(self.__b, players=[
                 self.__p1,
                 self.__p2,
@@ -614,30 +607,6 @@ class StateTests(unittest.TestCase):
 
         self.assertTrue(state.can_player_move(4))
 
-    def test_get_avatars_by_player_id_fail1(self):
-        # Tests get_avatars_by_player_id failing due to
-        # invalid player_id
-        state = State(self.__b, players=[
-            self.__p1,
-            self.__p2])
-
-        with self.assertRaises(TypeError):
-            state._State__get_avatar_ids_by_player_id(-1)
-
-        with self.assertRaises(TypeError):
-            state._State__get_avatar_ids_by_player_id('hoola hoop')
-
-    def test_get_avatars_by_player_id_success1(self):
-        # Tests successful get_avatars_by_player_id
-        # that returns player's avatars' ids
-        state = State(self.__b, players=[
-            self.__p1,
-            self.__p2])
-
-        expected = [0, 1, 2, 3]
-
-        self.assertEqual(state._State__get_avatar_ids_by_player_id(1), expected)
-
     def test_get_player_order1(self):
         # Tests player order for two players
         state = State(self.__b, players=[
@@ -668,7 +637,7 @@ class StateTests(unittest.TestCase):
             self.__p4])
 
         # Ensure the game hasn't started until all avatars are placed
-        self.assertFalse(state.game_started)
+        self.assertEqual(state.game_status, GameStatus.PLACING)
 
         # Set up the board with placements
         state.place_avatar(Position(0, 0))
@@ -677,7 +646,7 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Position(1, 1))
 
         # Ensure again that the game hasn't started until all avatars are placed
-        self.assertFalse(state.game_started)
+        self.assertEqual(state.game_status, GameStatus.PLACING)
 
         state.place_avatar(Position(2, 0))
         state.place_avatar(Position(2, 1))
@@ -685,7 +654,7 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Position(3, 1))
 
         # Game should be started
-        self.assertTrue(state.game_started)
+        self.assertEqual(state.game_status, GameStatus.RUNNING)
 
     def test_current_player_updates(self):
         # Test the proper updates of the current_player field based
@@ -812,18 +781,18 @@ class StateTests(unittest.TestCase):
         # Player 4
         state.place_avatar(Position(2, 1))
 
-        # This exception will be thrown when the game ends
-        with self.assertRaises(NoMoreTurnsException):
+        # Make move 1 for p1
+        state.move_avatar(Position(3, 1), Position(4, 1))
 
-            # Make move 1 for p1
-            state.move_avatar(Position(3, 1), Position(4, 1))
+        # Make sure at least one player can still move
+        self.assertTrue(state.can_anyone_move())
 
-            # Make sure at least one player can still move
-            self.assertTrue(state.can_anyone_move())
-
-            # Make move 2 for p3, meaning game should end because all tiles are either
-            # occupied or holes
-            state.move_avatar(Position(2, 0), Position(4, 0))
+        # Make move 2 for p3, meaning game should end because all tiles are either
+        # occupied or holes
+        state.move_avatar(Position(2, 0), Position(4, 0))
 
         # Make sure no one can move
         self.assertFalse(state.can_anyone_move())
+
+        # Make sure it's game over
+        self.assertEqual(state.game_status, GameStatus.OVER)

@@ -3,7 +3,7 @@ import unittest
 
 sys.path.append('../')
 
-from Hole import Hole
+from hole import Hole
 
 
 class HoleTests(unittest.TestCase):

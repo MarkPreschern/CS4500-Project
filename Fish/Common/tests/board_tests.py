@@ -1,17 +1,17 @@
 import unittest
 import sys
 
-from Position import Position
 
 sys.path.append('Common/')
 
 from exceptions.InvalidPositionException import InvalidPositionException
 
-from Board import Board
-from Tile import Tile
-from Hole import Hole
+from board import Board
+from position import Position
+from tile import Tile
+from hole import Hole
 import tkinter as tk
-from MovementDirection import MovementDirection
+from movement_direction import MovementDirection
 
 
 class BoardTests(unittest.TestCase):

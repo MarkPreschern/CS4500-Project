@@ -1,16 +1,20 @@
 import copy
 
-from Position import Position
-from State import State
+from action import Action
+from game_status import GameStatus
+from position import Position
+from state import State
+from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
 
 
 class GameTree(object):
     """
-    Represents a game tree representation. The representation can be used to represent
-    entire games and enables parties to check rules and plan their next moves. It
-    is generated from a state and can maintain connections to subsequent game states
-    by way of other GameTree(s).
+    Represents an entire game starting from a given state. The representation can be
+    used by parties to check rules and plan their next moves. It is generated from
+    a state and can maintain connections to subsequent game states by way of other
+    GameTree(s). The structure follows a lazy, generative design meaning that
+    adjacent trees are not connected until there is an explicit "need".
     """
 
     def __init__(self, state: State):
@@ -23,12 +27,22 @@ class GameTree(object):
         :param state: State object to based game tree off of
         :return: resulting GameTree object
         """
+        # Validate state
+        if not isinstance(state, State):
+            raise TypeError('Expected State object for state!')
 
         # Initialize state
         self.__state = state
 
-        # Initialize dictionary of "actions to GameTree objects"
-        # to hold subsequent game trees
+        # Make sure the state is one in which everyone has finished
+        # placing their penguins
+        if self.__state.game_status == GameStatus.PLACING:
+            raise GameNotRunningException()
+
+        # Initialize dictionary of actions to GameTree objects.
+        # to hold subsequent game trees. An action is defined as
+        # a tuple of Position(s) to denote a move from the former
+        # position to the latter.
         self.__children = {}
 
     @property
@@ -36,14 +50,14 @@ class GameTree(object):
         """
         Returns a list of all GameTrees that derive from this GameTree.
         """
-        return copy.deepcopy(self.__children)
+        return self.__children
 
     @property
     def state(self) -> State:
         """
         Returns a copy of the GameState that the tree is based off of.
         """
-        return copy.deepcopy(self.__state)
+        return self.__state
 
     def flesh_out(self):
         """
@@ -55,7 +69,7 @@ class GameTree(object):
         """
 
         # Get all possible actions for this tree's underlying state
-        actions: [(Position, Position)] = self.__state.get_possible_actions()
+        actions: [Action] = self.__state.get_possible_actions()
 
         # For each possible action
         for action in actions:
@@ -70,23 +84,22 @@ class GameTree(object):
             self.__children.update({action: GameTree(subsequent_state)})
 
     @classmethod
-    def try_action(cls, state: State, action: (Position, Position)):
+    def try_action(cls, state: State, action: Action):
         """
         Tries to perform the given action or fails. If successful, the
         function returns the resulting state from performing provided
         action, otherwise it throws an InvalidActionException().
 
         :param state: State object to perform action on
-        :param action: tuple of Positions representing move to make
+        :param action: Action object representing move to make
         :return: resulting game state
         """
         # Validate parameters
         if not isinstance(state, State):
             raise TypeError('Expected State object for state!')
 
-        if not isinstance(action, ((int, int), (int, int))):
-            raise TypeError('Expected a tuple of two positions for'
-                            'action!')
+        if not isinstance(action, Action):
+            raise TypeError('Expected a Action object for action!')
 
         # Create game tree for given state
         tree = cls(state)
@@ -110,6 +123,7 @@ class GameTree(object):
         """
         Applies given function to all child states that are
         reachable from the provided state.
+
         :param state: State object whose children to apply function to
         :param fn: function to apply
         :return: list of results of applying given function to child

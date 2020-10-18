@@ -3,14 +3,14 @@
 from tkinter import Tk, Frame
 import sys
 
-from Position import Position
+from position import Position
 
 sys.path.append('../')
 
-from Board import Board
-from State import State
-from Player import Player
-from Color import Color
+from board import Board
+from state import State
+from player import Player
+from color import Color
 
 
 # Make up window
@@ -27,29 +27,33 @@ b = Board.homogeneous(1, rows=10, cols=4)
 
 # Build state
 s = State(b, [Player(1, 'Bob', 20, Color.RED),
-              Player(2, 'Larry', 30, Color.BLACK)])
+              Player(2, 'Larry', 30, Color.BLACK),
+              Player(3, "Gary", 102, Color.WHITE)])
 
+# Place all avatars
 # Player 1 place
-s.place_avatar(Position(0, 0))
+s.place_avatar(Position(4, 0))
 # Player 2 place
-s.place_avatar(Position(5, 2))
+s.place_avatar(Position(0, 1))
+# Player 3 place
+s.place_avatar(Position(2, 2))
 # Player 1 place
-s.place_avatar(Position(1, 2))
+s.place_avatar(Position(1, 0))
 # Player 2 place
-s.place_avatar(Position(6, 0))
+s.place_avatar(Position(2, 0))
+# Player 3 place
+s.place_avatar(Position(3, 2))
 # Player 1 place
-s.place_avatar(Position(5, 3))
+s.place_avatar(Position(1, 1))
 # Player 2 place
-s.place_avatar(Position(7, 2))
-# Player 1 place
-s.place_avatar(Position(5, 0))
-# Player 2 place
-s.place_avatar(Position(8, 3))
+s.place_avatar(Position(4, 1))
+# Player 3 place
+s.place_avatar(Position(3, 0))
 
 # Move player 1 avatar
-s.move_avatar(Position(0, 0), Position(3, 1))
+s.move_avatar(Position(1, 0), Position(7, 3))
 # Move player 2 avatar
-s.move_avatar(Position(7, 2), Position(8, 2))
+s.move_avatar(Position(4, 1), Position(3, 1))
 
 s.render(frame)
 # Run tk mainloop

@@ -5,7 +5,7 @@ import sys
 
 sys.path.append('../')
 
-from Board import Board
+from board import Board
 
 # Make up window
 _window = Tk()

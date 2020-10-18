@@ -4,7 +4,7 @@ import constants as ct
 
 sys.path.append('../')
 
-from Tile import Tile
+from tile import Tile
 
 
 class TileTests(unittest.TestCase):

@@ -1,7 +1,6 @@
-class AvatarNotPlacedException(Exception):
+class GameNotRunningException(Exception):
     """
-    An exception signaling that an avatar has not been
-    placed.
+    An exception signaling that the game is not running.
     """
     def __init__(self, msg=""):
         """

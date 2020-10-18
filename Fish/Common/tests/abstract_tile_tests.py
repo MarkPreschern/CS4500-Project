@@ -3,7 +3,7 @@ import unittest
 
 sys.path.append('../')
 
-from AbstractTile import AbstractTile
+from abstract_tile import AbstractTile
 
 
 class AbstractTileTests(unittest.TestCase):

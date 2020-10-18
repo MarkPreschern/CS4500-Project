@@ -3,8 +3,8 @@ import unittest
 
 sys.path.append('../')
 
-from Player import Player
-from Color import  Color
+from player import Player
+from color import  Color
 
 
 class PlayerTests(unittest.TestCase):

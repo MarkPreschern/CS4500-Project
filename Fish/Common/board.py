@@ -1,14 +1,14 @@
 from random import randint
 import constants as ct
-from Hole import Hole
-from Position import Position
-from Tile import Tile
-from AbstractTile import AbstractTile
+from hole import Hole
+from position import Position
+from tile import Tile
+from abstract_tile import AbstractTile
 import tkinter as tk
 import itertools
-from MovementDirection import MovementDirection
+from movement_direction import MovementDirection
 from exceptions.InvalidPositionException import InvalidPositionException
-from SpriteManager import SpriteManager
+from sprite_manager import SpriteManager
 
 
 class Board(object):
