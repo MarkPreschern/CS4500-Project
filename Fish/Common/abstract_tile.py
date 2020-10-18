@@ -15,3 +15,10 @@ class AbstractTile(object):
         Checks whether object is a tile.
         """
         return False
+
+    @property
+    def fish_no(self):
+        """
+        Retrieves the number of fish to the tile.
+        """
+        return 0

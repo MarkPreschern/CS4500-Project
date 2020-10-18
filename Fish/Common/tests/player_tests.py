@@ -41,3 +41,28 @@ class PlayerTests(unittest.TestCase):
         self.assertEqual(player.name, 'seth')
         self.assertEqual(player.age, 23)
         self.assertEqual(player.color, Color.WHITE)
+        self.assertEqual(player.score, 0)
+
+    def test_score_fail1(self):
+        # Tests failing score due to invalid type
+        player = Player(99, 'iBot', 100, Color.WHITE)
+
+        with self.assertRaises(TypeError):
+            player.score = -1
+
+    def test_score_fail2(self):
+        # Tests failing score due to invalid type
+        player = Player(99, 'iBot', 100, Color.WHITE)
+
+        with self.assertRaises(TypeError):
+            player.score = 'whaa'
+
+    def test_score_success(self):
+        # Tests successful score setter & getter
+        player = Player(99, 'iBot', 100, Color.WHITE)
+
+        # Increment player's score by 10
+        player.score += 10
+
+        # Run check
+        self.assertEqual(player.score, 10)

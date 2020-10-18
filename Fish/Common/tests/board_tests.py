@@ -25,9 +25,11 @@ class BoardTests(unittest.TestCase):
         # tkinter is not initialized
         Board.DISABLE_SPRITE_MANAGER = True
         # Make up board with no holes
-        self.__no_hole_board1 = Board.min_oft_and_holes(4, [(2, 3), (1, 2)])
+        self.__hole_board1 = Board.min_oft_and_holes(4, [(2, 3), (1, 2)])
+        self.__no_hole_board1 = Board.min_oft_and_holes(4, [])
 
-        self.__no_hole_board2 = Board.homogeneous(2, 10, 5)
+
+        self.__homogeneous_board1 = Board.homogeneous(2, 10, 5)
 
     def test_init_fail1(self):
         # Tests constructor failing due to invalid tiles collection
@@ -190,29 +192,29 @@ class BoardTests(unittest.TestCase):
         # Tests failing remove_tile due to point provided
         # being invalid
         with self.assertRaises(ValueError):
-            self.__no_hole_board1.remove_tile([12, 'ok'])
+            self.__hole_board1.remove_tile([12, 'ok'])
 
     def test_remove_tile_fail2(self):
         # Tests failing remove_tile due to point provided
         # not existing
         with self.assertRaises(InvalidPositionException):
-            self.__no_hole_board1.remove_tile(Position(32, 23))
+            self.__hole_board1.remove_tile(Position(32, 23))
 
     def test_remove_tile_success(self):
         # Tests successful remove_tile
-        self.__no_hole_board1.remove_tile(Position(0, 0))
+        self.__hole_board1.remove_tile(Position(0, 0))
         # Tile should not be a hole
-        self.assertTrue(self.__no_hole_board1.get_tile(Position(0, 0)).is_hole)
+        self.assertTrue(self.__hole_board1.get_tile(Position(0, 0)).is_hole)
 
     def test_get_tile_fail1(self):
         # Tests failing get_tile due to point being invalid
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.get_tile('ok')
+            self.__hole_board1.get_tile('ok')
 
     def test_get_tile_fail2(self):
         # Tests failing get_tile due to non-existent point
         with self.assertRaises(InvalidPositionException):
-            self.__no_hole_board1.get_tile(Position(120, 10))
+            self.__hole_board1.get_tile(Position(120, 10))
 
     def test_get_tile_success(self):
         # Tests successful get_tile
@@ -230,7 +232,7 @@ class BoardTests(unittest.TestCase):
         # Tests failing render due to an invalid frame being
         # provided
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.render('ohai')
+            self.__hole_board1.render('ohai')
 
     def test_get_reachable_positions_homogenous(self):
         # Test get_reachable_positions for a homogenous board
@@ -316,12 +318,12 @@ class BoardTests(unittest.TestCase):
     def test_get_reachable_positions_fail1(self):
         # Test failed reachable position computation due to invalid position typing
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.get_reachable_positions([0])
+            self.__hole_board1.get_reachable_positions([0])
 
     def test_get_reachable_positions_fail2(self):
         # Test failed reachable position computation due to invalid position on board
         with self.assertRaises(ValueError):
-            self.__no_hole_board1.get_reachable_positions(Position(100, -5))
+            self.__hole_board1.get_reachable_positions(Position(100, -5))
 
     def test_get_reachable_positions_on_single_tile(self):
         # Test get_reachable_positions on a board with one tile
@@ -411,89 +413,89 @@ class BoardTests(unittest.TestCase):
     def test_find_straight_path_fail1(self):
         # Test failed find straight path due to invalid pos
         with self.assertRaises(TypeError):
-            self.__no_hole_board1._Board__find_straight_path([100, -5], MovementDirection.Top)
+            self.__hole_board1._Board__find_straight_path([100, -5], MovementDirection.Top)
 
     def test_find_straight_path_fail2(self):
         # Test failed find straight path due to invalid direction
         with self.assertRaises(TypeError):
-            self.__no_hole_board1._Board__find_straight_path(Position(0, 0), "TopRight")
+            self.__hole_board1._Board__find_straight_path(Position(0, 0), "TopRight")
 
     def test_find_straight_path_fail3(self):
         # Test failed find straight path due to invalid edge list
         with self.assertRaises(TypeError):
-            self.__no_hole_board1._Board__find_straight_path(Position(0, 0), MovementDirection.TopRight,
-                                                             edge_list=[Position(0, 0), Position(1, 0)])
+            self.__hole_board1._Board__find_straight_path(Position(0, 0), MovementDirection.TopRight,
+                                                          edge_list=[Position(0, 0), Position(1, 0)])
 
     def test_get_connecting_positions_fail1(self):
         # Test that fails due to invalid parameter types
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.get_connecting_positions(0, ())
+            self.__hole_board1.get_connecting_positions(0, ())
 
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.get_connecting_positions((), 0)
+            self.__hole_board1.get_connecting_positions((), 0)
 
         with self.assertRaises(TypeError):
-            self.__no_hole_board1.get_connecting_positions((), (2))
+            self.__hole_board1.get_connecting_positions((), (2))
 
     def test_get_connecting_positions_success1(self):
         # Tests successful get_connecting_positions with no points in-between
-        result = self.__no_hole_board1.get_connecting_positions(Position(3, 3), Position(3, 3))
+        result = self.__hole_board1.get_connecting_positions(Position(3, 3), Position(3, 3))
 
         self.assertEqual(result, [])
 
-        result = self.__no_hole_board1.get_connecting_positions(Position(0, 0), Position(1, 0))
+        result = self.__hole_board1.get_connecting_positions(Position(0, 0), Position(1, 0))
 
         self.assertEqual(result, [])
 
-        result = self.__no_hole_board1.get_connecting_positions(Position(0, 0), Position(2, 0))
+        result = self.__hole_board1.get_connecting_positions(Position(0, 0), Position(2, 0))
 
         self.assertEqual(result, [])
 
     def test_get_connecting_positions_success2(self):
         # Tests successful get_connecting_positions with 1 point in-between
         # going SE
-        result = self.__no_hole_board1.get_connecting_positions(Position(0, 0), Position(2, 1))
+        result = self.__hole_board1.get_connecting_positions(Position(0, 0), Position(2, 1))
 
         self.assertEqual(result, [Position(1, 0)])
 
     def test_get_connecting_positions_success3(self):
         # Tests successful get_connecting_positions with 2 points in-between
         # going SE
-        result = self.__no_hole_board1.get_connecting_positions(Position(0, 0), Position(3, 1))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(0, 0), Position(3, 1))
 
         self.assertEqual(result, [Position(1, 0), Position(2, 1)])
 
     def test_get_connecting_positions_success4(self):
         # Tests successful get_connecting_positions with 1 points in-between
         # going NE
-        result = self.__no_hole_board1.get_connecting_positions(Position(3, 0), Position(1, 1))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(3, 0), Position(1, 1))
 
         self.assertEqual(result, [Position(2, 1)])
 
     def test_get_connecting_positions_success5(self):
         # Tests successful get_connecting_positions with 1 points in-between
         # going SW
-        result = self.__no_hole_board2.get_connecting_positions(Position(2, 1), Position(4, 0))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(2, 1), Position(4, 0))
 
         self.assertEqual(result, [Position(3, 0)])
 
     def test_get_connecting_positions_success6(self):
         # Tests successful get_connecting_positions with 2 points in-between
         # going NW
-        result = self.__no_hole_board2.get_connecting_positions(Position(3, 1), Position(0, 0))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(3, 1), Position(0, 0))
 
         self.assertEqual(result, [Position(2, 1), Position(1, 0)])
 
     def test_get_connecting_positions_success7(self):
         # Tests successful get_connecting_positions with 2 points in-between
         # going N
-        result = self.__no_hole_board2.get_connecting_positions(Position(6, 0), Position(0, 0))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(6, 0), Position(0, 0))
 
         self.assertEqual(result, [Position(4, 0), Position(2, 0)])
 
     def test_get_connecting_positions_success8(self):
         # Tests successful get_connecting_positions with 2 points in-between
         # going S
-        result = self.__no_hole_board2.get_connecting_positions(Position(0, 0), Position(6, 0))
+        result = self.__homogeneous_board1.get_connecting_positions(Position(0, 0), Position(6, 0))
 
         self.assertEqual(result, [Position(2, 0), Position(4, 0)])

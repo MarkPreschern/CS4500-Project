@@ -1,6 +1,7 @@
 import sys
 import unittest
 
+from action import Action
 from game_status import GameStatus
 
 sys.path.append('../')
@@ -17,7 +18,6 @@ from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
 from exceptions.GameNotRunningException import GameNotRunningException
-from exceptions.NoMoreTurnsException import NoMoreTurnsException
 
 
 class StateTests(unittest.TestCase):
@@ -743,16 +743,79 @@ class StateTests(unittest.TestCase):
         # Move one of player 1's avatars
         state.move_avatar(Position(3, 1), Position(4, 1))
 
-        # Verify that it is not p1, p2, nor p3's turn
-        self.assertNotEqual(state.current_player, 1)
-        self.assertNotEqual(state.current_player, 2)
-        self.assertNotEqual(state.current_player, 3)
-
         # Verify that it is actually player 4's turn and that p2 and p3 have been skipped
         self.assertEqual(state.current_player, 4)
 
     def test_game_over(self):
         # Test the game until the game is over
+
+        # Setup board
+        new_b = Board.homogeneous(3, 5, 2)
+        # Setup state
+        state = State(new_b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Make sure we're placing
+        self.assertEqual(state.game_status, GameStatus.PLACING)
+
+        # Set up the board with placements s.t. only 2 moves can be made
+        # Player 1
+        state.place_avatar(Position(3, 0))
+        # Player 2
+        state.place_avatar(Position(0, 0))
+        # Player 3
+        state.place_avatar(Position(1, 0))
+        # Player 4
+        state.place_avatar(Position(2, 0))
+        # Player 1
+        state.place_avatar(Position(3, 1))
+        # Player 2
+        state.place_avatar(Position(0, 1))
+        # Player 3
+        state.place_avatar(Position(1, 1))
+        # Player 4
+        state.place_avatar(Position(2, 1))
+
+        # Make sure we're running
+        self.assertEqual(state.game_status, GameStatus.RUNNING)
+
+        # Make move 1 for p1
+        state.move_avatar(Position(3, 1), Position(4, 1))
+
+        # Make sure at least one player can still move
+        self.assertTrue(state.can_anyone_move())
+
+        # Make move 2 for p3, meaning game should end because all tiles are either
+        # occupied or holes
+        state.move_avatar(Position(2, 0), Position(4, 0))
+
+        # Make sure no one can move
+        self.assertFalse(state.can_anyone_move())
+
+        # Make sure it's game over
+        self.assertEqual(state.game_status, GameStatus.OVER)
+
+    def test_get_possible_actions_success1(self):
+        # Tests a successful get_possible_actions during placing phase
+
+        # Setup board
+        new_b = Board.homogeneous(3, 5, 2)
+        # Setup state
+        state = State(new_b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Since we're still in placing phase, there should be
+        # no actions available
+        self.assertEqual(state.get_possible_actions(), [])
+
+    def test_get_possible_actions_success2(self):
+        # Tests a successful get_possible_actions during playing phase
 
         # Setup board
         new_b = Board.homogeneous(3, 5, 2)
@@ -781,18 +844,154 @@ class StateTests(unittest.TestCase):
         # Player 4
         state.place_avatar(Position(2, 1))
 
-        # Make move 1 for p1
+        # Ascertain available actions
+        self.assertCountEqual(state.get_possible_actions(), [
+            Action(Position(3, 0), Position(4, 0)),
+            Action(Position(3, 0), Position(4, 1)),
+            Action(Position(3, 1), Position(4, 1))
+        ])
+
+        # Make move
         state.move_avatar(Position(3, 1), Position(4, 1))
 
-        # Make sure at least one player can still move
-        self.assertTrue(state.can_anyone_move())
+        # There should only be one action remaining
+        self.assertCountEqual(state.get_possible_actions(), [
+            Action(Position(2, 0), Position(4, 0))
+        ])
 
-        # Make move 2 for p3, meaning game should end because all tiles are either
-        # occupied or holes
+        # Make final move
         state.move_avatar(Position(2, 0), Position(4, 0))
 
-        # Make sure no one can move
-        self.assertFalse(state.can_anyone_move())
+        # There should only no actions remaining
+        self.assertCountEqual(state.get_possible_actions(), [])
 
-        # Make sure it's game over
-        self.assertEqual(state.game_status, GameStatus.OVER)
+    def test_get_player_score_test_fail1(self):
+        # Tests failing get_player_score due to player_id being invalid
+        # (type-wise)
+
+        # Setup state
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        with self.assertRaises(TypeError):
+            state.get_player_score('nice try')
+
+        with self.assertRaises(TypeError):
+            state.get_player_score(-23)
+
+    def test_get_player_score_test_fail2(self):
+        # Tests failing get_player_score due to player_id not
+        # existing
+
+        # Setup state
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        with self.assertRaises(NonExistentPlayerException):
+            state.get_player_score(23)
+
+    def test_get_player_score_test_success(self):
+        # Tests successful get_player_score over the course
+        # of a game
+
+        # Setup state
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Make sure everyone's score is 0
+        for k in range(4):
+            self.assertEqual(state.get_player_score(k + 1), 0)
+
+        # Player 1 place
+        state.place_avatar(Position(0, 0))
+        # Player 2 place
+        state.place_avatar(Position(0, 1))
+        # Player 3 place
+        state.place_avatar(Position(2, 1))
+        # Player 4 place
+        state.place_avatar(Position(4, 1))
+        # Player 1 place
+        state.place_avatar(Position(5, 0))
+        # Player 2 place
+        state.place_avatar(Position(4, 0))
+        # Player 3 place
+        state.place_avatar(Position(3, 0))
+        # Player 4 place
+        state.place_avatar(Position(3, 1))
+
+        # Make sure everyone's score is still 0
+        for k in range(4):
+            self.assertEqual(state.get_player_score(k + 1), 0)
+
+        # Player 1 make a move
+        state.move_avatar(Position(0, 0), Position(1, 0))
+
+        # Make sure player 1 has a score of 2 (board is homogeneous
+        # with the same no. fish to each tile)
+        self.assertEqual(state.get_player_score(1), 2)
+        # Make sure everyone else is at 0
+        self.assertEqual(state.get_player_score(2), 0)
+        self.assertEqual(state.get_player_score(3), 0)
+        self.assertEqual(state.get_player_score(4), 0)
+
+        # Player 2 make a move
+        state.move_avatar(Position(0, 1), Position(1, 1))
+
+        # Make sure player 1 & 2 have a score of 2
+        self.assertEqual(state.get_player_score(1), 2)
+        self.assertEqual(state.get_player_score(2), 2)
+        # Make sure everyone else is at 0
+        self.assertEqual(state.get_player_score(3), 0)
+        self.assertEqual(state.get_player_score(4), 0)
+
+    def test_move_log_success1(self):
+        # Tests move log
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Successful placement
+        # Place player 1's avatar
+        state.place_avatar(Position(0, 0))
+        # Place player 2's avatar
+        state.place_avatar(Position(3, 0))
+        # Place player 3's avatar
+        state.place_avatar(Position(1, 1))
+        # Place player 4's avatar
+        state.place_avatar(Position(4, 0))
+
+        # Place player 1's avatar
+        state.place_avatar(Position(4, 1))
+        # Place player 2's avatar
+        state.place_avatar(Position(5, 0))
+        # Place player 3's avatar
+        state.place_avatar(Position(2, 0))
+        # Place player 4's avatar
+        state.place_avatar(Position(3, 1))
+
+        # No moves have been made yet
+        self.assertEqual(state.move_log, [])
+
+        # Make a move
+        state.move_avatar(Position(0, 0), Position(2, 1))
+        # Check log
+        self.assertEqual(state.move_log, [Action(Position(0, 0), Position(2, 1))])
+
+        # Make another move
+        state.move_avatar(Position(5, 0), Position(6, 0))
+        # Check log
+        self.assertCountEqual(state.move_log, [
+            Action(Position(0, 0), Position(2, 1)),
+            Action(Position(5, 0), Position(6, 0))
+        ])

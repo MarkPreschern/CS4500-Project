@@ -125,7 +125,7 @@ class Board(object):
             max_y = 1
 
         # Set tentative rows and cols
-        rows, cols = max_y + 1, max_x + 1
+        rows, cols = max_x + 1, max_y + 1
 
         # Determine remaining open slots after adding holes and one-fish tiles
         remaining_slots = rows * cols - min_one_fish_tile_no - len(holes)

@@ -28,7 +28,8 @@ class State(object):
 
     def __init__(self, board: Board, players: [Player]):
         """
-        Initializes a State object with the given parameters.
+        Initializes a State object with the given board and player list.
+
         :param board: Board object
         :param players: list of Player objects
         :return: new State object designed to spec
@@ -80,11 +81,7 @@ class State(object):
         # as the collection is sorted in increasing order of age.
         self.__current_player_id = next(self.__player_order)
 
-        # Indicates whether everyone has finished placing their avatar
-        # and the game has started
-        #self.__game_started = False
-
-        # Indicates the state of the game
+        # Indicates the status of the game (placing / running / over)
         self.__game_status = GameStatus.PLACING
 
         # Make up log of moves that have been made since the beginning
@@ -117,10 +114,13 @@ class State(object):
     def get_possible_actions(self) -> []:
         """
         Returns a list of all possible moves for the current
-        player.
+        player assuming that the game is running.
 
         :return: list of Action objects
         """
+        if self.__game_status != GameStatus.RUNNING:
+            return []
+
         # Initialize collection of possible moves
         possible_moves = []
 
@@ -174,6 +174,23 @@ class State(object):
         a sorted collection of player ids.
         """
         return list(self.__players.keys())
+
+    def get_player_score(self, player_id: int) -> int:
+        """
+        Gets provided player's score.
+
+        :param player_id: id of player whose score
+                          to retrieve
+        :return: score
+        """
+        # Validate player id
+        if not isinstance(player_id, int) or player_id <= 0:
+            raise TypeError('Expected positive integer for player_id!')
+
+        if player_id not in self.__players.keys():
+            raise NonExistentPlayerException()
+
+        return self.__players.get(player_id).score
 
     def place_avatar(self, position: Position) -> None:
         """
@@ -262,6 +279,9 @@ class State(object):
         if self.__current_player_id != player_id:
             raise MoveOutOfTurnException()
 
+        # Adjust player score
+        self.__players[self.__current_player_id].score += self.__board.get_tile(src).fish_no
+
         # Set dst to player_id
         self.__placements.update({dst: player_id})
         # Remove player_id from src
@@ -337,6 +357,7 @@ class State(object):
     def can_player_move(self, player_id: int) -> bool:
         """
         Tells if player with given player_id can perform a move.
+        It does not check for turn.
 
         :param player_id: id of player for whom to check
         :return: boolean indicating whether player

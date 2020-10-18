@@ -1,11 +1,10 @@
 import copy
 
 from action import Action
-from game_status import GameStatus
-from position import Position
-from state import State
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
+from game_status import GameStatus
+from state import State
 
 
 class GameTree(object):
@@ -119,7 +118,7 @@ class GameTree(object):
         raise InvalidActionException()
 
     @classmethod
-    def apply_function_to_child_states(cls, state: State, fn):
+    def apply_to_child_states(cls, state: State, fn):
         """
         Applies given function to all child states that are
         reachable from the provided state.
@@ -143,5 +142,5 @@ class GameTree(object):
 
         # For each child tree, apply function to child's underlying
         # state and return the results for all children in an array
-        return [fn(child.state) for child in tree.children]
+        return [fn(child.state) for child in tree.children.values()]
 
