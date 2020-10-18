@@ -34,6 +34,7 @@ class Player(object):
         self.__name = name
         self.__age = age
         self.__color = color
+        self.__score = 0
 
     @property
     def id(self) -> int:
@@ -62,3 +63,20 @@ class Player(object):
         Returns player's color.
         """
         return self.__color
+
+    @property
+    def score(self) -> int:
+        """
+        Returns player's score.
+        """
+        return self.__score
+
+    @score.setter
+    def score(self, score: int) -> None:
+        """
+        Sets a player's score to given value.
+        """
+        if not isinstance(score, int) or score < 0:
+            raise TypeError('Expected positive int for score!')
+
+        self.__score = score

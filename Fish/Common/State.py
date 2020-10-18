@@ -7,7 +7,7 @@ from collections import OrderedDict
 import tkinter as tk
 from itertools import cycle
 
-
+from Position import Position
 from exceptions.AvatarAlreadyPlacedException import AvatarAlreadyPlacedException
 from exceptions.AvatarNotPlacedException import AvatarNotPlacedException
 from exceptions.GameNotStartedException import GameNotStartedException
@@ -55,7 +55,7 @@ class State(object):
         self.__board = board
 
         # Initialize placements
-        self.__placements = {}  # key = avatar id, value = position tuple
+        self.__placements = {}  # key = avatar id, value = Position obj
 
         # Create player dictionary keyed by player ids w/ Player values
         self.__players = OrderedDict()
@@ -102,6 +102,35 @@ class State(object):
         """
         return self.__game_started
 
+    def get_possible_actions(self) -> []:
+        """
+        Returns a list of all possible moves for the current
+        player.
+
+        :return: list of Position tuples, where each tuple is made up of
+                 an origin and a destination Position object.
+        """
+        # Retrieve current players' avatars' ids
+        avatar_ids = self.__get_avatar_ids_by_player_id(self.__current_player_id)
+
+        # Initialize collection of possible moves
+        possible_moves = []
+
+        # Cycle over player's avatar ids
+        for avatar_id in avatar_ids:
+            # Get current avatar's position
+            avatar_pos = self.__placements.get(avatar_id)
+
+            # Determine all reachable positions for avatar_pos
+            reachable_positions = self.__board.get_reachable_positions(avatar_pos)
+
+            # Create possible move for position reachable from avatar's
+            # current position
+            for pos in reachable_positions:
+                possible_moves.extend((avatar_pos, pos))
+
+        return possible_moves
+
     def __trigger_next_turn(self):
         """
         Triggers next turn by giving the next player
@@ -143,44 +172,42 @@ class State(object):
             avatar = Avatar(id=avatar_id, player_id=player_id, color=color)
             self.__avatars.update({avatar.id: avatar})
 
-    def place_avatar(self, avatar_id: int, position: tuple) -> None:
+    def place_avatar(self, position: Position) -> None:
         """
-        Places an avatar on behalf of the player with the specified
-        id at the specified location if it is not a hole.
+        Places an avatar on behalf of the current player with at
+        the specified location if it is not a hole.
 
-        :param avatar_id: avatar id (unique with respect to the player)
-        :param position: tuple position to place avatar
+        :param position: position to place avatar
         :return: None
         """
-        # Validate type of avatar_id
-        if not isinstance(avatar_id, int) or avatar_id < 0:
-            raise TypeError('Expected integer >= 0 for avatar id!')
-
         # Validate type of position
-        if not isinstance(position, tuple):
-            raise TypeError('Expected tuple for position id!')
-
-        # Make sure player has not already placed avatar w/ id avatar_id
-        if avatar_id in self.__placements:
-            raise AvatarAlreadyPlacedException()
-
-        if avatar_id not in self.__avatars.keys():
-            raise NonExistentAvatarException()
-
-        # Get player id for this avatar
-        player_id = self.__get_player_by_avatar_id(avatar_id).id
-
-        # Make sure they are not placing out of turn
-        if self.__current_player_id != player_id:
-            raise PlaceOutOfTurnException(f'{self.__current_player_id} {player_id}')
+        if not isinstance(position, Position):
+            raise TypeError('Expected Position for position id!')
 
         # Make sure target position is not occupied by another player or
         # a hole
         if self.__is_position_occupied_or_hole(position):
             raise InvalidPositionException("Position already occupied or hole!")
 
+        # Get current player's avatar ids
+        avatar_ids = self.__get_avatar_ids_by_player_id(self.__current_player_id)
+
+        # Initialize place holder for id of avatar to place
+        avatar_id_to_place = None
+
+        # Find current player the next available avatar they can place
+        for avatar_id in avatar_ids:
+            # If this avatar has not been placed, use it
+            if avatar_id not in self.__placements.keys():
+                avatar_id_to_place = avatar_id
+                break
+
+        # If not avatar can be placed, throw error
+        if avatar_id_to_place is None:
+            raise NonExistentAvatarException()
+
         # Update placement to reflect updated avatar's position
-        self.__placements.update({avatar_id: position})
+        self.__placements.update({avatar_id_to_place: position})
 
         # If everyone has placed, start game
         if self.__has_everyone_placed():
@@ -189,15 +216,15 @@ class State(object):
         # Trigger next turn
         self.__trigger_next_turn()
 
-    def __is_position_occupied_or_hole(self, position: (int, int)) -> bool:
+    def __is_position_occupied_or_hole(self, position: Position) -> bool:
         """
         Returns true if given position is either a hole or occupied
         by another avatar.
         :param position: position to check
         :return: boolean indicating if condition above is fulfilled
         """
-        if not isinstance(position, tuple):
-            raise TypeError('Expected tuple for position!')
+        if not isinstance(position, Position):
+            raise TypeError('Expected Position for position!')
 
         # Check if tile is a hole
         if self.__board.get_tile(position).is_hole:
@@ -209,60 +236,53 @@ class State(object):
 
         return False
 
-    def move_avatar(self, avatar_id: int, position: tuple) -> None:
+    def move_avatar(self, src: Position, dst: Position) -> None:
         """
-        Moves an avatar on behalf of the player with the specified
-        id to the specified location if said location is reachable
-        and not a hole.
+        Moves an avatar on behalf of the current player from src to dst.
+        If the player does not have an avatar at src, an error occurs.
 
-        :param avatar_id: id of avatar to mvoe
-        :param position: tuple position to move avatar
+        :param src: position from which to move player's avatar
+        :param dst: position to which to move player's avatar
         :return: None
         """
-        # Validate type of avatar id
-        if not isinstance(avatar_id, int) or avatar_id < 0:
-            raise TypeError('Expected integer for avatar id!')
+        # Validate src
+        if not isinstance(src, Position):
+            raise TypeError('Expected Position for src!')
 
-        # Make sure avatar id is in avatar list
-        if avatar_id not in self.__avatars.keys():
-            raise NonExistentAvatarException('Avatar id not in avatar list!')
-
-        # Make sure avatar has already placed their avatar
-        if avatar_id not in self.__placements:
-            raise AvatarNotPlacedException()
-
-        # Validate type of position
-        if not isinstance(position, tuple):
-            raise TypeError('Expected tuple for position!')
-
-        # If not everyone has placed, then no one can move
-        if not self.__game_started:
-            raise GameNotStartedException()
-
-        # Get player for this avatar
-        player_id = self.__get_player_by_avatar_id(avatar_id)
-
-        # Make sure it's their turn
-        if self.__current_player_id != player_id.id:
-            raise MoveOutOfTurnException(f'{self.__current_player_id} {player_id}')
-
-        # Retrieve avatar's current position
-        current_pos = self.__placements.get(avatar_id)
+        # Validate dst
+        if not isinstance(dst, Position):
+            raise TypeError('Expected Position for dst!')
 
         # Check if path to target position is clear
-        if not self.__is_path_clear(current_pos, position):
+        if not self.__is_path_clear(src, dst):
             raise UnclearPathException('Target position cannot be reached!')
 
-        # Update position
-        self.__placements.update({avatar_id: position})
+        # Retrieve current player's avatar ids
+        avatar_ids = self.__get_avatar_ids_by_player_id(self.__current_player_id)
 
-        # Replace previous position on the board with a hole
-        self.__board.remove_tile(current_pos)
+        # Initialize flag to indicate whether avatar has been found
+        found_avatar = False
 
-        # Trigger next turn
-        self.__trigger_next_turn()
+        # Cycle over player's avatar ids
+        for avatar_id in avatar_ids:
+            # Check if current avatar is positioned at src
+            if self.__placements.get(avatar_id) == src:
+                # Update position
+                self.__placements.update({avatar_id: dst})
+                # Replace previous position on the board with a hole
+                self.__board.remove_tile(src)
+                # Set flag to indicate that an avatar has been found
+                found_avatar = True
 
-    def __is_path_clear(self, pos1: (int, int), pos2: (int, int)) -> bool:
+                # Trigger next turn
+                self.__trigger_next_turn()
+
+        # If we have not found an avatar that belongs to the player
+        # at that position, throw an error
+        if not found_avatar:
+            raise NonExistentAvatarException()
+
+    def __is_path_clear(self, pos1: Position, pos2: Position) -> bool:
         """
         Checks if the path is clear of holes and avatars
         from pos1 to pos2.
@@ -271,11 +291,11 @@ class State(object):
         :param pos2: end position
         :return: boolean indicating if condition is fulfilled
         """
-        if not isinstance(pos1, tuple):
-            raise TypeError('Expected tuple for pos1!')
+        if not isinstance(pos1, Position):
+            raise TypeError('Expected Position for pos1!')
 
-        if not isinstance(pos2, tuple):
-            raise TypeError('Expected tuple for pos2!')
+        if not isinstance(pos2, Position):
+            raise TypeError('Expected Position for pos2!')
 
         # Retrieve all reachable positions from pos1
         reachable_pos = self.__board.get_reachable_positions(pos1)
@@ -343,7 +363,7 @@ class State(object):
             return False
 
         # Get avatar ids for this player
-        avatar_ids = self.get_avatars_by_player_id(player_id)
+        avatar_ids = self.__get_avatar_ids_by_player_id(player_id)
 
         # Cycle over avatar ids
         for avatar_id in avatar_ids:
@@ -356,8 +376,8 @@ class State(object):
             # Retrieve avatar position for this avatar
             avatar_pos = self.__placements.get(avatar_id)
 
-            # Retrieve all reachable positions for this position2
-            reachable_pos = self.__board.get_reachable_positions(avatar_pos)
+            # Retrieve all reachable positions from this position
+            reachable_pos: [Position] = self.__board.get_reachable_positions(avatar_pos)
 
             # Make sure at least one path is clear
             for pos in reachable_pos:
@@ -368,12 +388,14 @@ class State(object):
         # for anyone
         return False
 
-    def get_avatars_by_player_id(self, player_id: int) -> [int]:
+    def __get_avatar_ids_by_player_id(self, player_id: int) -> [int]:
         """
-        Returns a list of ids pertaining to
-        avatars owned by the provided player.
+        Returns a list of avatar ids owned by the player with provided
+        id.
+
         :param player_id: id of player for whom to retrieve
                           avatar
+        :return: list of avatar ids
         """
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player_id!')
@@ -441,7 +463,7 @@ class State(object):
             # Retrieve sprite's name based on avatar color
             player_sprite_name = player.color.name.lower()
 
-            # Demultiplex avatar position into x & y
+            # De-multiplex avatar position into x & y
             avatar_x, avatar_y = pos
 
             # Figure out avatar x y

@@ -3,6 +3,8 @@
 from tkinter import Tk, Frame
 import sys
 
+from Position import Position
+
 sys.path.append('../')
 
 from Board import Board
@@ -28,26 +30,26 @@ s = State(b, [Player(1, 'Bob', 20, Color.RED),
               Player(2, 'Larry', 30, Color.BLACK)])
 
 # Player 1 place
-s.place_avatar(0, (0, 0))
+s.place_avatar(Position(0, 0))
 # Player 2 place
-s.place_avatar(4, (5, 2))
+s.place_avatar(Position(5, 2))
 # Player 1 place
-s.place_avatar(1, (1, 2))
+s.place_avatar(Position(1, 2))
 # Player 2 place
-s.place_avatar(5, (6, 0))
+s.place_avatar(Position(6, 0))
 # Player 1 place
-s.place_avatar(2, (5, 3))
+s.place_avatar(Position(5, 3))
 # Player 2 place
-s.place_avatar(6, (7, 2))
+s.place_avatar(Position(7, 2))
 # Player 1 place
-s.place_avatar(3, (5, 0))
+s.place_avatar(Position(5, 0))
 # Player 2 place
-s.place_avatar(7, (8, 3))
+s.place_avatar(Position(8, 3))
 
 # Move player 1 avatar
-s.move_avatar(0, (3, 1))
+s.move_avatar(Position(0, 0), Position(3, 1))
 # Move player 2 avatar
-s.move_avatar(6, (8, 2))
+s.move_avatar(Position(7, 2), Position(8, 2))
 
 s.render(frame)
 # Run tk mainloop

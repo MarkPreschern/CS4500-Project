@@ -1,6 +1,7 @@
 from random import randint
 import constants as ct
 from Hole import Hole
+from Position import Position
 from Tile import Tile
 from AbstractTile import AbstractTile
 import tkinter as tk
@@ -92,12 +93,12 @@ class Board(object):
         return self.__tiles.copy()
 
     @classmethod
-    def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes: [tuple]):
+    def min_oft_and_holes(cls, min_one_fish_tile_no: int, holes: [Position]):
         """
         Builds a board with at least min_one_fish_tiles one-fish tiles and given
         holes.
         :param min_one_fish_tile_no: minimum number of one-fish tiles
-        :param holes: holes in the form of a list of tuple points
+        :param holes: holes in the form of a list of Position objects
         :return: instance of Board configured to spec
         """
         # Check params
@@ -197,16 +198,16 @@ class Board(object):
         # Return resulting board
         return cls(tiles)
 
-    def remove_tile(self, pt: (int, int)) -> None:
+    def remove_tile(self, pt: Position) -> None:
         """
         Removes a tile at the given position (if one exists) by
         replacing it with a Hole instead.
-        :param pt: point at to remove tile
+        :param pt: position to remove tile
         :return: None
         """
         # Validate point
-        if not isinstance(pt, tuple):
-            raise ValueError('Expected tuple object for pt!')
+        if not isinstance(pt, Position):
+            raise ValueError('Expected Position object for pt!')
 
         # Retrieve tile at point
         tile = self.get_tile(pt)
@@ -217,16 +218,16 @@ class Board(object):
         else:
             raise ValueError('No tile at given location!')
 
-    def get_tile(self, pt: (int, int)) -> AbstractTile:
+    def get_tile(self, pt: Position) -> AbstractTile:
         """
         Returns the tile at the given point.
 
-        :param pt: xy tuple the tile lives
+        :param pt: position the tile lives
         :return: AbstractTile object
         """
         # Validate point
-        if not isinstance(pt, tuple):
-            raise TypeError('Expected tuple object for pt!')
+        if not isinstance(pt, Position):
+            raise TypeError('Expected Position object for pt!')
 
         if pt not in self.__tiles.keys():
             raise InvalidPositionException('No tile exists at given position!')
@@ -275,16 +276,16 @@ class Board(object):
 
         return canvas
 
-    def get_reachable_positions(self, pos: (int, int)) -> [(int, int)]:
+    def get_reachable_positions(self, pos: Position) -> [Position]:
         """
         Create a list of all tiles that are reachable within a straight line path of the given position.
 
         :param pos: the starting position for which reachable positions will be computed
-        :return: a list of tuples that contains all reachable positions
+        :return: a list of Position that contains all reachable positions
         """
         # Validate params
-        if not isinstance(pos, tuple):
-            raise TypeError('Expected tuple for pos.')
+        if not isinstance(pos, Position):
+            raise TypeError('Expected Position for pos.')
         if pos not in self.tiles.keys():
             raise ValueError('Expected pos to be a position on the game board.')
 
@@ -307,22 +308,22 @@ class Board(object):
 
         return reachable_positions
 
-    def get_connecting_positions(self, pos1: (int, int), pos2: (int, int)) -> [(int, int)]:
+    def get_connecting_positions(self, pos1: Position, pos2: Position) -> [Position]:
         """
-        Retrieves a list of all point tuples connecting
+        Retrieves a list of all Position objects connecting
         the provided positions.
 
-        :param pos1: tuple of first position
-        :param pos2: tuple of second position
+        :param pos1: first position
+        :param pos2: second position
         :return: resulting list
         """
-        if not isinstance(pos1, tuple):
-            raise TypeError('Expected tuple for pos1')
+        if not isinstance(pos1, Position):
+            raise TypeError('Expected Position for pos1')
 
-        if not isinstance(pos2, tuple):
-            raise TypeError('Expected tuple for pos2')
+        if not isinstance(pos2, Position):
+            raise TypeError('Expected Position for pos2')
 
-        # Demultiplex positions into x,y coordinates
+        # De-multiplex positions into x,y coordinates
         x1, y1 = pos1
         x2, y2 = pos2
 
@@ -372,7 +373,7 @@ class Board(object):
         As an example, an edge between a starting tile A and its neighboring tile to the
         top left will have a weight of MovementDirection.TopLeft, or 0.
         
-        :return: a dict whose keys are tuples representing positions
+        :return: a dict whose keys are Position objects representing positions
                  and whose values are dicts containing adjacent tiles with weights
         """
         # Store the edges
@@ -388,12 +389,12 @@ class Board(object):
             col = pos[1]
 
             # Locations of surrounding tiles
-            top_left = (row - 1, col - 1) if row % 2 == 0 else (row - 1, col)
-            top = (row - 2, col)
-            top_right = (row - 1, col) if row % 2 == 0 else (row - 1, col + 1)
-            bottom_right = (row + 1, col) if row % 2 == 0 else (row + 1, col + 1)
-            bottom = (row + 2, col)
-            bottom_left = (row + 1, col - 1) if row % 2 == 0 else (row + 1, col)
+            top_left = Position(row - 1, col - 1) if row % 2 == 0 else Position(row - 1, col)
+            top = Position(row - 2, col)
+            top_right = Position(row - 1, col) if row % 2 == 0 else Position(row - 1, col + 1)
+            bottom_right = Position(row + 1, col) if row % 2 == 0 else Position(row + 1, col + 1)
+            bottom = Position(row + 2, col)
+            bottom_left = Position(row + 1, col - 1) if row % 2 == 0 else Position(row + 1, col)
 
             # For all possible directions, check if the computed position exists on the board
             # and add to the current adjacent tiles dict with 
@@ -420,7 +421,7 @@ class Board(object):
 
         return edges
 
-    def __find_straight_path(self, start_pos, direction, edge_list=None) -> [(int, int)]:
+    def __find_straight_path(self, start_pos, direction, edge_list=None) -> [Position]:
         """
         Find the positions of all tiles in the straight line path starting from the
         given position and moving in the given direction.
@@ -429,12 +430,13 @@ class Board(object):
         :param direction: direction of the straight line path
         :param edge_list: list of edges between tiles/nodes in the directed graph described 
                           in compute_reachable_edge_list
-        :return: a list of tuples representing the positions of tiles that are in the straight line path
+        :return: a list of Position objects representing the positions of tiles that are in
+                 the straight line path
         """
 
         # Validate params
-        if not isinstance(start_pos, tuple):
-            raise TypeError('Expected tuple for start_pos.')
+        if not isinstance(start_pos, Position):
+            raise TypeError('Expected Position for start_pos.')
         if not isinstance(direction, MovementDirection):
             raise TypeError('Expected MovementDirection for direction.')
         if edge_list and not isinstance(edge_list, dict):
