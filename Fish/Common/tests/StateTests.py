@@ -828,28 +828,37 @@ class StateTests(unittest.TestCase):
     def test_game_over(self):
         # Test the game until the game is over
 
+        # Setup board
+        new_b = Board.homogeneous(3, 5, 2)
+        # Setup state
+        state = State(new_b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Set up the board with placements s.t. only 2 moves can be made
+        state.place_avatar(0, (3, 0))
+        state.place_avatar(2, (0, 0))
+        state.place_avatar(4, (1, 0))
+        state.place_avatar(6, (2, 0))
+        state.place_avatar(1, (3, 1))
+        state.place_avatar(3, (0, 1))
+        state.place_avatar(5, (1, 1))
+        state.place_avatar(7, (2, 1))
+
         # This exception will be thrown when the game ends
         with self.assertRaises(NoMoreTurnsException):
-            new_b = Board.homogeneous(3, 5, 2)
-            state = State(new_b, players=[
-                self.__p1,
-                self.__p2,
-                self.__p3,
-                self.__p4])
-
-            # Set up the board with placements s.t. only 2 moves can be made
-            state.place_avatar(0, (3, 0))
-            state.place_avatar(2, (0, 0))
-            state.place_avatar(4, (1, 0))
-            state.place_avatar(6, (2, 0))
-            state.place_avatar(1, (3, 1))
-            state.place_avatar(3, (0, 1))
-            state.place_avatar(5, (1, 1))
-            state.place_avatar(7, (2, 1))
 
             # Make move 1 for p1
             state.move_avatar(1, (4, 1))
 
+            # Make sure at least one player can still move
+            self.assertTrue(state.can_anyone_move())
+
             # Mave move 2 for p3, meaning game should end because all tiles are either
             # occupied or holes
             state.move_avatar(6, (4, 0))
+
+        # Make sure no one can move
+        self.assertFalse(state.can_anyone_move())

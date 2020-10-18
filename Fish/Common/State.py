@@ -25,7 +25,8 @@ class State(object):
     """
     State represents the current state of a game: the state of the board,
     the current placements of the penguins, knowledge about the players,
-    and the order in which they play.
+    and the order in which they play. More generally speaking, a game state
+    represents a complete snapshot of a game in time.
     """
 
     def __init__(self, board: Board, players: [Player]):
