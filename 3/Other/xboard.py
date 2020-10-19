@@ -108,7 +108,7 @@ def xboard():
     in a valid board json object from STDIN and output the number of
     reachable positions from the given position.
     """
-    # Initialzie inpuit
+    # Initialzie input
     current_input = ""
     # Continuously read input from STDIN
     for k in sys.stdin:

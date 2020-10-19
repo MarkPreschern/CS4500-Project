@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+import argparse
+import sys
+import unittest
+
+sys.path.append("Other/")
+
+from xstate import xstate
+# from XboardTests import XboardTests
+
+
+if __name__ == "__main__":
+    # Add optional argument to enable unit testing
+    parser = argparse.ArgumentParser(description="Run xstate or unit tests")
+    parser.add_argument("-u", "--unit", help="Run unit tests", action="store_true")
+
+    args = vars(parser.parse_args())
+
+    # Reset the command line arguments to prevent "unit" argument from being
+    # passed to xstate
+    sys.argv = ["xstate"]
+
+    # If unit argument was provided, run the unit tests. Otherwise, call xstate
+    if args['unit']:
+        unittest.main()
+    else:
+        xstate()

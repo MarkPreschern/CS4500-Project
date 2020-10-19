@@ -151,16 +151,16 @@ class Board(object):
             for col in range(cols):
                 # Check if it's a hole
                 if (row, col) in holes:
-                    tiles.update({(row, col): Hole()})
+                    tiles.update({Position(row, col): Hole()})
                 elif one_fish_tile_cnt < min_one_fish_tile_no:
                     # Add one-fish tile
-                    tiles.update({(row, col): Tile(1)})
+                    tiles.update({Position(row, col): Tile(1)})
                     one_fish_tile_cnt += 1
                 else:
                     # Generate an arbitrary number of fish
                     fish_no = randint(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE)
                     # Add random fish-tile
-                    tiles.update({(row, col): Tile(fish_no)})
+                    tiles.update({Position(row, col): Tile(fish_no)})
 
         # return new instance of Board with built board
         return cls(tiles)
@@ -193,7 +193,7 @@ class Board(object):
         # Add x-fish tiles to each pointer
         for r in range(rows):
             for c in range(cols):
-                tiles.update({(r, c): Tile(tile_fish_no)})
+                tiles.update({Position(r, c): Tile(tile_fish_no)})
 
         # Return resulting board
         return cls(tiles)
