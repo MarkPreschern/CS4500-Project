@@ -18,6 +18,7 @@ class Board(object):
     paths that can be traversed  from any arbitrary position.
     """
     DISABLE_SPRITE_MANAGER = False
+    RENDER_TILE_COORDINATES = True
 
     def __init__(self, tiles: dict):
         """
@@ -273,6 +274,13 @@ class Board(object):
                 # Add hole
                 hole_sprite = canvas.create_image(3, 3, image=SpriteManager.get_sprite('hole'), anchor=tk.NW)
                 canvas.move(hole_sprite, x, y)
+
+            if Board.RENDER_TILE_COORDINATES:
+                # Add tile x, y
+                canvas.create_text(x + ct.TILE_WIDTH / 2 + ct.MARGIN_OFFSET,
+                                   y + ct.TILE_HEIGHT - ct.MARGIN_OFFSET,
+                                   fill="black", font="Arial 10",
+                                   text=f'{pt[0]},{pt[1]}')
 
         return canvas
 

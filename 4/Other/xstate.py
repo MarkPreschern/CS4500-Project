@@ -32,13 +32,11 @@ def xstate() -> None:
     input_obj = ""
 
     # Read from STDIN indefinitely until stream is closed
-    #for k in sys.stdin:
-    #    input_obj += k
-
-    fh = open('Tests/1-in.json', 'r')
+    for k in sys.stdin:
+        input_obj += k
 
     # Load from read string
-    json_obj = json.load(fh)
+    json_obj = json.loads(input_obj)
 
     # Get state from json
     state = _get_next_state(json_obj['players'], json_obj['board'])
