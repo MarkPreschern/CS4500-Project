@@ -69,7 +69,7 @@ def initialize_board(json_board: list) -> Board:
         for _ in row:
             try:
                 # The current position
-                current_pos = (current_row, current_col)
+                current_pos = Position(current_row, current_col)
 
                 # The number of fish according to the json object
                 num_fish = json_board[current_row][current_col]

@@ -81,7 +81,7 @@ class StateTests(unittest.TestCase):
             self.__p3])
 
         # Assert the board is equal
-        self.assertEqual(self.__b, state._State__board)
+        self.assertEqual(self.__b, state.board)
 
         # Assert the player dict is equal
         expected_players = OrderedDict()
@@ -94,7 +94,7 @@ class StateTests(unittest.TestCase):
         self.assertSequenceEqual(expected_players, state._State__players)
 
         # Assert the placements dictionary is initialized to the proper val
-        self.assertEqual(state._State__placements, {})
+        self.assertEqual(state.placements, {})
 
     def test_place_avatar_fail1(self):
         # Test failure of place_avater due to invalid player id type
@@ -157,14 +157,14 @@ class StateTests(unittest.TestCase):
 
         expected = {1: [Position(1, 0)], 2: [], 3: []}
 
-        self.assertSequenceEqual(state._State__placements, expected)
+        self.assertSequenceEqual(state.placements, expected)
 
         # Test a second placement
         state.place_avatar(Position(0, 0))
 
         expected = {1: [Position(1, 0)], 2: [Position(0, 0)], 3: []}
 
-        self.assertSequenceEqual(state._State__placements, expected)
+        self.assertSequenceEqual(state.placements, expected)
 
     def test_place_avatar_repeat_position(self):
         # Test failure of place_avatar when placing on a tile that another
@@ -283,7 +283,7 @@ class StateTests(unittest.TestCase):
                 3: [Position(2, 2), Position(3, 2), Position(3, 0)]
         }
 
-        self.assertSequenceEqual(state._State__placements, expected)
+        self.assertSequenceEqual(state.placements, expected)
 
         # Test a second move
         state.move_avatar(Position(0, 1), Position(2, 1))
@@ -292,7 +292,7 @@ class StateTests(unittest.TestCase):
                     3: [Position(2, 2), Position(3, 2), Position(3, 0)]
                     }
 
-        self.assertSequenceEqual(state._State__placements, expected)
+        self.assertSequenceEqual(state.placements, expected)
 
     def test_move_through_another_avatar(self):
         # Tests failing move due to an avatar in the way
@@ -994,3 +994,41 @@ class StateTests(unittest.TestCase):
             Action(Position(0, 0), Position(2, 1)),
             Action(Position(5, 0), Position(6, 0))
         ])
+    
+    def test_get_player_color_success(self):
+        # Test successful get player score for all players
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+        
+        self.assertEqual(state.get_player_color(1), Color.RED)
+        self.assertEqual(state.get_player_color(2), Color.WHITE)
+        self.assertEqual(state.get_player_color(3), Color.BLACK)
+        self.assertEqual(state.get_player_color(4), Color.BROWN)
+
+    def test_get_player_color_fail1(self):
+        # Test failure of get player color due to invalid player id type
+        with self.assertRaises(TypeError):
+            state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+            state.get_player_color("hello")
+    
+    def test_get_player_color_fail2(self):
+        # Test failure of get player color due to invalid player id type
+        with self.assertRaises(TypeError):
+            state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+            state.get_player_color(-1)
+    
+    def test_get_player_color_fail3(self):
+        

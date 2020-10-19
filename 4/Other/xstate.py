@@ -1,15 +1,14 @@
 import sys
 import json
 
+sys.path.append("../3/Other")
+sys.path.append("../Fish/Common")
+
 from action import Action
 from exceptions.InvalidActionException import InvalidActionException
 from game_tree import GameTree
 from position import Position
 from state import State
-
-sys.path.append("../3/Other")
-sys.path.append("../Fish/Common")
-
 from xboard import initialize_board
 from player import Player
 from board import Board
