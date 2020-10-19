@@ -115,28 +115,24 @@ def xboard():
         # Append the current character to the input
         current_input = current_input + k
 
-        # Since we are guaranteed valid input, the input JSON value will
-        # always end with a } character. At this point, we begin our
-        # parsing of JSON input
-        if '}' in k:            
-            try:
-                input_json = json.loads(current_input)
-                validate_input_json(input_json)
+    try:
+        input_json = json.loads(current_input)
+        validate_input_json(input_json)
 
-                board = initialize_board(input_json['board'])
+        board = initialize_board(input_json['board'])
 
-                # Get the number of reachable positions from the specified position in the json input
-                pos = input_json['position']
-                number_of_positions = len(board.get_reachable_positions((pos[0], pos[1])))
+        # Get the number of reachable positions from the specified position in the json input
+        pos = input_json['position']
+        number_of_positions = len(board.get_reachable_positions(Position(pos[0], pos[1])))
 
-                # Output number of positions to standard out
-                print(number_of_positions)
-            except ValueError as e1:
-                print(f'ERROR: {e1}')
-            except TypeError as e2:
-                print(f'ERROR: {e2}')
-            except json.JSONDecodeError as e3:
-                print(f'ERROR: {e3}')
-        
-            # If input has ended, clear the current input to prepare for the next set of input
-            current_input = ""
+        # Output number of positions to standard out
+        print(number_of_positions)
+    except ValueError as e1:
+        print(f'ERROR: {e1}')
+    except TypeError as e2:
+        print(f'ERROR: {e2}')
+    except json.JSONDecodeError as e3:
+        print(f'ERROR: {e3}')
+
+    # If input has ended, clear the current input to prepare for the next set of input
+    current_input = ""
