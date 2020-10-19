@@ -32,11 +32,13 @@ def xstate() -> None:
     input_obj = ""
 
     # Read from STDIN indefinitely until stream is closed
-    for k in sys.stdin:
-        input_obj += k
+    #for k in sys.stdin:
+    #    input_obj += k
+
+    fh = open('Tests/1-in.json', 'r')
 
     # Load from read string
-    json_obj = json.loads(input_obj)
+    json_obj = json.load(fh)
 
     # Get state from json
     state = _get_next_state(json_obj['players'], json_obj['board'])
@@ -144,7 +146,8 @@ def _get_next_state(player_list_json: dict, board_json: dict) -> State:
     # Cycle over each json object in the json list
     for player in player_list_json:
         # Make up Player object
-        players.append(Player(player_id_counter, "", 1, _str_to_color(player['color'])))
+        players.append(Player(player_id_counter, "", player_id_counter,
+                              _str_to_color(player['color'])))
         # Insert placement
         player_placements.update({player_id_counter: player['places']})
         # Increment id counter
