@@ -14,6 +14,11 @@ from player import Player
 from board import Board
 from movement_direction import MovementDirection
 from color import Color
+from action import Action
+from exceptions.InvalidActionException import InvalidActionException
+from game_tree import GameTree
+from position import Position
+from state import State
 
 directions_to_try = [MovementDirection.Top, MovementDirection.TopRight, MovementDirection.BottomRight,
                      MovementDirection.Bottom, MovementDirection.BottomLeft, MovementDirection.TopLeft]
@@ -38,10 +43,14 @@ def xstate() -> None:
     json_obj = json.loads(input_obj)
 
     # Get state from json
-    state = _get_next_state(json_obj['players'], json_obj['board'])
+    state = _get_next_state(json_obj)
 
-    # Write JSON to STDOUT
-    print(_state_to_json(state))
+    # If there is no next state for first avatar, print False
+    if state is None:
+        print(json.dumps(False))
+    else:
+        # Write JSON to STDOUT
+        print(json.dumps(_state_to_json(state)))
 
 
 def _board_to_json(board: Board) -> []:
@@ -54,6 +63,9 @@ def _board_to_json(board: Board) -> []:
     :param board: Board object to parse
     :return: resulting array
     """
+    if not isinstance(board, Board):
+        raise TypeError('Expected Board for board!')
+
     # Create two dimensional matrix as a place holder with the
     # right dimensions
     matrix = []
@@ -73,15 +85,14 @@ def _board_to_json(board: Board) -> []:
 
 def _state_to_json(state: State) -> dict:
     """
-    Produces JSON for given state or False if
-    state is None.
+    Produces JSON for given state.
 
     :param state: state to produce JSON for
     :return: resulting json dictionary
     """
-    # Return JSON "False" if state is None
-    if state is None:
-        return json.dumps(False)
+    # Check params
+    if not isinstance(state, State):
+        raise TypeError('Expected State object or None!')
 
     json_obj = dict()
 
@@ -103,7 +114,7 @@ def _state_to_json(state: State) -> dict:
         # Append player object to list
         json_obj['players'].append(player_obj)
 
-    return json.dumps(json_obj)
+    return json_obj
 
 
 def _str_to_color(color_str: str) -> Color:
@@ -113,20 +124,41 @@ def _str_to_color(color_str: str) -> Color:
     :param color_str: string to parse
     :return: Color object
     """
-    return Color[color_str.upper()]
+    if not isinstance(color_str, str):
+        raise TypeError('Expected str for color_str!')
+
+    # Capitalize
+    color_str = color_str.upper()
+
+    # Make sure color exists
+    if color_str not in Color.__dict__:
+        raise ValueError('Not such color!')
+
+    return Color[color_str]
 
 
-def _get_next_state(player_list_json: dict, board_json: dict) -> State:
+def _get_next_state(json_obj: dict) -> State:
     """
     Produces the subsequent game state from trying to move first player's
     first avatar in an order of directions. If said avatar cannot go
     in any of the specified directions, None is returned.
 
-    :param player_list_json: a dict containing a list of players
-                             including their color, places and score
-    :param board_json:       board json
+    :param json_obj: json object (dictionary) containing player list and board
     :return: resulting state or False.
     """
+    if not isinstance(json_obj, dict):
+        raise TypeError('Expected dict for json_obj!')
+
+    if 'players' not in json_obj.keys():
+        raise ValueError('Expected players in object!')
+
+    if 'board' not in json_obj.keys():
+        raise ValueError('Expected board in object!')
+
+    # Retrieve player list
+    player_list = json_obj['players']
+    board_json = json_obj['board']
+
     # Get board from json
     board = initialize_board(board_json)
 
@@ -141,7 +173,7 @@ def _get_next_state(player_list_json: dict, board_json: dict) -> State:
     player_placements = {}
 
     # Cycle over each json object in the json list
-    for player in player_list_json:
+    for player in player_list:
         # Make up Player object
         players.append(Player(player_id_counter, "", player_id_counter,
                               _str_to_color(player['color'])))
@@ -195,6 +227,13 @@ def _get_next_position(position: Position, direction: MovementDirection):
     :param position: position to start from
     :param direction: direction to go in
     """
+    # Validate params
+    if not isinstance(position, Position):
+        raise TypeError('Expected Position object for position!')
+
+    if not isinstance(direction, MovementDirection):
+        raise TypeError('Expected MovementDirection for direction!')
+
     if direction == MovementDirection.Top:
         next_position = Position(position.x - 2, position.y)
     elif direction == MovementDirection.Bottom:

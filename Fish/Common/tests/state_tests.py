@@ -738,12 +738,14 @@ class StateTests(unittest.TestCase):
 
         # Verify that it is player 1's turn
         self.assertEqual(state.current_player, 1)
+        self.assertSequenceEqual(state.get_player_order(), [1, 2, 3, 4])
 
         # Move one of player 1's avatars
         state.move_avatar(Position(3, 1), Position(4, 1))
 
         # Verify that it is actually player 4's turn and that p2 and p3 have been skipped
         self.assertEqual(state.current_player, 4)
+        self.assertSequenceEqual(state.get_player_order(), [4, 1, 2, 3])
 
     def test_game_over(self):
         # Test the game until the game is over
@@ -994,7 +996,60 @@ class StateTests(unittest.TestCase):
             Action(Position(0, 0), Position(2, 1)),
             Action(Position(5, 0), Position(6, 0))
         ])
-    
+
+    def test_get_player_order_success1(self):
+        # Tests successful get player order
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Successful placement
+        self.assertSequenceEqual(state.get_player_order(), [1, 2, 3, 4])
+
+        # Place player 1's avatar
+        state.place_avatar(Position(0, 0))
+
+        self.assertSequenceEqual(state.get_player_order(), [2, 3, 4, 1])
+        # Place player 2's avatar
+        state.place_avatar(Position(3, 0))
+
+        self.assertSequenceEqual(state.get_player_order(), [3, 4, 1, 2])
+
+        # Place player 3's avatar
+        state.place_avatar(Position(1, 1))
+
+        self.assertSequenceEqual(state.get_player_order(), [4, 1, 2, 3])
+
+        # Place player 4's avatar
+        state.place_avatar(Position(4, 0))
+
+        self.assertSequenceEqual(state.get_player_order(), [1, 2, 3, 4])
+
+        # Finish placing
+        # Place player 1's avatar
+        state.place_avatar(Position(4, 1))
+        # Place player 2's avatar
+        state.place_avatar(Position(5, 0))
+        # Place player 3's avatar
+        state.place_avatar(Position(2, 0))
+        # Place player 4's avatar
+        state.place_avatar(Position(3, 1))
+
+        # Make a move on behalf of player 1
+        state.move_avatar(Position(0, 0), Position(2, 1))
+
+        # Make sure player one is at the end, and player 2 is next up
+        self.assertSequenceEqual(state.get_player_order(), [2, 3, 4, 1])
+
+        # Make another move
+        state.move_avatar(Position(5, 0), Position(6, 0))
+
+        # Make sure player two is at the end, and player 3 is next up
+        self.assertSequenceEqual(state.get_player_order(), [3, 4, 1, 2])
+
     def test_get_player_color_success(self):
         # Test successful get player score for all players
         state = State(self.__b, players=[
@@ -1002,7 +1057,7 @@ class StateTests(unittest.TestCase):
             self.__p2,
             self.__p3,
             self.__p4])
-        
+
         self.assertEqual(state.get_player_color(1), Color.RED)
         self.assertEqual(state.get_player_color(2), Color.WHITE)
         self.assertEqual(state.get_player_color(3), Color.BLACK)
@@ -1031,4 +1086,12 @@ class StateTests(unittest.TestCase):
             state.get_player_color(-1)
     
     def test_get_player_color_fail3(self):
-        
+        # Test failure of get player color due to player id not being in game
+        with self.assertRaises(NonExistentPlayerException):
+            state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+            state.get_player_color(5)

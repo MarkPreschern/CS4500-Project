@@ -1,6 +1,6 @@
 import copy
 import tkinter as tk
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from itertools import cycle
 
 import constants as ct
@@ -193,11 +193,15 @@ class State(object):
         original_sorting = list(self.__players.keys())
 
         # Find the current player id in the original sorting
-        n = len(self.__players) - original_sorting.index(self.__current_player_id)
+        n = original_sorting.index(self.__current_player_id)
 
         # Rotate original sorting to get current sorting
         # based on the current player
-        return original_sorting[-n:] + original_sorting[:-n]
+        dl = deque(original_sorting)
+        # Rotate left
+        dl.rotate(-n)
+
+        return list(dl)
 
     def get_player_score(self, player_id: int) -> int:
         """
