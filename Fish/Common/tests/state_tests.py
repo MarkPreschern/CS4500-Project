@@ -1095,3 +1095,78 @@ class StateTests(unittest.TestCase):
             self.__p4])
 
             state.get_player_color(5)
+    
+    def test_get_player_positions_success(self):
+        # Test successful get player positions
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Player 1 place
+        state.place_avatar(Position(0, 0))
+        # Player 2 place
+        state.place_avatar(Position(0, 1))
+        # Player 3 place
+        state.place_avatar(Position(2, 1))
+        # Player 4 place
+        state.place_avatar(Position(4, 1))
+        # Player 1 place
+        state.place_avatar(Position(5, 0))
+        # Player 2 place
+        state.place_avatar(Position(4, 0))
+        # Player 3 place
+        state.place_avatar(Position(3, 0))
+        # Player 4 place
+        state.place_avatar(Position(3, 1))
+
+        # Check that player positions are correctly obtained and in the proper order
+        self.assertEqual(state.get_player_positions(1), [Position(0, 0), Position(5, 0)])
+        self.assertEqual(state.get_player_positions(2), [Position(0, 1), Position(4, 0)])
+        self.assertEqual(state.get_player_positions(3), [Position(2, 1), Position(3, 0)])
+        self.assertEqual(state.get_player_positions(4), [Position(4, 1), Position(3, 1)])
+
+        # Move player 1 avatar
+        state.move_avatar(Position(5, 0), Position(6, 1))
+
+        self.assertEqual(state.get_player_positions(1), [Position(0, 0), Position(6, 1)])
+    
+    def test_get_player_positions_fail1(self):
+        # Test failure of get_player_positions due to invalid player id type
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Player 1 place
+        state.place_avatar(Position(0, 0))
+        
+        with self.assertRaises(TypeError):
+            state.get_player_positions(-2)
+    
+    def test_get_player_positions_fail2(self):
+        # Test failure of get_player_positions due to invalid player id type
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Player 1 place
+        state.place_avatar(Position(0, 0))
+        
+        with self.assertRaises(TypeError):
+            state.get_player_positions("hey")
+    
+    def test_get_player_positions_fail3(self):
+        # Test failure of get_player_positions due to player not being in the game
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+        
+        with self.assertRaises(NonExistentPlayerException):
+            state.get_player_positions(5)
