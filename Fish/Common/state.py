@@ -193,7 +193,7 @@ class State(object):
         original_sorting = list(self.__players.keys())
 
         # Find the current player id in the original sorting
-        n = original_sorting.index(self.__current_player_id)
+        n = len(self.__players) - original_sorting.index(self.__current_player_id)
 
         # Rotate original sorting to get current sorting
         # based on the current player
