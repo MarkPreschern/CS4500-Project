@@ -6,6 +6,7 @@ from itertools import cycle
 import constants as ct
 from action import Action
 from board import Board
+from color import Color
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
 from exceptions.InvalidPositionException import InvalidPositionException
@@ -52,8 +53,8 @@ class State(object):
 
         self.__board = board
 
-        # Initialize placements as a dictionary that holds Position objects mapped to
-        # player ids.
+        # Initialize placements as a dictionary that maps player ids to a array
+        # of avatar positions
         self.__placements = {}
 
         # Create player dictionary keyed by player ids w/ Player values
@@ -72,6 +73,8 @@ class State(object):
         for player in players:
             # Add player to collection
             self.__players.update({player.id: player})
+            # Initialize player's placements
+            self.__placements.update({player.id: []})
 
         # Create a circular list of player ids in order in which they go
         self.__player_order = cycle(list(self.__players.keys()))
@@ -95,6 +98,20 @@ class State(object):
         of the game.
         """
         return copy.copy(self.__move_log)
+
+    @property
+    def board(self) -> []:
+        """
+        Returns an immutable copy of the board.
+        """
+        return copy.deepcopy(self.__board)
+
+    @property
+    def placements(self) -> []:
+        """
+        Returns an immutable copy of placements.
+        """
+        return copy.copy(self.__placements)
 
     @property
     def current_player(self) -> int:
@@ -124,12 +141,11 @@ class State(object):
         # Initialize collection of possible moves
         possible_moves = []
 
-        # Cycle over placements
-        for position, player_id in self.__placements.items():
-            # Continue if it's not current player
-            if self.__current_player_id != player_id:
-                continue
+        # Get player's placements
+        player_placements = self.__placements.get(self.__current_player_id)
 
+        # Cycle over each avatar position
+        for position in player_placements:
             # Determine all reachable positions for avatar_pos
             reachable_positions = self.__board.get_reachable_positions(position)
 
@@ -173,7 +189,15 @@ class State(object):
         Returns the order in which the players go in
         a sorted collection of player ids.
         """
-        return list(self.__players.keys())
+        # Come up with original sorting of player ids
+        original_sorting = list(self.__players.keys())
+
+        # Find the current player id in the original sorting
+        n = original_sorting.index(self.__current_player_id)
+
+        # Rotate original sorting to get current sorting
+        # based on the current player
+        return original_sorting[-n:] + original_sorting[:-n]
 
     def get_player_score(self, player_id: int) -> int:
         """
@@ -191,6 +215,42 @@ class State(object):
             raise NonExistentPlayerException()
 
         return self.__players.get(player_id).score
+
+    def get_player_positions(self, player_id: int) -> [Position]:
+        """
+        Gets provided player's positions.
+
+        :param player_id: id of player whose positions
+                          to retrieve
+        :return: player's position
+        """
+        # Validate player id
+        if not isinstance(player_id, int) or player_id <= 0:
+            raise TypeError('Expected positive integer for player_id!')
+
+        # Make sure this player is actually in the game
+        if player_id not in self.__placements.keys():
+            raise NonExistentPlayerException()
+
+        return self.__placements.get(player_id)
+
+    def get_player_color(self, player_id: int) -> Color:
+        """
+        Gets provided player's color.
+
+        :param player_id: id of player whose color
+                          to retrieve
+        :return: player's color
+        """
+        # Validate player id
+        if not isinstance(player_id, int) or player_id <= 0:
+            raise TypeError('Expected positive integer for player_id!')
+
+        # Make sure this player is actually in the game
+        if player_id not in self.__players.keys():
+            raise NonExistentPlayerException()
+
+        return self.__players.get(player_id).color
 
     def place_avatar(self, position: Position) -> None:
         """
@@ -214,7 +274,7 @@ class State(object):
             raise InvalidActionException()
 
         # Update placement to reflect updated avatar's position
-        self.__placements.update({position: self.__current_player_id})
+        self.__placements[self.__current_player_id].append(position)
 
         # If everyone has placed, start game
         if self.__has_everyone_placed():
@@ -238,8 +298,9 @@ class State(object):
             return True
 
         # Check if an avatar is at position
-        if position in self.__placements.keys():
-            return True
+        for placements in self.__placements.values():
+            if position in placements:
+                return True
 
         return False
 
@@ -268,8 +329,15 @@ class State(object):
         if self.__game_status != GameStatus.RUNNING:
             raise GameNotRunningException()
 
+        # Initialize player id at place holder
+        player_id = -1
+
         # Get player id whose avatar exists at src
-        player_id = self.__placements.get(src)
+        for pid, placements in self.__placements.items():
+            # If src is among this player's placements, set id
+            if src in placements:
+                player_id = pid
+                break
 
         # Make sure there is an avatar at src
         if not player_id:
@@ -282,10 +350,9 @@ class State(object):
         # Adjust player score
         self.__players[self.__current_player_id].score += self.__board.get_tile(src).fish_no
 
-        # Set dst to player_id
-        self.__placements.update({dst: player_id})
-        # Remove player_id from src
-        del self.__placements[src]
+        # Swap out old avatar position for new
+        self.__placements[player_id][self.__placements[player_id].index(src)] = dst
+
         # Remove board tile
         self.__board.remove_tile(src)
         # Record move
@@ -323,10 +390,21 @@ class State(object):
         # For each in-between position
         for pos in positions_to_check:
             # Check if an avatar has been placed on current position
-            if pos in self.__placements.keys():
+            if pos in self.__get_all_avatar_positions():
                 return False
 
         return True
+
+    def __get_all_avatar_positions(self) -> []:
+        """
+        Returns a list of all avatar Position objects.
+        """
+        positions = []
+
+        for placements in self.__placements.values():
+            positions.extend(placements)
+
+        return positions
 
     def __has_everyone_placed(self) -> bool:
         """
@@ -335,7 +413,8 @@ class State(object):
         :return: resulting boolean
         """
 
-        return len(self.__placements) == self.__avatars_per_player * len(self.__players)
+        return len(self.__get_all_avatar_positions()) == self.__avatars_per_player \
+               * len(self.__players)
 
     def can_anyone_move(self) -> bool:
         """
@@ -375,19 +454,17 @@ class State(object):
         if self.__game_status != GameStatus.RUNNING:
             return False
 
-        # Cycle over avatar ids
-        for pos, id in self.__placements.items():
-            # Make sure the current iteration pertain to player
-            # we're checking for
-            if id != player_id:
-                continue
+        # Retrieve player's positions
+        player_positions = self.__placements.get(player_id)
 
+        # Cycle over player's positions
+        for position in player_positions:
             # Retrieve all reachable positions from this position
-            reachable_pos: [Position] = self.__board.get_reachable_positions(pos)
-
+            reachable_pos: [Position] = self.__board.get_reachable_positions(position)
             # Make sure at least one path is clear
+
             for reachable_pos in reachable_pos:
-                if self.__is_path_clear(pos, reachable_pos):
+                if self.__is_path_clear(position, reachable_pos):
                     return True
 
         # If we haven't returned thus far, no positions are reachable
@@ -418,29 +495,31 @@ class State(object):
         canvas = self.__board.render(frame)
 
         # Render players to board
-        for pos, player_id in self.__placements.items():
+        for player_id, positions in self.__placements.items():
             # Retrieve player
             player = self.__players.get(player_id)
             # Retrieve sprite's name based on avatar color
             player_sprite_name = player.color.name.lower()
 
-            # De-multiplex avatar position into x & y
-            avatar_x, avatar_y = pos
+            # Cycle over player's positions
+            for pos in positions:
+                # De-multiplex avatar position into x & y
+                avatar_x, avatar_y = pos
 
-            # Figure out avatar x y
-            sprite_x_offset = ct.TILE_WIDTH / 2 - ct.AVATAR_WIDTH / 2 + ct.MARGIN_OFFSET
+                # Figure out avatar x y
+                sprite_x_offset = ct.TILE_WIDTH / 2 - ct.AVATAR_WIDTH / 2 + ct.MARGIN_OFFSET
 
-            sprite_x = (0 if avatar_x % 2 == 0 else ct.DELTA) + (2 * ct.DELTA * avatar_y) + sprite_x_offset
-            sprite_y = avatar_x * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
+                sprite_x = (0 if avatar_x % 2 == 0 else ct.DELTA) + (2 * ct.DELTA * avatar_y) + sprite_x_offset
+                sprite_y = avatar_x * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
 
-            # Figure out avatar's name x y
-            avatar_name_x = sprite_x + ct.AVATAR_WIDTH / 2.0
-            avatar_name_y = sprite_y + ct.AVATAR_HEIGHT + ct.MARGIN_OFFSET
+                # Figure out avatar's name x y
+                avatar_name_x = sprite_x + ct.AVATAR_WIDTH / 2.0
+                avatar_name_y = sprite_y + ct.AVATAR_HEIGHT + ct.MARGIN_OFFSET
 
-            # Add avatar
-            canvas.create_image(sprite_x, sprite_y, image=SpriteManager.get_sprite(player_sprite_name),
-                                anchor=tk.NW)
+                # Add avatar
+                canvas.create_image(sprite_x, sprite_y, image=SpriteManager.get_sprite(player_sprite_name),
+                                    anchor=tk.NW)
 
-            # Add avatar name
-            canvas.create_text(avatar_name_x, avatar_name_y, fill="black", font="Arial 10",
-                               text=f'{player.name}[{player_id}]')
+                # Add avatar name
+                canvas.create_text(avatar_name_x, avatar_name_y, fill="black", font="Arial 10",
+                                   text=f'{player.name}[{player_id}]')

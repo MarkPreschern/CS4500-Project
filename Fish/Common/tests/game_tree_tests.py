@@ -212,6 +212,35 @@ class GameTreeTests(unittest.TestCase):
         # possible moves)
         self.assertSequenceEqual(game_tree.children, {})
 
+    def test_flesh_out4(self):
+        # Tests the fleshing out of a GameTree and that of its children
+        game_tree = GameTree(self.__state2)
+        # Flesh out tree
+        game_tree.flesh_out()
+        # It's player 1's turn in the state corresponding to this tree
+        self.assertEqual(game_tree.state.current_player, 1)
+
+        # Make sure it has generated all possible connecting trees
+        self.assertSequenceEqual(self.__state2.get_possible_actions(),
+                                 list(game_tree.children.keys()))
+
+        # Cycle over child trees, check current player, and check move log to make sure
+        # move has been made for the state.
+        for action, tree in game_tree.children.items():
+            # Flesh out current child tree
+            tree.flesh_out()
+
+            # Make sure it has generated all possible connecting trees for current
+            # child tree
+            self.assertSequenceEqual(tree.state.get_possible_actions(),
+                                     list(tree.children.keys()))
+
+            # Make sure it's player 2's turn in the state corresponding to this tree
+            self.assertEqual(tree.state.current_player, 2)
+
+            # Make sure action was the last action that happened
+            self.assertEqual(action, tree.state.move_log[-1])
+
     def test_try_action_fail1(self):
         # Tests a failing try_action due to state being invalid (type-wise)
         with self.assertRaises(TypeError):

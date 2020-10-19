@@ -11,6 +11,7 @@ sys.path.append("../Fish/Common/")
 from tile import Tile
 from hole import Hole
 from board import Board
+from position import Position
 
 # The pattern for the input filepaths
 INPUT_FILEPATH = "Tests/*-in.json"
@@ -173,7 +174,7 @@ def xboard():
     # Test all input files
     for filepath in input_files:
         # Extract the end of the filepath (excluding all parent directories for ease of processing)
-        end_of_filepath = re.search(r'/[0-9]-in.json', filepath).group(0)
+        end_of_filepath = re.search(r'/[0-9]+-in.json', filepath).group(0)
 
         # Extract the file number from the input file
         file_no = end_of_filepath.strip("/").strip("-in.json")
@@ -218,7 +219,7 @@ def xboard():
 
             # Get the number of reachable positions from the specified position in the json input
             pos = input_json['position']
-            number_of_positions = len(board.get_reachable_positions((pos[0], pos[1])))
+            number_of_positions = len(board.get_reachable_positions(Position(pos[0], pos[1])))
 
             # Compare the number of reachable positions to the value in the output file
             if number_of_positions != output_json:

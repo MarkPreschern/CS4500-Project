@@ -155,14 +155,14 @@ class StateTests(unittest.TestCase):
 
         state.place_avatar(Position(1, 0))
 
-        expected = {Position(1, 0) : 1}
+        expected = {1: [Position(1, 0)], 2: [], 3: []}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
         # Test a second placement
         state.place_avatar(Position(0, 0))
 
-        expected = {Position(1, 0) : 1, Position(0, 0): 2}
+        expected = {1: [Position(1, 0)], 2: [Position(0, 0)], 3: []}
 
         self.assertSequenceEqual(state._State__placements, expected)
 
@@ -277,21 +277,20 @@ class StateTests(unittest.TestCase):
 
         # Test a move
         state.move_avatar(Position(1, 0), Position(0, 0))
-        expected = {Position(4, 0) : 1, Position(0, 0): 1,
-                    Position(1, 1) : 1, Position(0, 1) : 2,
-                    Position(2, 0) : 2, Position(4, 1) : 2,
-                    Position(2, 2) : 3, Position(3, 2) : 3,
-                    Position(3, 0) : 3}
+        expected = {
+                1: [Position(4, 0), Position(0, 0), Position(1, 1)],
+                2: [Position(0, 1), Position(2, 0), Position(4, 1)],
+                3: [Position(2, 2), Position(3, 2), Position(3, 0)]
+        }
 
         self.assertSequenceEqual(state._State__placements, expected)
 
         # Test a second move
         state.move_avatar(Position(0, 1), Position(2, 1))
-        expected = {Position(4, 0) : 1, Position(0, 0): 1,
-                    Position(1, 1) : 1, Position(2, 1) : 2,
-                    Position(2, 0) : 2, Position(4, 1) : 2,
-                    Position(2, 2) : 3, Position(3, 2) : 3,
-                    Position(3, 0) : 3}
+        expected = {1: [Position(4, 0), Position(0, 0), Position(1, 1)],
+                    2: [Position(2, 1), Position(2, 0), Position(4, 1)],
+                    3: [Position(2, 2), Position(3, 2), Position(3, 0)]
+                    }
 
         self.assertSequenceEqual(state._State__placements, expected)
 
