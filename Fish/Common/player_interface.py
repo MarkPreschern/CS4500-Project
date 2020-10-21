@@ -15,8 +15,9 @@ class PlayerInterface(object):
     def setup(self, player_id: int, state: State) -> bool:
         """
         This method is used to inform the player about the initial setup of the game before
-        any placements are made. More specifically it provides it with its id, the board
-        layout, and complete player list, which includes the id, name and color of each player.
+        any placements are made. More specifically it provides it with its id, and the initial
+        state of the game, which includes the board layout, player order, and a complete list of
+        players.
 
         :param player_id:   player's id
         :param state:       a State object that includes the state of the board,

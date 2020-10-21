@@ -11,6 +11,7 @@ from movement_direction import MovementDirection
 from color import Color
 from action import Action
 from exceptions.InvalidActionException import InvalidActionException
+from exceptions.GameNotRunningException import GameNotRunningException
 from game_tree import GameTree
 from position import Position
 from state import State
@@ -210,6 +211,8 @@ def _get_next_state(json_obj: dict) -> State:
             return new_state
         except InvalidActionException:
             pass
+        except GameNotRunningException:
+            return None
 
     return None
 
