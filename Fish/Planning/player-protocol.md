@@ -2,7 +2,8 @@
 
 The protocol for the Player API can be described by the following diagram:  
 
-<embed src="./protocol-diagram.pdf" type="application/pdf">
+![Protocol Diagram](player_protocol_p1.jpeg "Protocol Diagram")
+![Protocol Diagram](player_protocol_p2.jpeg "Protocol Diagram")
 
 Below, we will describe each step of the diagram in detail.
 
