@@ -2,7 +2,7 @@
 
 The protocol for the Player API can be described by the following diagram:  
 
-**Insert Diagram Here**
+<image src="./protocol-diagram.pdf"/>
 
 Below, we will describe each step of the diagram in detail.
 
