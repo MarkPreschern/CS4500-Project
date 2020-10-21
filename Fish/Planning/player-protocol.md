@@ -2,8 +2,7 @@
 
 The protocol for the Player API can be described by the following diagram:  
 
-<object data="./protocol-diagram.pdf" type="application/pdf" width="100%"> 
-</object>
+<embed src="./protocol-diagram.pdf" type="application/pdf">
 
 Below, we will describe each step of the diagram in detail.
 
