@@ -9,3 +9,6 @@ a command line input. The program can be quit by clicking anywhere within the he
 - Fish: contains the code needed to implement the Fish game
 - 3: contains test harness xboard, a small program that takes a JSON input describing a Fish board configuration and a start position, and outputs a JSON containing
 the number of reachable positions for the given position. 
+- 4: contains test harness xstate, which serves as integration tests for our State implementation. The harness takes in a complete
+state and produces a new state if a move is possible on the current player's first avatar. Otherwise, it produces False. The directory also
+includes unit tests for said harness, as well as a series of test input and output JSON files that can be used with the harness.
