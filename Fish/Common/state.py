@@ -180,7 +180,7 @@ class State(object):
             if self.__game_status == GameStatus.PLACING:
                 self.__current_player_id = player_id
                 break
-            elif self.can_player_move(player_id):
+            elif not self.is_player_stuck(player_id):
                 self.__current_player_id = player_id
                 break
 
@@ -333,23 +333,16 @@ class State(object):
         if self.__game_status != GameStatus.RUNNING:
             raise GameNotRunningException()
 
-        # Initialize player id at place holder
-        player_id = -1
-
-        # Get player id whose avatar exists at src
-        for pid, placements in self.__placements.items():
-            # If src is among this player's placements, set id
-            if src in placements:
-                player_id = pid
-                break
+        # Get player id for src
+        player_id = self.__whose_avatar(src)
 
         # Make sure there is an avatar at src
-        if not player_id:
+        if player_id == -1:
             raise InvalidActionException()
 
         # Make sure it is the current player
         if self.__current_player_id != player_id:
-            raise MoveOutOfTurnException()
+            raise MoveOutOfTurnException(f'avatar belongs to player id {player_id} current player id: {self.__current_player_id}')
 
         # Adjust player score
         self.__players[self.__current_player_id].score += self.__board.get_tile(src).fish_no
@@ -363,6 +356,30 @@ class State(object):
         self.__move_log.append(Action(src, dst))
         # Trigger next turn
         self.__trigger_next_turn()
+
+    def __whose_avatar(self, pos: Position) -> int:
+        """
+        Returns the id of the player to whom the avatar
+        on the given position belongs.
+
+        :param pos: position avatar is one
+        :return: returns player id or -1 to indicate that nobody
+                 has an avatar placed at that position
+        """
+        # Validate position
+        if not isinstance(pos, Position):
+            raise TypeError('Expected Position for pos!')
+
+        # Initialize player id at place holder
+        player_id = -1
+        # Get player id whose avatar exists at src
+        for pid, placements in self.__placements.items():
+            # If src is among this player's placements, set id
+            if pos in placements:
+                player_id = pid
+                break
+
+        return player_id
 
     def __is_path_clear(self, pos1: Position, pos2: Position) -> bool:
         """
@@ -432,19 +449,19 @@ class State(object):
         # Cycle over players and return true if any of them
         # can move
         for player_id in self.__players.keys():
-            if self.can_player_move(player_id):
+            if not self.is_player_stuck(player_id):
                 return True
 
         return False
 
-    def can_player_move(self, player_id: int) -> bool:
+    def is_player_stuck(self, player_id: int) -> bool:
         """
-        Tells if player with given player_id can perform a move.
-        It does not check for turn.
+        Tells if player with given player_id can go anywhere. It does
+        not check for turn.
 
         :param player_id: id of player for whom to check
         :return: boolean indicating whether player
-                 can move
+                 can move (not necessarily this turn)
         """
         # Validate player_id
         if not isinstance(player_id, int) or player_id <= 0:
@@ -456,7 +473,7 @@ class State(object):
 
         # If the game hasn't started, no one can move
         if self.__game_status != GameStatus.RUNNING:
-            return False
+            return True
 
         # Retrieve player's positions
         player_positions = self.__placements.get(player_id)
@@ -469,10 +486,10 @@ class State(object):
 
             for reachable_pos in reachable_pos:
                 if self.__is_path_clear(position, reachable_pos):
-                    return True
+                    return False
 
         # If we haven't returned thus far, no positions are reachable
-        return False
+        return True
 
     def render(self, parent_frame: tk.Frame):
         """

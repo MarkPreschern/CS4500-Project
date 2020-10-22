@@ -215,8 +215,8 @@ class StateTests(unittest.TestCase):
 
             state.move_avatar(-1, Position(1, 0))
 
-    def test_move_avatar_fail3(self):
-        # Test failure of move_avatar due target position
+    def test_is_player_stuck_fail3(self):
+        # Test failure of is_player_stuck due target position
         # being the same as starting position
         with self.assertRaises(UnclearPathException):
             state = State(self.__b, players=[
@@ -244,7 +244,7 @@ class StateTests(unittest.TestCase):
             state.place_avatar(Position(3, 0))
 
             # Make sure p1 can move
-            self.assertTrue(state.can_player_move(self.__p1.id))
+            self.assertFalse(state.is_player_stuck(self.__p1.id))
             self.assertEqual(state.current_player, self.__p1.id)
 
             state.move_avatar(Position(0, 0), Position(0, 0))
@@ -463,9 +463,9 @@ class StateTests(unittest.TestCase):
             state.place_avatar(8, (3, 0))
 
             # Make sure p1 can move avatar id 0
-            self.assertTrue(state.can_player_move(self.__p1.id))
+            self.assertTrue(state.is_player_stuck(self.__p1.id))
             # This should raise the exception
-            state.can_player_move("1")
+            state.is_player_stuck("1")
 
     def test_can_player_move_fail2(self):
         # Tests failing can_player_move due to non-existent
@@ -478,10 +478,10 @@ class StateTests(unittest.TestCase):
                 self.__p3])
 
             # This should raise the exception
-            state.can_player_move(231)
+            state.is_player_stuck(231)
 
-    def test_can_player_move_fail3(self):
-        # Tests failing can_player_move due to avatar
+    def test_is_player_stuck_fail3(self):
+        # Tests failing is_player_stuck due to avatar
         # being surrounded by other avatars
 
         state = State(self.__b, players=[
@@ -509,11 +509,10 @@ class StateTests(unittest.TestCase):
         # Place player 4's avatars
         state.place_avatar(Position(2, 0))
 
-        # This should raise the exception
-        self.assertFalse(state.can_player_move(4))
+        self.assertTrue(state.is_player_stuck(4))
 
-    def test_can_player_move_success1(self):
-        # Tests successful can_player_move with almost
+    def test_is_player_stuck_success1(self):
+        # Tests successful is_player_stuck with almost
         # completely surrounded avatar
         state = State(self.__b, players=[
             self.__p1,
@@ -540,11 +539,11 @@ class StateTests(unittest.TestCase):
         # Place player 4's avatar
         state.place_avatar(Position(2, 0))
 
-        self.assertTrue(state.can_player_move(4))
+        self.assertFalse(state.is_player_stuck(4))
         self.assertTrue(state.can_anyone_move())
 
-    def test_can_player_move_success2(self):
-        # Tests successful can_player_move with almost
+    def test_is_player_stuck_success2(self):
+        # Tests successful is_player_stuck with almost
         # completely surrounded avatar where not all
         # avatars have been placed yet
         state = State(self.__b, players=[
@@ -570,14 +569,14 @@ class StateTests(unittest.TestCase):
         # Place player 3's avatar
         state.place_avatar(Position(4, 1))
 
-        # This return false as player 4 has not
+        # This return false true player 4 has not
         # finished placing their avatars
-        self.assertFalse(state.can_player_move(4))
+        self.assertTrue(state.is_player_stuck(4))
         # No one should be able to move
         self.assertFalse(state.can_anyone_move())
 
-    def test_can_player_move_success3(self):
-        # Tests successful can_player_move where one of
+    def test_is_player_stuck_success3(self):
+        # Tests successful is_player_stuck where one of
         # player's avatars is completely surrounded
         state = State(self.__b, players=[
             self.__p1,
@@ -604,7 +603,7 @@ class StateTests(unittest.TestCase):
         # Place player 4's avatar
         state.place_avatar(Position(3, 1))
 
-        self.assertTrue(state.can_player_move(4))
+        self.assertFalse(state.is_player_stuck(4))
 
     def test_get_player_order1(self):
         # Tests player order for two players

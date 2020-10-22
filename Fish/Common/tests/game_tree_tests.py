@@ -7,10 +7,12 @@ from board import Board
 from color import Color
 from exceptions.InvalidActionException import InvalidActionException
 from game_status import GameStatus
+from hole import Hole
 from player import Player
 from position import Position
 from state import State
 from exceptions.GameNotRunningException import GameNotRunningException
+from tile import Tile
 
 sys.path.append('Common/')
 
@@ -24,7 +26,23 @@ class GameTreeTests(unittest.TestCase):
         # Initialize boards
         self.__board1 = Board.homogeneous(5, 5, 3)
         self.__board2 = Board.homogeneous(3, 5, 2)
-        self.__board3 = Board.min_oft_and_holes(0, [Position(5, 2)])
+        self.__board3 = Board({
+            Position(0, 0): Tile(5),
+            Position(0, 1): Tile(3),
+            Position(0, 2): Tile(2),
+            Position(1, 0): Tile(2),
+            Position(1, 1): Tile(3),
+            Position(1, 2): Tile(2),
+            Position(2, 0): Tile(3),
+            Position(2, 1): Tile(4),
+            Position(2, 2): Tile(1),
+            Position(3, 0): Tile(1),
+            Position(3, 1): Tile(1),
+            Position(3, 2): Tile(5),
+            Position(4, 0): Tile(2),
+            Position(4, 1): Tile(3),
+            Position(4, 2): Tile(4)
+        })
 
         # Initialize some players for testing
         self.__p1 = Player(1, "John", 20, Color.RED)
@@ -111,23 +129,40 @@ class GameTreeTests(unittest.TestCase):
             self.__p11])
 
         # Player 1
-        self.__state5.place_avatar(Position(3, 0))
-        # Player 2
-        self.__state5.place_avatar(Position(0, 0))
-        # Player 3
-        self.__state5.place_avatar(Position(1, 0))
-        # Player 1
         self.__state5.place_avatar(Position(2, 0))
         # Player 2
-        self.__state5.place_avatar(Position(4, 0))
-        # Player 3
         self.__state5.place_avatar(Position(0, 1))
-        # Player 1
-        self.__state5.place_avatar(Position(2, 1))
-        # Player 2
-        self.__state5.place_avatar(Position(1, 1))
         # Player 3
+        self.__state5.place_avatar(Position(0, 2))
+        # Player 1
+        self.__state5.place_avatar(Position(1, 0))
+        # Player 2
+        self.__state5.place_avatar(Position(1, 2))
+        # Player 3
+        self.__state5.place_avatar(Position(0, 0))
+        # Player 1
         self.__state5.place_avatar(Position(3, 1))
+        # Player 2
+        self.__state5.place_avatar(Position(2, 1))
+        # Player 3
+        self.__state5.place_avatar(Position(3, 2))
+
+        """
+                self.__board3 = Board({
+            Position(0, 0): Tile(5),
+            Position(0, 1): Tile(3),
+            Position(0, 2): Tile(2),
+            Position(1, 0): Tile(2),
+            Position(1, 1): Hole(),
+            Position(1, 2): Tile(2),
+            Position(2, 0): Tile(3),
+            Position(2, 1): Tile(4),
+            Position(2, 2): Hole(),
+            Position(3, 0): Tile(1),
+            Position(3, 1): Tile(1),
+            Position(3, 2): Tile(5)
+        })
+        """
 
     def test_init_fail1(self):
         # Tests failing constructor due to an invalid state
@@ -145,7 +180,6 @@ class GameTreeTests(unittest.TestCase):
         game_tree = GameTree(self.__state2)
 
         # Tests properties
-        self.assertEqual(game_tree.state, self.__state2)
         self.assertEqual(game_tree.children, {})
 
     def test_flesh_out1(self):
@@ -252,20 +286,31 @@ class GameTreeTests(unittest.TestCase):
             GameTree.try_action(self.__state2, (Position(0, 0), Position(1, 0)))
 
     def test_try_action_fail3(self):
-        # Tests a failing try_action due to state being invalid (game is not running)
-        with self.assertRaises(GameNotRunningException):
-            GameTree.try_action(self.__state1, Action(Position(0, 0), Position(1, 0)))
+        # Tests a failing try_action due to action being invalid (not accessible via a straight
+        # line path)
+        with self.assertRaises(InvalidActionException):
+            GameTree.try_action(GameTree(self.__state2), Action(Position(3, 0), Position(0, 0)))
 
     def test_try_action_fail4(self):
-        # Tests a failing try_action due to action being invalid (not permissible
-        # with respect to the rules of the game
+        # Tests a failing try_action due to action being out of turn (it involves moving someone
+        # else but the current player's avatar, despite otherwise being legal)
         with self.assertRaises(InvalidActionException):
-            GameTree.try_action(self.__state2, Action(Position(0, 0), Position(4, 0)))
+            GameTree.try_action(GameTree(self.__state2), Action(Position(0, 1), Position(2, 1)))
+
+    def test_try_action_fail5(self):
+        # Tests a failing try_action due to action involves moving thru another character
+        with self.assertRaises(InvalidActionException):
+            GameTree.try_action(GameTree(self.__state2), Action(Position(4, 0), Position(2, 1)))
+
+    def test_try_action_fail6(self):
+        # Tests a failing try_action due to action involves moving to an already occupied tile
+        with self.assertRaises(InvalidActionException):
+            GameTree.try_action(GameTree(self.__state2), Action(Position(4, 0), Position(3, 0)))
 
     def test_try_action_success(self):
         # Tests a successful try_action where a valid action gets executed
         valid_action = Action(Position(1, 0), Position(4, 2))
-        new_state = GameTree.try_action(self.__state2, valid_action)
+        new_state = GameTree.try_action(GameTree(self.__state2), valid_action)
 
         # Make sure the valid action we gave it got executed and is at the top
         # of the move log
@@ -279,19 +324,19 @@ class GameTreeTests(unittest.TestCase):
             GameTree.apply_to_child_states('not a real state', lambda _: 1)
 
     def test_apply_to_child_states_fail2(self):
-        # Tests apply_to_child_states failing due to invalid state (game is not running)
+        # Tests apply_to_child_states failing due to invalid underlying state (game is not running)
         with self.assertRaises(GameNotRunningException):
-            GameTree.apply_to_child_states(self.__state1, lambda _: 1)
+            GameTree.apply_to_child_states(GameTree(self.__state1), lambda _: 1)
 
     def test_apply_to_child_states_fail3(self):
         # Tests apply_to_child_states failing due to invalid function (type-wise)
         with self.assertRaises(TypeError):
-            GameTree.apply_to_child_states(self.__state2, lambda state, _: state)
+            GameTree.apply_to_child_states(GameTree(self.__state2), lambda state, _: state)
 
     def test_apply_to_child_states_successful1(self):
         # Tests successful apply_to_child_states where each child state maps to
         # that state's current player
-        result = GameTree.apply_to_child_states(self.__state2, lambda state: state.current_player)
+        result = GameTree.apply_to_child_states(GameTree(self.__state2), lambda state: state.current_player)
 
         # Resulting array should consist of the next player's id the same number of times
         # as there are reachable states
@@ -300,8 +345,15 @@ class GameTreeTests(unittest.TestCase):
     def test_apply_to_child_states_successful2(self):
         # Tests successful apply_to_child_states where each child state maps to
         # that a given player's score (homogeneous board)
-        result = GameTree.apply_to_child_states(self.__state2, lambda state: state.get_player_score(1))
+        result = GameTree.apply_to_child_states(GameTree(self.__state2), lambda state: state.get_player_score(1))
 
         # Score should be the same (5) all around since this is a homogeneous board with
         # 5 fish to each tile
         self.assertSequenceEqual(result, 7 * [5])
+
+    def test_apply_to_child_states_successful3(self):
+        # Tests successful apply_to_child_states where each child state maps to
+        # that a given player's score (heterogeneous board)
+        result = GameTree.apply_to_child_states(GameTree(self.__state5), lambda state: state.get_player_score(9))
+
+        self.assertSequenceEqual(result, [3, 3, 3, 2, 1, 1, 1, 1])
