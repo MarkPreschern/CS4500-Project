@@ -207,7 +207,7 @@ def _get_next_state(json_obj: dict) -> State:
 
         try:
             # Try action on game state
-            new_state = GameTree.try_action(state, Action(first_avatar_pos, next_pos))
+            new_state = GameTree.try_action(GameTree(state), Action(first_avatar_pos, next_pos))
             return new_state
         except InvalidActionException:
             pass
