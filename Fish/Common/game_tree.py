@@ -9,11 +9,15 @@ from state import State
 
 class GameTree(object):
     """
-    Represents an entire game starting from a given state. The representation can be
-    used by parties to check rules and plan their next moves. It is generated from
-    a state and can maintain connections to subsequent game states by way of other
-    GameTree(s). The structure follows a lazy, generative design meaning that
-    adjacent trees are not connected until there is an explicit "need".
+    INTERPRETATION: Represents an entire game starting from a given state wherein no more
+    avatars will be placed. It is generated from a state and can maintain connections to
+    subsequent game states by way of other GameTree(s).
+
+    PURPOSE: The representation can be used by the players and the referee to check rules and
+    plan their next moves.
+
+    The structure follows a lazy, generative design meaning that adjacent trees are not connected
+    until there is an explicit "need".
     """
 
     def __init__(self, state: State):
