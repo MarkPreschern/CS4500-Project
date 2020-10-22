@@ -3,16 +3,15 @@
 from tkinter import Tk, Frame
 import sys
 
-from hole import Hole
-from position import Position
-from tile import Tile
-
 sys.path.append('../')
 
 from board import Board
 from state import State
 from player import Player
 from color import Color
+from hole import Hole
+from position import Position
+from tile import Tile
 
 # Make up window
 _window = Tk()
