@@ -57,40 +57,36 @@ def initialize_board(json_board: list) -> Board:
     :param json_board: the json representation of a board as provided by the testing specifications
     :return: a Board object consisting of the tiles described by the board_json
     """
-    # Keep track of the current row and column
-    current_row = 0
-    current_col = 0
-
     # Dict to store tile objects
     tiles = {}
 
+    # Determine the maximum row length so that we can determine whether we need to pad certain rows with 0's
+    max_row_length = max(map(lambda x: len(x), json_board))
+
     # Iterate through each row in the json board
-    for row in json_board:
-        for _ in row:
+    for row in range(len(json_board)):
+        # Current row in the board
+        current_row = json_board[row]
+
+        # Iterate through all columns in the current row (and, if row length
+        # is shorter than the maximum, iterate extra times to pad with zeros)
+        for current_col in range(max_row_length):
             try:
                 # The current position
-                current_pos = Position(current_row, current_col)
+                current_pos = Position(row, current_col)
 
                 # The number of fish according to the json object
-                num_fish = json_board[current_row][current_col]
+                num_fish = current_row[current_col] if current_col < len(current_row) else 0
 
                 # Initialize a new tile/hole according to the number provided
                 new_tile = Tile(num_fish) if num_fish > 0 else Hole()
 
                 # Add the tile to the current collection of tiles
                 tiles[current_pos] = new_tile
-
-                # Move to the next column
-                current_col += 1
             except ValueError:
                 raise ValueError("Issue initializing tile because of an invalid number of fish.")
             except TypeError:
                 raise TypeError("Issue initializing tile because a non-integer value was encountered.")
-
-        # Move to the next row and reset columns
-        current_row += 1
-        current_col = 0
-
     try:
         # Disable sprite rendering for testing purposes
         Board.DISABLE_SPRITE_MANAGER = True
