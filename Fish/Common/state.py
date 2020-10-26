@@ -17,6 +17,7 @@ from game_status import GameStatus
 from player import Player
 from position import Position
 from sprite_manager import SpriteManager
+import time
 
 
 class State(object):
@@ -57,11 +58,11 @@ class State(object):
         # of avatar positions
         self.__placements = {}
 
+        # Initialize cache for all possible actions as a list of Action objects
+        self.__all_possible_actions_cache = []
+
         # Create player dictionary keyed by player ids w/ Player values
         self.__players = OrderedDict()
-
-        # Create an avatar dictionary keyed by avatar ids w/ Avatar values
-        self.__avatars = dict()
 
         # Sort player list in increasing order of age
         players.sort(key=lambda p: p.age)
@@ -91,6 +92,13 @@ class State(object):
         # of the game
         self.__move_log = []
 
+        # Make up cache
+        self.__player_stuck_cache = []
+
+    @property
+    def avatars_per_player(self) -> int:
+        return self.__avatars_per_player
+
     @property
     def move_log(self) -> []:
         """
@@ -119,6 +127,21 @@ class State(object):
         Returns the id of the player whose turn it is.
         """
         return self.__current_player_id
+
+    @property
+    def active_players_no(self) -> int:
+        """
+        Returns the number of active players in the game.
+        """
+        running_count = 0
+
+        for player_id, player_obj in self.__players.items():
+            if player_id in self.__player_stuck_cache:
+                continue
+
+            running_count += 1
+
+        return len(self.__players)
 
     @property
     def game_status(self) -> GameStatus:
@@ -152,11 +175,14 @@ class State(object):
             # Create possible move for position reachable from avatar's
             # current position
             for pos in reachable_positions:
-                # Skip if path is not clear of avatars
-                if not self.__is_path_clear(position, pos):
+                # Check if path is clear
+                if not self.__is_path_clear(position, pos, reachable_positions):
                     continue
 
                 possible_moves.append(Action(position, pos))
+
+        # Set cache
+        self.__all_possible_actions_cache = possible_moves
 
         return possible_moves
 
@@ -270,7 +296,7 @@ class State(object):
 
         # Make sure target position is not occupied by another player or
         # a hole
-        if self.__is_position_occupied_or_hole(position):
+        if not self.is_position_open(position):
             raise InvalidPositionException("Position already occupied or hole!")
 
         # Make sure there are still avatars to place
@@ -287,9 +313,9 @@ class State(object):
         # Trigger next turn
         self.__trigger_next_turn()
 
-    def __is_position_occupied_or_hole(self, position: Position) -> bool:
+    def is_position_open(self, position: Position) -> bool:
         """
-        Returns true if given position is either a hole or occupied
+        Returns false if given position is either a hole or occupied
         by another avatar.
         :param position: position to check
         :return: boolean indicating if condition above is fulfilled
@@ -299,14 +325,14 @@ class State(object):
 
         # Check if tile is a hole
         if self.__board.get_tile(position).is_hole:
-            return True
+            return False
 
         # Check if an avatar is at position
         for placements in self.__placements.values():
             if position in placements:
-                return True
+                return False
 
-        return False
+        return True
 
     def move_avatar(self, src: Position, dst: Position) -> None:
         """
@@ -325,13 +351,15 @@ class State(object):
         if not isinstance(dst, Position):
             raise TypeError('Expected Position for dst!')
 
-        # Check if path to target position is clear
-        if not self.__is_path_clear(src, dst):
-            raise UnclearPathException('Target position cannot be reached!')
+        # If action is not cache as valid, validate
+        if Action(src, dst) not in self.__all_possible_actions_cache:
+            # Check if path to target position is clear
+            if not self.__is_path_clear(src, dst):
+                raise UnclearPathException('Target position cannot be reached!')
 
-        # Make sure everyone has placed their avatars
-        if self.__game_status != GameStatus.RUNNING:
-            raise GameNotRunningException()
+            # Make sure everyone has placed their avatars
+            if self.__game_status != GameStatus.RUNNING:
+                raise GameNotRunningException()
 
         # Get player id for src
         player_id = self.__whose_avatar(src)
@@ -342,13 +370,16 @@ class State(object):
 
         # Make sure it is the current player
         if self.__current_player_id != player_id:
-            raise MoveOutOfTurnException(f'avatar belongs to player id {player_id} current player id: {self.__current_player_id}')
+            raise MoveOutOfTurnException(f'avatar belongs to player id {player_id} '
+                                         f'current player id: {self.__current_player_id}')
 
         # Adjust player score
         self.__players[self.__current_player_id].score += self.__board.get_tile(src).fish_no
 
         # Swap out old avatar position for new
         self.__placements[player_id][self.__placements[player_id].index(src)] = dst
+        # Clear cache for all possible actions
+        self.__all_possible_actions_cache.clear()
 
         # Remove board tile
         self.__board.remove_tile(src)
@@ -381,13 +412,14 @@ class State(object):
 
         return player_id
 
-    def __is_path_clear(self, pos1: Position, pos2: Position) -> bool:
+    def __is_path_clear(self, pos1: Position, pos2: Position, reachable_pos=None) -> bool:
         """
         Checks if the path is clear of holes and avatars
         from pos1 to pos2.
 
         :param pos1: start position
         :param pos2: end position
+        :param reachable_pos: optional list of all reachables positions from pos1
         :return: boolean indicating if condition is fulfilled
         """
         if not isinstance(pos1, Position):
@@ -396,8 +428,13 @@ class State(object):
         if not isinstance(pos2, Position):
             raise TypeError('Expected Position for pos2!')
 
-        # Retrieve all reachable positions from pos1
-        reachable_pos = self.__board.get_reachable_positions(pos1)
+        if reachable_pos is not None and not isinstance(reachable_pos, list):
+            raise TypeError('Expected list of Position for reachable_pos or None!')
+
+        # Check if reachable pos is provided
+        if not reachable_pos:
+            # Retrieve all reachable positions from pos1
+            reachable_pos = self.__board.get_reachable_positions(pos1)
 
         # Check if pos2 is among said positions
         if pos2 not in reachable_pos:
@@ -475,6 +512,10 @@ class State(object):
         if self.__game_status != GameStatus.RUNNING:
             return True
 
+        # See if player is in "forever-stuck" cache
+        if player_id in self.__player_stuck_cache:
+            return True
+
         # Retrieve player's positions
         player_positions = self.__placements.get(player_id)
 
@@ -484,9 +525,12 @@ class State(object):
             reachable_pos: [Position] = self.__board.get_reachable_positions(position)
             # Make sure at least one path is clear
 
-            for reachable_pos in reachable_pos:
-                if self.__is_path_clear(position, reachable_pos):
+            for pos in reachable_pos:
+                if self.__is_path_clear(position, pos, reachable_pos):
                     return False
+
+        # Cache that player is indefinitely stuck
+        self.__player_stuck_cache.append(player_id)
 
         # If we haven't returned thus far, no positions are reachable
         return True

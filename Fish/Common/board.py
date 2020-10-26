@@ -61,6 +61,9 @@ class Board(object):
         self.__cols = cols
         self.__tile_no = self.__rows * self.__cols
 
+        # Compute edge list for determining reachable positions
+        self.__edge_list = self.__compute_reachable_edge_list()
+
         if not Board.DISABLE_SPRITE_MANAGER:
             # Loads sprites
             SpriteManager.load_sprites()
@@ -172,6 +175,7 @@ class Board(object):
         """
         Builds a homogeneous board with tiles laden with
         the number of fish provided.
+
         :param tile_fish_no: number of fish to each tile
         :param rows: number of rows to board
         :param cols: number of cols to board
@@ -297,19 +301,16 @@ class Board(object):
         if pos not in self.tiles.keys():
             raise ValueError('Expected pos to be a position on the game board.')
 
-        # Compute edge list for determining reachable positions
-        edge_list = self.__compute_reachable_edge_list()
-
         # Store reachable positions
         reachable_positions = []
 
         # Use out-edges from the tile at the given pos
-        edges_to_adj_tiles = edge_list[pos]
+        edges_to_adj_tiles = self.__edge_list[pos]
 
         # Look at all adjacent tiles for straight line paths
         for movement_dir in edges_to_adj_tiles:
             # Find all of the tiles in the same direction as the current direction
-            tiles_in_path = self.__find_straight_path(pos, movement_dir, edge_list=edge_list)
+            tiles_in_path = self.__find_straight_path(pos, movement_dir)
 
             # Add all tiles above to the overall list of reachable positions
             reachable_positions.extend(tiles_in_path)
@@ -429,15 +430,13 @@ class Board(object):
 
         return edges
 
-    def __find_straight_path(self, start_pos, direction, edge_list=None) -> [Position]:
+    def __find_straight_path(self, start_pos, direction) -> [Position]:
         """
         Find the positions of all tiles in the straight line path starting from the
         given position and moving in the given direction.
 
         :param start_pos: starting position of the straight line path
         :param direction: direction of the straight line path
-        :param edge_list: list of edges between tiles/nodes in the directed graph described 
-                          in compute_reachable_edge_list
         :return: a list of Position objects representing the positions of tiles that are in
                  the straight line path
         """
@@ -447,12 +446,6 @@ class Board(object):
             raise TypeError('Expected Position for start_pos.')
         if not isinstance(direction, MovementDirection):
             raise TypeError('Expected MovementDirection for direction.')
-        if edge_list and not isinstance(edge_list, dict):
-            raise TypeError('Expected dict for edge_list')
-
-        # If an edge list was not provided, recompute the edges for this board
-        if not edge_list:
-            edge_list = self.__compute_reachable_edge_list()
 
         # Store tiles in the current straight line path
         tiles_in_path = []
@@ -463,7 +456,7 @@ class Board(object):
         # Iterate until the end of the path is reached or a hole is encountered
         while current_pos is not None:
             # Get the position of the next tile in the path
-            next_pos = edge_list.get(current_pos, {}).get(direction, None)
+            next_pos = self.__edge_list.get(current_pos, {}).get(direction, None)
 
             # If the next tile in the path is a hole, break
             if next_pos and self.tiles[next_pos].is_hole:
