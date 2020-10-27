@@ -147,23 +147,6 @@ class GameTreeTests(unittest.TestCase):
         # Player 3
         self.__state5.place_avatar(Position(3, 2))
 
-        """
-                self.__board3 = Board({
-            Position(0, 0): Tile(5),
-            Position(0, 1): Tile(3),
-            Position(0, 2): Tile(2),
-            Position(1, 0): Tile(2),
-            Position(1, 1): Hole(),
-            Position(1, 2): Tile(2),
-            Position(2, 0): Tile(3),
-            Position(2, 1): Tile(4),
-            Position(2, 2): Hole(),
-            Position(3, 0): Tile(1),
-            Position(3, 1): Tile(1),
-            Position(3, 2): Tile(5)
-        })
-        """
-
     def test_init_fail1(self):
         # Tests failing constructor due to an invalid state
         with self.assertRaises(TypeError):

@@ -17,7 +17,6 @@ from game_status import GameStatus
 from player import Player
 from position import Position
 from sprite_manager import SpriteManager
-import time
 
 
 class State(object):
@@ -92,12 +91,27 @@ class State(object):
         # of the game
         self.__move_log = []
 
-        # Make up cache
+        # Make up cache of stuck player ids
         self.__player_stuck_cache = []
 
     @property
+    def stuck_players(self) -> [int]:
+        return self.__player_stuck_cache
+
+    @property
     def avatars_per_player(self) -> int:
+        """
+        Returns the number of avatars each player
+        started with.
+        """
         return self.__avatars_per_player
+
+    @property
+    def players_no(self) -> int:
+        """
+        Returns the number of players currently in the game.
+        """
+        return len(self.__players)
 
     @property
     def move_log(self) -> []:
@@ -127,21 +141,6 @@ class State(object):
         Returns the id of the player whose turn it is.
         """
         return self.__current_player_id
-
-    @property
-    def active_players_no(self) -> int:
-        """
-        Returns the number of active players in the game.
-        """
-        running_count = 0
-
-        for player_id, player_obj in self.__players.items():
-            if player_id in self.__player_stuck_cache:
-                continue
-
-            running_count += 1
-
-        return len(self.__players)
 
     @property
     def game_status(self) -> GameStatus:
@@ -206,7 +205,7 @@ class State(object):
             if self.__game_status == GameStatus.PLACING:
                 self.__current_player_id = player_id
                 break
-            elif not self.is_player_stuck(player_id):
+            elif not self.__is_player_stuck(player_id):
                 self.__current_player_id = player_id
                 break
 
@@ -486,12 +485,12 @@ class State(object):
         # Cycle over players and return true if any of them
         # can move
         for player_id in self.__players.keys():
-            if not self.is_player_stuck(player_id):
+            if not self.__is_player_stuck(player_id):
                 return True
 
         return False
 
-    def is_player_stuck(self, player_id: int) -> bool:
+    def __is_player_stuck(self, player_id: int) -> bool:
         """
         Tells if player with given player_id can go anywhere. It does
         not check for turn.

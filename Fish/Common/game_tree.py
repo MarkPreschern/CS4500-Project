@@ -1,4 +1,4 @@
-import copy
+import pickle
 
 from action import Action
 from exceptions.GameNotRunningException import GameNotRunningException
@@ -21,6 +21,7 @@ class GameTree(object):
     The structure follows a lazy, generative design meaning that adjacent trees are not connected
     until there is an explicit "need".
     """
+    DEBUG = False
 
     def __init__(self, state: State):
         """
@@ -51,6 +52,11 @@ class GameTree(object):
         # Set flag to indicate whether game tree has been fleshed out
         self.__fleshed_out = False
 
+        # Get all possible actions for this tree's underlying state. It only includes
+        # actions that can be performed by the current player and that are legal
+        # under the rules of Fish.
+        self.__all_possible_moves = self.__state.get_possible_actions()
+
     @property
     def children(self):
         """
@@ -63,7 +69,45 @@ class GameTree(object):
         """
         Returns a copy of the GameState that the tree is based off of.
         """
-        return copy.deepcopy(self.__state)
+        return pickle.loads(pickle.dumps(self.__state))
+
+    def get_next(self):
+        """
+        Lazily returns the node's next child node by generating it
+        when the returned iterable is iterated over. If no more children exist,
+        None is returned.
+
+        :return: child GameTree object or None
+        """
+
+        # Cycle over all possible moves from this node
+        for move in self.__all_possible_moves:
+            # Make a copy of the state
+            subsequent_state: State = pickle.loads(pickle.dumps(self.__state))
+
+            current_player_id = subsequent_state.current_player
+
+            if GameTree.DEBUG:
+                print(
+                    f'[avatar: {current_player_id}] [score:'
+                    f' {subsequent_state.get_player_score(current_player_id)}]'
+                    f' [move: {[move.src.x, move.src.y, move.dst.x, move.dst.y]}]')
+
+            # Get move to make
+            src, dst = move
+            # Make move
+            subsequent_state.move_avatar(src, dst)
+
+            score = subsequent_state.get_player_score(current_player_id)
+
+            if GameTree.DEBUG:
+                print(f'after moving avatar {current_player_id} with score of {score}')
+
+                if score >= 10:
+                    print(subsequent_state.move_log)
+
+            # Yield next node
+            yield move, GameTree(subsequent_state)
 
     def flesh_out(self):
         """
@@ -77,21 +121,15 @@ class GameTree(object):
         if self.__fleshed_out:
             return
 
-        # Get all possible actions for this tree's underlying state. It only includes
-        # actions that can be performed by the current player and that are legal
-        # under the rules of Fish.
-        actions: [Action] = self.__state.get_possible_actions()
-
-        # For each possible action
-        for action in actions:
+        # Set children
+        for action in self.__all_possible_moves:
             # De-multiplex action into position tuples
             src, dst = action
 
             # Create subsequent game state after this move is made
-            subsequent_state: State = copy.deepcopy(self.__state)
+            subsequent_state: State = pickle.loads(pickle.dumps(self.__state))
             subsequent_state.move_avatar(src, dst)
 
-            # Insert mapping of action to resulting GameTree
             self.__children.update({action: GameTree(subsequent_state)})
 
         # Set flag
