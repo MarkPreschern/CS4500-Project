@@ -2,6 +2,7 @@ import copy
 import sys
 import unittest
 
+from action import Action
 
 sys.path.append('Player/')
 sys.path.append('../../Common')
@@ -209,6 +210,17 @@ class StrategyTests(unittest.TestCase):
     def test_get_best_action_success2(self):
         # Tests successful get_best_action with a max depth of 5 (3 players)
         self.assertEqual(Strategy.get_best_action(self.__state2, 5), ((1, 1), (2, 2)))
+
+    def test_get_best_action_success3(self):
+        # Tests minimax search on an incipient state and then on the state after a move has
+        # been made
+        # Get best move for player id 9
+        self.assertEqual(Strategy.get_best_action(self.__state5, 2), ((1, 0), (3, 0)))
+
+        self.__state5.move_avatar(Position(1, 0), Position(3, 0))
+
+        # Get best move for player id 10
+        self.assertEqual(Strategy.get_best_action(self.__state5, 2), ((0, 1), (2, 2)))
 
     def test_mini_max_search_fail1(self):
         # Tests failing mini_max_search due to invalid node
