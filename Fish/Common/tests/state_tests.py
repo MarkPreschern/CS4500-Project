@@ -1,9 +1,6 @@
 import sys
 import unittest
 
-from action import Action
-from game_status import GameStatus
-
 sys.path.append('../')
 
 from state import State
@@ -12,12 +9,16 @@ from board import Board
 from color import Color
 from collections import OrderedDict
 from position import Position
+from action import Action
 
 from exceptions.InvalidActionException import InvalidActionException
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
 from exceptions.GameNotRunningException import GameNotRunningException
+from exceptions.InvalidGameStatus import InvalidGameStatus
+
+from game_status import GameStatus
 
 
 class StateTests(unittest.TestCase):
@@ -432,8 +433,8 @@ class StateTests(unittest.TestCase):
             # This should raise the exception
             state.move_avatar(Position(1, 0), Position(4, 0))
 
-    def test_can_player_move_fail1(self):
-        # Tests failing can_player_move due to invalid
+    def test_is_player_stuck_fail1(self):
+        # Tests failing is_player_stuck due to invalid
         # player_id
 
         with self.assertRaises(TypeError):
@@ -467,8 +468,8 @@ class StateTests(unittest.TestCase):
             # This should raise the exception
             state._State__is_player_stuck("1")
 
-    def test_can_player_move_fail2(self):
-        # Tests failing can_player_move due to non-existent
+    def test_is_player_stuck_fail2(self):
+        # Tests failing is_player_stuck due to non-existent
         # player id
 
         with self.assertRaises(NonExistentPlayerException):
@@ -480,8 +481,10 @@ class StateTests(unittest.TestCase):
             # This should raise the exception
             state._State__is_player_stuck(231)
 
-    def test_is_player_stuck_fail3(self):
-        # Tests failing is_player_stuck due to avatar
+            self.assertNotIn(321, state.stuck_players)
+
+    def test_is_player_stuck_success1(self):
+        # Tests is_player_stuck that return true due to avatar
         # being surrounded by other avatars
 
         state = State(self.__b, players=[
@@ -510,8 +513,10 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Position(2, 0))
 
         self.assertTrue(state._State__is_player_stuck(4))
+        # Make sure player id 4 is among stuck players
+        self.assertIn(4, state.stuck_players)
 
-    def test_is_player_stuck_success1(self):
+    def test_is_player_stuck_success2(self):
         # Tests successful is_player_stuck with almost
         # completely surrounded avatar
         state = State(self.__b, players=[
@@ -540,9 +545,10 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Position(2, 0))
 
         self.assertFalse(state._State__is_player_stuck(4))
+        self.assertNotIn(4, state.stuck_players)
         self.assertTrue(state.can_anyone_move())
 
-    def test_is_player_stuck_success2(self):
+    def test_is_player_stuck_success3(self):
         # Tests successful is_player_stuck with almost
         # completely surrounded avatar where not all
         # avatars have been placed yet
@@ -569,13 +575,13 @@ class StateTests(unittest.TestCase):
         # Place player 3's avatar
         state.place_avatar(Position(4, 1))
 
-        # This return false true player 4 has not
-        # finished placing their avatars
-        self.assertTrue(state._State__is_player_stuck(4))
-        # No one should be able to move
-        self.assertFalse(state.can_anyone_move())
+        with self.assertRaises(InvalidGameStatus):
+            self.assertTrue(state._State__is_player_stuck(4))
 
-    def test_is_player_stuck_success3(self):
+        with self.assertRaises(InvalidGameStatus):
+            self.assertFalse(state.can_anyone_move())
+
+    def test_is_player_stuck_success4(self):
         # Tests successful is_player_stuck where one of
         # player's avatars is completely surrounded
         state = State(self.__b, players=[
@@ -604,6 +610,8 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Position(3, 1))
 
         self.assertFalse(state._State__is_player_stuck(4))
+        # Make sure player id 4 is NOT among stuck players
+        self.assertNotIn(4, state.stuck_players)
 
     def test_get_player_order1(self):
         # Tests player order for two players

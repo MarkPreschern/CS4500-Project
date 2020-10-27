@@ -1,4 +1,5 @@
 import copy
+import pickle
 import tkinter as tk
 from collections import OrderedDict, deque
 from itertools import cycle
@@ -9,6 +10,7 @@ from board import Board
 from color import Color
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
+from exceptions.InvalidGameStatus import InvalidGameStatus
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
@@ -96,7 +98,12 @@ class State(object):
 
     @property
     def stuck_players(self) -> [int]:
-        return self.__player_stuck_cache
+        """
+        Returns a list of ids who belong to players that are stuck (or
+        cannot move any of their penguins). This list is actualized at the
+        very least at end of each turn.
+        """
+        return self.__player_stuck_cache.copy()
 
     @property
     def avatars_per_player(self) -> int:
@@ -126,7 +133,7 @@ class State(object):
         """
         Returns an immutable copy of the board.
         """
-        return copy.deepcopy(self.__board)
+        return pickle.loads(pickle.dumps(self.__board))
 
     @property
     def placements(self) -> []:
@@ -195,7 +202,7 @@ class State(object):
             return
 
         # Check if another turn is warranted, otherwise call it a game.
-        if not self.can_anyone_move() and self.__game_status == GameStatus.RUNNING:
+        if self.__game_status == GameStatus.RUNNING and not self.can_anyone_move():
             self.__game_status = GameStatus.OVER
             return
 
@@ -475,11 +482,17 @@ class State(object):
 
     def can_anyone_move(self) -> bool:
         """
-        Tells if any player can move any of their avatars.
+        Tells if any player can move any of their avatars. Can only be called
+        after everyone has finished placing their avatars.
+
         :return: boolean indicating whether anyone can move
         """
-        # If the game hasn't started, no one can move
-        if self.__game_status != GameStatus.RUNNING:
+        # If we're still placing, we cannot compute response
+        if self.__game_status is GameStatus.PLACING:
+            raise InvalidGameStatus()
+
+        # If game is over, no one can move
+        if self.__game_status is GameStatus.OVER:
             return False
 
         # Cycle over players and return true if any of them
@@ -493,7 +506,8 @@ class State(object):
     def __is_player_stuck(self, player_id: int) -> bool:
         """
         Tells if player with given player_id can go anywhere. It does
-        not check for turn.
+        not check for turn. Can only be called after everyone has
+        finished placing their avatars.
 
         :param player_id: id of player for whom to check
         :return: boolean indicating whether player
@@ -507,8 +521,12 @@ class State(object):
         if player_id not in self.__players.keys():
             raise NonExistentPlayerException()
 
-        # If the game hasn't started, no one can move
-        if self.__game_status != GameStatus.RUNNING:
+        # Make sure game is running or over
+        if self.__game_status is GameStatus.PLACING:
+            raise InvalidGameStatus()
+
+        # If game is over, no one can move
+        if self.__game_status is GameStatus.OVER:
             return True
 
         # See if player is in "forever-stuck" cache
