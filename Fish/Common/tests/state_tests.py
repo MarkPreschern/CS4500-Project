@@ -75,7 +75,8 @@ class StateTests(unittest.TestCase):
                 self.__p4,
                 self.__p5])
 
-    def init_test_success(self):
+    def init_test_success1(self):
+        # test a successful constructor with 3 players
         state = State(self.__b, players=[
             self.__p1,
             self.__p2,
@@ -93,6 +94,37 @@ class StateTests(unittest.TestCase):
         expected_players[3] = self.__p3
 
         self.assertSequenceEqual(expected_players, state._State__players)
+
+        self.assertEqual(state.players_no, 3)
+        self.assertEqual(state.avatars_per_player, 3)
+
+        # Assert the placements dictionary is initialized to the proper val
+        self.assertEqual(state.placements, {})
+
+    def init_test_success2(self):
+        # test a successful constructor with 4 players
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Assert the board is equal
+        self.assertEqual(self.__b, state.board)
+
+        # Assert the player dict is equal
+        expected_players = OrderedDict()
+        expected_players.sort(key=lambda p: p.age)
+
+        expected_players[1] = self.__p1
+        expected_players[2] = self.__p2
+        expected_players[3] = self.__p3
+        expected_players[4] = self.__p4
+
+        self.assertSequenceEqual(expected_players, state._State__players)
+
+        self.assertEqual(state.players_no, 4)
+        self.assertEqual(state.avatars_per_player, 2)
 
         # Assert the placements dictionary is initialized to the proper val
         self.assertEqual(state.placements, {})
@@ -195,6 +227,57 @@ class StateTests(unittest.TestCase):
 
             # This should raise the exception
             state.place_avatar(Position(0, 0))
+
+    def test_is_position_open_fail1(self):
+        # Tests is_position_open failing due to invalid position (type-wise)
+
+        # Make up new state
+        state = State(Board.homogeneous(3, 3, 2), players=[
+            self.__p1,
+            self.__p2,
+            self.__p3])
+
+        with self.assertRaises(TypeError):
+            state.is_position_open('hello dora')
+
+    def test_is_position_open_fail2(self):
+        # Tests is_position_open failing due to invalid position (outside
+        # the bounds of the board)
+
+        # Make up new state
+        state = State(Board.homogeneous(3, 3, 2), players=[
+            self.__p1,
+            self.__p2,
+            self.__p3])
+
+        with self.assertRaises(InvalidPositionException):
+            state.is_position_open(Position(3, 1))
+
+    def test_is_position_open_success1(self):
+        # Tests a series of is_position_open calls on a hole, tile
+        # and avatar
+
+        # Make up board with a hole in it
+        b = Board.homogeneous(3, 3, 2)
+        b.remove_tile(Position(0, 0))
+
+        # Make up state
+        state = State(b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3])
+
+        # Place some avatars
+        state.place_avatar(Position(1, 0))
+        state.place_avatar(Position(1, 1))
+
+        # Check if position is open on a hole
+        self.assertFalse(state.is_position_open(Position(0, 0)))
+        # Check if position is open on a avatar
+        self.assertFalse(state.is_position_open(Position(1, 0)))
+        self.assertFalse(state.is_position_open(Position(1, 1)))
+        # Check if position is open on an open tile
+        self.assertTrue(state.is_position_open(Position(2, 1)))
 
     def test_move_avatar_fail1(self):
         # Test failure of place_avatar due to invalid dst

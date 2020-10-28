@@ -1,17 +1,16 @@
 import copy
-import unittest
 import sys
+import unittest
 
 from action import Action
 from board import Board
 from color import Color
+from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
 from game_status import GameStatus
-from hole import Hole
 from player import Player
 from position import Position
 from state import State
-from exceptions.GameNotRunningException import GameNotRunningException
 from tile import Tile
 
 sys.path.append('Common/')

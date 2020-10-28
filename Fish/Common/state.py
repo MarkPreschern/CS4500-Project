@@ -322,12 +322,17 @@ class State(object):
     def is_position_open(self, position: Position) -> bool:
         """
         Returns false if given position is either a hole or occupied
-        by another avatar.
+        by another avatar. Otherwise, it returns true.
+
         :param position: position to check
         :return: boolean indicating if condition above is fulfilled
         """
         if not isinstance(position, Position):
             raise TypeError('Expected Position for position!')
+
+        # Check if position is within bounds
+        if position.x >= self.__board.rows or position.y >= self.__board.cols:
+            raise InvalidPositionException('Outside the bounds of the board!')
 
         # Check if tile is a hole
         if self.__board.get_tile(position).is_hole:
