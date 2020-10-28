@@ -1,17 +1,16 @@
 import copy
-import unittest
 import sys
+import unittest
 
 from action import Action
 from board import Board
 from color import Color
+from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
 from game_status import GameStatus
-from hole import Hole
 from player import Player
 from position import Position
 from state import State
-from exceptions.GameNotRunningException import GameNotRunningException
 from tile import Tile
 
 sys.path.append('Common/')
@@ -86,6 +85,9 @@ class GameTreeTests(unittest.TestCase):
         # Player 3 place
         self.__state2.place_avatar(Position(3, 0))
 
+        # Make up tree for this state
+        self.__tree2 = GameTree(self.__state2)
+
         # ========================== STATE 3 ==========================
         # Setup state that is one move away from game over
         self.__state3 = State(self.__board2, players=[
@@ -114,12 +116,18 @@ class GameTreeTests(unittest.TestCase):
         # Make move 1 for p1
         self.__state3.move_avatar(Position(3, 1), Position(4, 1))
 
+        # Make up tree for this state
+        self.__tree3 = GameTree(self.__state3)
+
         # ========================== STATE 4 ==========================
         # Setup state that is game over
         self.__state4 = copy.deepcopy(self.__state3)
 
         # Make final move
         self.__state4.move_avatar(Position(2, 0), Position(4, 0))
+
+        # Make up tree for this state
+        self.__tree4 = GameTree(self.__state4)
 
         # ========================== STATE 5 ==========================
         # Setup state that includes heterogeneous board
@@ -147,22 +155,8 @@ class GameTreeTests(unittest.TestCase):
         # Player 3
         self.__state5.place_avatar(Position(3, 2))
 
-        """
-                self.__board3 = Board({
-            Position(0, 0): Tile(5),
-            Position(0, 1): Tile(3),
-            Position(0, 2): Tile(2),
-            Position(1, 0): Tile(2),
-            Position(1, 1): Hole(),
-            Position(1, 2): Tile(2),
-            Position(2, 0): Tile(3),
-            Position(2, 1): Tile(4),
-            Position(2, 2): Hole(),
-            Position(3, 0): Tile(1),
-            Position(3, 1): Tile(1),
-            Position(3, 2): Tile(5)
-        })
-        """
+        # Make up tree for this state
+        self.__tree5 = GameTree(self.__state5)
 
     def test_init_fail1(self):
         # Tests failing constructor due to an invalid state
@@ -177,48 +171,39 @@ class GameTreeTests(unittest.TestCase):
 
     def test_init_success(self):
         # Tests successful game tree constructor
-        game_tree = GameTree(self.__state2)
+        GameTree(self.__state2)
 
-        # Tests properties
-        self.assertEqual(game_tree.children, {})
-
-    def test_flesh_out1(self):
-        # Tests the fleshing out of a GameTree where at least two more rounds
+    def test_get_next1(self):
+        # Tests the get_next() of a GameTree where at least two more rounds
         # are possible.
-        game_tree = GameTree(self.__state2)
-        # Flesh out tree
-        game_tree.flesh_out()
         # It's player 1's turn in the state corresponding to this tree
-        self.assertEqual(game_tree.state.current_player, 1)
+        self.assertEqual(self.__tree2.state.current_player, 1)
 
         # Make sure it has generated all possible connecting trees
         self.assertSequenceEqual(self.__state2.get_possible_actions(),
-                                 list(game_tree.children.keys()))
+                                 self.__tree2.all_possible_actions)
 
         # Cycle over child trees, check current player, and check move log to make sure
         # move has been made for the state.
-        for action, tree in game_tree.children.items():
+        for action, tree in self.__tree2.get_next():
             # Make sure it's player 2's turn in the state corresponding to this tree
             self.assertEqual(tree.state.current_player, 2)
 
             # Make sure action was the last action that happened
             self.assertEqual(action, tree.state.move_log[-1])
 
-    def test_flesh_out2(self):
-        # Tests the fleshing out of a GameTree where one more round is possible
-        game_tree = GameTree(self.__state3)
-        # Flesh out tree
-        game_tree.flesh_out()
+    def test_get_next2(self):
+        # Tests the get_next() out of a GameTree where one more round is possible
         # It's player 4's turn in the state corresponding to this tree
-        self.assertEqual(game_tree.state.current_player, 8)
+        self.assertEqual(self.__tree3.state.current_player, 8)
 
         # Make sure it has generated all possible connecting trees
-        self.assertSequenceEqual(list(game_tree.children.keys()),
+        self.assertSequenceEqual(self.__tree3.all_possible_actions,
                                  [Action(Position(2, 0), Position(4, 0))])
 
         # Cycle over child trees, check current player, and check move log to make sure
         # move has been made for the state.
-        for action, tree in game_tree.children.items():
+        for action, tree in self.__tree3.get_next():
             # Make sure it's player 11's turn in the state corresponding to this tree
             self.assertEqual(tree.state.current_player, 8)
 
@@ -228,81 +213,67 @@ class GameTreeTests(unittest.TestCase):
             # Make sure it's game over
             self.assertEqual(tree.state.game_status, GameStatus.OVER)
 
-            # Flesh out child tree
-            tree.flesh_out()
-
             # Make sure no more child states are possible for it is game
             # over
-            self.assertSequenceEqual(tree.children, [])
+            self.assertSequenceEqual(tree.all_possible_actions, [])
 
-    def test_flesh_out3(self):
-        # Tests the fleshing out of a GameTree where no more rounds is possible (aka
+    def test_get_next3(self):
+        # Tests the get_next() of a GameTree where no more rounds is possible (aka
         # game over state).
-        game_tree = GameTree(self.__state4)
-        # Flesh out tree
-        game_tree.flesh_out()
+        for _, _ in self.__tree4.get_next():
+            self.assertTrue(False)
 
         # Make sure is has not generated any more trees (as there are no more
         # possible moves)
-        self.assertSequenceEqual(game_tree.children, {})
+        self.assertSequenceEqual(self.__tree4.all_possible_actions, [])
 
-    def test_flesh_out4(self):
-        # Tests the fleshing out of a GameTree and that of its children
-        game_tree = GameTree(self.__state2)
-        # Flesh out tree
-        game_tree.flesh_out()
+    def test_get_next4(self):
+        # Tests the get_next() out of a GameTree and that of its children
         # It's player 1's turn in the state corresponding to this tree
-        self.assertEqual(game_tree.state.current_player, 1)
-
-        # Make sure it has generated all possible connecting trees
-        self.assertSequenceEqual(self.__state2.get_possible_actions(),
-                                 list(game_tree.children.keys()))
+        self.assertEqual(self.__tree2.state.current_player, 1)
 
         # Cycle over child trees, check current player, and check move log to make sure
         # move has been made for the state.
-        for action, tree in game_tree.children.items():
-            # Flesh out current child tree
-            tree.flesh_out()
+        for action1, tree1 in self.__tree2.get_next():
+            # Make sure it has generated all possible connecting edges
+            self.assertSequenceEqual(tree1.state.get_possible_actions(),
+                                     tree1.all_possible_actions)
 
-            # Make sure it has generated all possible connecting trees for current
-            # child tree
-            self.assertSequenceEqual(tree.state.get_possible_actions(),
-                                     list(tree.children.keys()))
+            for action2, tree2 in self.__tree2.get_next():
+                # Make sure it has generated all possible connecting edges for current
+                # child tree
+                self.assertSequenceEqual(tree2.state.get_possible_actions(),
+                                         tree2.all_possible_actions)
 
-            # Make sure it's player 2's turn in the state corresponding to this tree
-            self.assertEqual(tree.state.current_player, 2)
+                # Make sure it's player 2's turn in the state corresponding to this tree
+                self.assertEqual(tree2.state.current_player, 2)
 
-            # Make sure action was the last action that happened
-            self.assertEqual(action, tree.state.move_log[-1])
+                # Make sure action was the last action that happened
+                self.assertEqual(action2, tree2.state.move_log[-1])
 
     def test_try_action_fail1(self):
-        # Tests a failing try_action due to state being invalid (type-wise)
-        with self.assertRaises(TypeError):
-            GameTree.try_action('not a real state', Action(Position(0, 0), Position(1, 0)))
-
-    def test_try_action_fail2(self):
         # Tests a failing try_action due to action being invalid (type-wise)
         with self.assertRaises(TypeError):
-            GameTree.try_action(self.__state2, (Position(0, 0), Position(1, 0)))
+            self.__tree2.try_action(Position(0, 0), Position(1, 0))
 
-    def test_try_action_fail3(self):
+    def test_try_action_fail2(self):
         # Tests a failing try_action due to action being invalid (not accessible via a straight
         # line path)
         with self.assertRaises(InvalidActionException):
             GameTree.try_action(GameTree(self.__state2), Action(Position(3, 0), Position(0, 0)))
 
-    def test_try_action_fail4(self):
+    def test_try_action_fail3(self):
         # Tests a failing try_action due to action being out of turn (it involves moving someone
         # else but the current player's avatar, despite otherwise being legal)
         with self.assertRaises(InvalidActionException):
             GameTree.try_action(GameTree(self.__state2), Action(Position(0, 1), Position(2, 1)))
 
-    def test_try_action_fail5(self):
+    def test_try_action_fail4(self):
         # Tests a failing try_action due to action involves moving thru another character
         with self.assertRaises(InvalidActionException):
             GameTree.try_action(GameTree(self.__state2), Action(Position(4, 0), Position(2, 1)))
 
-    def test_try_action_fail6(self):
+    def test_try_action_fail5(self):
         # Tests a failing try_action due to action involves moving to an already occupied tile
         with self.assertRaises(InvalidActionException):
             GameTree.try_action(GameTree(self.__state2), Action(Position(4, 0), Position(3, 0)))
@@ -310,7 +281,7 @@ class GameTreeTests(unittest.TestCase):
     def test_try_action_success(self):
         # Tests a successful try_action where a valid action gets executed
         valid_action = Action(Position(1, 0), Position(4, 2))
-        new_state = GameTree.try_action(GameTree(self.__state2), valid_action)
+        new_state = self.__tree2.try_action(valid_action)
 
         # Make sure the valid action we gave it got executed and is at the top
         # of the move log
@@ -319,21 +290,11 @@ class GameTreeTests(unittest.TestCase):
         self.assertEqual(new_state.current_player, 2)
 
     def test_apply_to_child_states_fail1(self):
-        # Tests apply_to_child_states failing due to invalid state (type-wise)
-        with self.assertRaises(TypeError):
-            GameTree.apply_to_child_states('not a real state', lambda _: 1)
-
-    def test_apply_to_child_states_fail2(self):
-        # Tests apply_to_child_states failing due to invalid underlying state (game is not running)
-        with self.assertRaises(GameNotRunningException):
-            GameTree.apply_to_child_states(GameTree(self.__state1), lambda _: 1)
-
-    def test_apply_to_child_states_fail3(self):
         # Tests apply_to_child_states failing due to invalid function (type-wise)
         with self.assertRaises(TypeError):
-            GameTree.apply_to_child_states(GameTree(self.__state2), lambda state, _: state)
+            self.__tree2.apply_to_child_states(lambda state, _: state)
 
-    def test_apply_to_child_states_successful1(self):
+    def test_apply_to_child_states_success1(self):
         # Tests successful apply_to_child_states where each child state maps to
         # that state's current player
         result = GameTree.apply_to_child_states(GameTree(self.__state2), lambda state: state.current_player)
@@ -342,7 +303,7 @@ class GameTreeTests(unittest.TestCase):
         # as there are reachable states
         self.assertSequenceEqual(result, [2, 2, 2, 2, 2, 2, 2])
 
-    def test_apply_to_child_states_successful2(self):
+    def test_apply_to_child_states_success2(self):
         # Tests successful apply_to_child_states where each child state maps to
         # that a given player's score (homogeneous board)
         result = GameTree.apply_to_child_states(GameTree(self.__state2), lambda state: state.get_player_score(1))
@@ -351,7 +312,7 @@ class GameTreeTests(unittest.TestCase):
         # 5 fish to each tile
         self.assertSequenceEqual(result, 7 * [5])
 
-    def test_apply_to_child_states_successful3(self):
+    def test_apply_to_child_states_success3(self):
         # Tests successful apply_to_child_states where each child state maps to
         # that a given player's score (heterogeneous board)
         result = GameTree.apply_to_child_states(GameTree(self.__state5), lambda state: state.get_player_score(9))

@@ -1,8 +1,5 @@
 import sys
 
-from color import Color
-from game_tree import GameTree
-
 sys.path.append('../Common')
 
 from state import State
@@ -10,6 +7,9 @@ from exceptions.InvalidGameStatus import InvalidGameStatus
 from game_status import GameStatus
 from action import Action
 from position import Position
+from constants import VERY_LARGE_NUMBER
+from exceptions.GameNotRunningException import GameNotRunningException
+from game_tree import GameTree
 
 
 class Strategy(object):
@@ -22,6 +22,7 @@ class Strategy(object):
     Interpretation: The strategy is the logic employed by a player to determine their moves in an
                     attempt to win the game by collecting the largest number of fish.
     """
+    DEBUG = False
 
     @staticmethod
     def place_penguin(state: State) -> None:
@@ -33,7 +34,8 @@ class Strategy(object):
         placed in that location on behalf of the current player.
 
         :param state: current state of the game
-        :return: None
+        :return: returns position at which the penguin was placed or None if no
+                 place to place penguin is found
         """
         # Validate parameters
         if not isinstance(state, State):
@@ -52,6 +54,9 @@ class Strategy(object):
                 # Pitch avatar if said position is open
                 if state.is_position_open(pos):
                     state.place_avatar(pos)
+                    return pos
+
+        return None
 
     @staticmethod
     def get_best_action(state: State, depth: int) -> Action:
@@ -62,7 +67,8 @@ class Strategy(object):
         current player based on those worst case scenarios.
 
         :param state: state which to determine best move for current player for
-        :param depth: how many turns to look ahead (must be > 0)
+        :param depth: how many the current player in the provided states gets to go at most
+        :return: best Action current player can make best on mini-max strategy
         """
         # Validate parameters
         if not isinstance(state, State):
@@ -71,71 +77,115 @@ class Strategy(object):
         if not isinstance(depth, int) or depth <= 0:
             raise TypeError('Expected integer >= 0 for depth!')
 
-        # Make up game tree from state
-        game_tree = GameTree(state)
-        # Flesh game tree out (determine its subsequent states)
-        game_tree.flesh_out()
+        # Make sure game is running and we're not in the placing
+        # stage still
+        if state.game_status != GameStatus.RUNNING:
+            raise GameNotRunningException()
 
-        # Initialize variable to hold best action
-        best_action = None
-        # Initialize variable to hold maximum score
-        max_score = 0
+        # Make up a game tree for the state
+        tree = GameTree(state)
 
-        # Calculate true depth (we want current player to play depth rounds)
-        # depth = depth * state.players_no
+        # Determine min-max score for current child state
+        score, best_move = Strategy.__mini_max_search(tree, state.current_player, depth)
 
-        # Cycle over every possible action and resulting state in game tree
-        for action, next_tree_node in game_tree.children.items():
-            # Determine min-max score for current child state
-            score = Strategy.__minmax(next_tree_node, state.current_player, depth, -1000, 1000)
-
-            # If score is better than running max score, record both score and action
-            if score > max_score:
-                max_score = score
-                best_action = action
-
-        print(f'max score: {max_score}')
+        if Strategy.DEBUG:
+            print(f'max score: {score} {best_move}')
         # Return "best" action associated with the best score
-        return best_action
+        return best_move
 
     @staticmethod
-    def __minmax(node: GameTree, player_id_to_max: int, depth: int, alpha: int, beta: int):
+    def __mini_max_search(node: GameTree, player_id_to_max: int, depth: int,
+                          alpha: int = -VERY_LARGE_NUMBER, beta: int = VERY_LARGE_NUMBER):
         """
-        Implements min-max algorithm with alpha-beta pruning.
+        Implements min-max algorithm with alpha-beta pruning. It computes the best worst
+        score of the current player in the provided GameTree node by picking
+        the best moves the player can make during their turn and the "best" worst moves its
+        opponents can make during their turns that most minimize the player's score. It utilizes
+        alpha-beta pruning to trim away edges of the tree (or player moves) that are known to
+        yield a worse score than previously computed branches.
+
+        :param node: game tree node for which to run
+        :param player_id_to_max: id of player whose score to maximize (maximizer)
+        :param depth: the number of times maximizing player is evaluated
+        :param alpha: the best score of the maximizer
+        :param beta: the best worst score of the minimizer (one of the player's opponents)
+        :return: tuple of integer best score and corresponding best Action object. If there are
+                 multiple best moves leading to the same score, then the one with the smallest
+                 source row, source column, destination row or destination column is picked (
+                 in that order).
         """
         # Validate params
         if not isinstance(node, GameTree):
             raise TypeError('Expected GameTree for node!')
 
-        if depth == 0:
-            return node.state.get_player_score(player_id_to_max)
+        if not isinstance(player_id_to_max, int) or player_id_to_max <= 0:
+            raise TypeError('Expected positive integer for player_id_to_max!')
 
-        node.flesh_out()
+        if not isinstance(depth, int) or depth < 0:
+            raise TypeError('Expected integer >= 0 for depth!')
+
+        if not isinstance(alpha, int):
+            raise TypeError('Expected integer for alpha!')
+
+        if not isinstance(beta, int):
+            raise TypeError('Expected integer for beta!')
+
+        # If we have reached our depth, maximizer is stuck or game is over, return player score
+        if depth == 0 or node.state.game_status == GameStatus.OVER \
+                or player_id_to_max in node.state.stuck_players:
+            return node.state.get_player_score(player_id_to_max), None
 
         # If current player is maximizer, maximize
         if node.state.current_player == player_id_to_max:
+            if Strategy.DEBUG:
+                print(f'==== PLAYER {node.state.current_player} ========')
+            # Initialize best value to something very negative
+            best_val = -VERY_LARGE_NUMBER
+            # Initialize best_move to anything (won't be compared to assuming we can always achieve
+            # a positive score)
+            best_move: Action = Action(Position(VERY_LARGE_NUMBER, VERY_LARGE_NUMBER),
+                                       Position(VERY_LARGE_NUMBER, VERY_LARGE_NUMBER))
             # Cycle over all possibles moves and their associated states
-            for action, child_node in node.children.items():
-                score = Strategy.__minmax(child_node, player_id_to_max, depth - 1, alpha, beta)
-                # maximize player_id_to_max's score
-                if score > alpha:
-                    # found a better move for ourselves
-                    alpha = score
+            for move, child_node in node.get_next():
+                # Get best score of subsequent node
+                score, _ = Strategy.__mini_max_search(child_node, player_id_to_max, depth - 1, alpha, beta)
+
+                # If our best move leads to the same score, pick the move with
+                # the lowest src x, dst y, dst x, dst y (in that order)
+                if score == best_val:
+                    best_move = min(best_move, move)
+                elif score > best_val:
+                    # If it leads to a better score, update best val and best move
+                    best_val = score
+                    best_move = move
+
+                # Determine if this beats our alpha, and if so set our alpha
+                alpha = max(alpha, best_val)
+
+                # If player's best beats opponents best worst move, cut off
                 if alpha >= beta:
-                    # cut off
-                    return alpha
-                # player's best move
-            return alpha
+                    break
+
+            # Return our best move
+            return best_val, best_move
         else:
+            if Strategy.DEBUG:
+                print(f'==== PLAYER {node.state.current_player} ========')
+            # Initialize opponent's best value to something very positive
+            best_val = VERY_LARGE_NUMBER
             # Minimize, otherwise
-            for action, child_node in node.children.items():
-                score = Strategy.__minmax(child_node, player_id_to_max, depth - 1, alpha, beta)
-                # minimize player_id_to_max's score
-                if score < beta:
-                    # opponent found a better worse move (worse for us)
-                    beta = score
+            for move, child_node in node.get_next():
+                # Get best score of subsequent node
+                score, _ = Strategy.__mini_max_search(child_node, player_id_to_max, depth, alpha, beta)
+                # Minimize player_id_to_max's score
+                best_val = min(score, best_val)
+
+                # See if we have come up with a better "worst" move
+                beta = min(beta, best_val)
+
+                # If player's best beats opponents best worst move, cut off
                 if alpha >= beta:
-                    # cut off
-                    return beta
-            # opponent's best move
-            return beta
+                    break
+
+            # Return opponent's best move
+            return best_val, None

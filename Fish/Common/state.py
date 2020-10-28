@@ -1,4 +1,5 @@
 import copy
+import pickle
 import tkinter as tk
 from collections import OrderedDict, deque
 from itertools import cycle
@@ -9,6 +10,7 @@ from board import Board
 from color import Color
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
+from exceptions.InvalidGameStatus import InvalidGameStatus
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
@@ -17,7 +19,6 @@ from game_status import GameStatus
 from player import Player
 from position import Position
 from sprite_manager import SpriteManager
-import time
 
 
 class State(object):
@@ -92,12 +93,32 @@ class State(object):
         # of the game
         self.__move_log = []
 
-        # Make up cache
+        # Make up cache of stuck player ids
         self.__player_stuck_cache = []
 
     @property
+    def stuck_players(self) -> [int]:
+        """
+        Returns a list of ids who belong to players that are stuck (or
+        cannot move any of their penguins). This list is actualized at the
+        very least at end of each turn.
+        """
+        return self.__player_stuck_cache.copy()
+
+    @property
     def avatars_per_player(self) -> int:
+        """
+        Returns the number of avatars each player
+        started with.
+        """
         return self.__avatars_per_player
+
+    @property
+    def players_no(self) -> int:
+        """
+        Returns the number of players currently in the game.
+        """
+        return len(self.__players)
 
     @property
     def move_log(self) -> []:
@@ -112,7 +133,7 @@ class State(object):
         """
         Returns an immutable copy of the board.
         """
-        return copy.deepcopy(self.__board)
+        return pickle.loads(pickle.dumps(self.__board))
 
     @property
     def placements(self) -> []:
@@ -127,21 +148,6 @@ class State(object):
         Returns the id of the player whose turn it is.
         """
         return self.__current_player_id
-
-    @property
-    def active_players_no(self) -> int:
-        """
-        Returns the number of active players in the game.
-        """
-        running_count = 0
-
-        for player_id, player_obj in self.__players.items():
-            if player_id in self.__player_stuck_cache:
-                continue
-
-            running_count += 1
-
-        return len(self.__players)
 
     @property
     def game_status(self) -> GameStatus:
@@ -196,7 +202,7 @@ class State(object):
             return
 
         # Check if another turn is warranted, otherwise call it a game.
-        if not self.can_anyone_move() and self.__game_status == GameStatus.RUNNING:
+        if self.__game_status == GameStatus.RUNNING and not self.can_anyone_move():
             self.__game_status = GameStatus.OVER
             return
 
@@ -206,7 +212,7 @@ class State(object):
             if self.__game_status == GameStatus.PLACING:
                 self.__current_player_id = player_id
                 break
-            elif not self.is_player_stuck(player_id):
+            elif not self.__is_player_stuck(player_id):
                 self.__current_player_id = player_id
                 break
 
@@ -316,12 +322,17 @@ class State(object):
     def is_position_open(self, position: Position) -> bool:
         """
         Returns false if given position is either a hole or occupied
-        by another avatar.
+        by another avatar. Otherwise, it returns true.
+
         :param position: position to check
         :return: boolean indicating if condition above is fulfilled
         """
         if not isinstance(position, Position):
             raise TypeError('Expected Position for position!')
+
+        # Check if position is within bounds
+        if position.x >= self.__board.rows or position.y >= self.__board.cols:
+            raise InvalidPositionException('Outside the bounds of the board!')
 
         # Check if tile is a hole
         if self.__board.get_tile(position).is_hole:
@@ -476,25 +487,32 @@ class State(object):
 
     def can_anyone_move(self) -> bool:
         """
-        Tells if any player can move any of their avatars.
+        Tells if any player can move any of their avatars. Can only be called
+        after everyone has finished placing their avatars.
+
         :return: boolean indicating whether anyone can move
         """
-        # If the game hasn't started, no one can move
-        if self.__game_status != GameStatus.RUNNING:
+        # If we're still placing, we cannot compute response
+        if self.__game_status is GameStatus.PLACING:
+            raise InvalidGameStatus()
+
+        # If game is over, no one can move
+        if self.__game_status is GameStatus.OVER:
             return False
 
         # Cycle over players and return true if any of them
         # can move
         for player_id in self.__players.keys():
-            if not self.is_player_stuck(player_id):
+            if not self.__is_player_stuck(player_id):
                 return True
 
         return False
 
-    def is_player_stuck(self, player_id: int) -> bool:
+    def __is_player_stuck(self, player_id: int) -> bool:
         """
         Tells if player with given player_id can go anywhere. It does
-        not check for turn.
+        not check for turn. Can only be called after everyone has
+        finished placing their avatars.
 
         :param player_id: id of player for whom to check
         :return: boolean indicating whether player
@@ -508,8 +526,12 @@ class State(object):
         if player_id not in self.__players.keys():
             raise NonExistentPlayerException()
 
-        # If the game hasn't started, no one can move
-        if self.__game_status != GameStatus.RUNNING:
+        # Make sure game is running or over
+        if self.__game_status is GameStatus.PLACING:
+            raise InvalidGameStatus()
+
+        # If game is over, no one can move
+        if self.__game_status is GameStatus.OVER:
             return True
 
         # See if player is in "forever-stuck" cache

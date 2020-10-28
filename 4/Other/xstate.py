@@ -224,8 +224,10 @@ def _get_next_state(state: State) -> State:
         next_pos = _get_next_position(first_avatar_pos, direction)
 
         try:
+            # Make up game tree
+            gt = GameTree(state)
             # Try action on game state
-            new_state = GameTree.try_action(GameTree(state), Action(first_avatar_pos, next_pos))
+            new_state = gt.try_action(Action(first_avatar_pos, next_pos))
             return new_state
         except InvalidActionException:
             pass
