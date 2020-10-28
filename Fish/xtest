@@ -5,7 +5,7 @@ import sys
 
 # Added folder containing test classes to path
 sys.path.append('Common/tests')
-sys.path.append('Player/tests')
+sys.path.append('Player/Other/tests')
 
 
 from board_tests import BoardTests

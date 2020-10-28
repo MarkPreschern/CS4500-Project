@@ -2,10 +2,9 @@ import copy
 import sys
 import unittest
 
-from action import Action
 
 sys.path.append('Player/')
-sys.path.append('../../Common')
+sys.path.append('../../../Common')
 
 from strategy import Strategy
 from board import Board
