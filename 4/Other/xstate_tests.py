@@ -7,7 +7,7 @@ sys.path.append("../Fish/Common")
 from board import Board
 from position import Position
 from tile import Tile
-from xstate import _board_to_json, _state_to_json, _str_to_color, _get_next_position, _get_next_state
+from xstate import _board_to_json, _state_to_json, _str_to_color, _get_next_position, _get_next_state, initialize_state
 from hole import Hole
 from state import State
 from color import Color
@@ -217,17 +217,47 @@ class XStateTests(unittest.TestCase):
         self.assertEqual(_get_next_position(Position(4, 2), MovementDirection.TopRight),
                          Position(3, 2))
 
-    def test_get_next_state_fail1(self):
+    def testinitialize_state_fail1(self):
         # Fails due to json_obj being invalid
         with self.assertRaises(TypeError):
-            _get_next_state('')
+            initialize_state('')
 
-    def test_get_next_state_fail2(self):
+    def testinitialize_state_fail2(self):
         # Fails due to json_obj not containing players
         with self.assertRaises(ValueError):
-            _get_next_state({'board': []})
+            initialize_state({'board': []})
 
-    def test_get_next_state_fail3(self):
+    def testinitialize_state_fail3(self):
         # Fails due to json_obj not containing board
         with self.assertRaises(ValueError):
-            _get_next_state({'players': []})
+            initialize_state({'players': []})
+    
+    def test_get_next_state_success(self):
+        # Test successful get next state
+        json_obj = {
+            'players': [
+                {'score': 0, 'places': [[1, 0], [2, 0], [0, 0]], 'color': 'white'},
+                {'score': 0, 'places': [[1, 1], [2, 1], [3, 1]], 'color': 'black'},
+                {'score': 0, 'places': [[0, 1], [1, 2], [3, 2]], 'color': 'brown'}
+            ],
+            'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
+        }
+
+        # Initialize state from json object
+        state = initialize_state(json_obj)
+
+        # Expected state after getting next state
+        expected_state = {
+            'players': [
+                {'score': 0, 'places': [[1, 1], [2, 1], [3, 1]], 'color': 'black'},
+                {'score': 0, 'places': [[0, 1], [1, 2], [3, 2]], 'color': 'brown'},
+                {'score': 4, 'places': [[3, 0], [2, 0], [0, 0]], 'color': 'white'}
+            ],
+            'board': [[4, 4, 4], [0, 4, 4], [4, 4, 4], [4, 4, 4]]
+        }
+
+        # Get next state
+        next_state = _get_next_state(state)
+        
+        # Make sure json representations of the states are as expected
+        self.assertDictEqual(expected_state, _state_to_json(next_state))

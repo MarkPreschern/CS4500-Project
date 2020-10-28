@@ -2,9 +2,11 @@ import sys
 import json
 
 sys.path.append("../3/Other")
+sys.path.append("../4/Other")
 sys.path.append("../Fish/Common")
 
 from xboard import initialize_board
+from xstate import initialize_state, _get_next_position
 from player import Player
 from board import Board
 from movement_direction import MovementDirection
@@ -38,186 +40,141 @@ def xtree() -> None:
     # Load from read string
     json_obj = json.loads(input_obj)
 
-    # json_obj now has a state, a from position, and a to position. Get state from json
-    state = _get_next_state(json_obj['state'], json_obj['from'], json_obj['to'])
+    # Convert from and to position to a Position object
+    from_pos = Position(json_obj['from'][0], json_obj['from'][1])
+    to_pos = Position(json_obj['to'][0], json_obj['to'][1])
+
+    # Initialize State object from json representation of state
+    init_state = initialize_state(json_obj['state'])
+
+    # Get the state after player 1 takes their first action
+    state = _get_next_state(init_state, from_pos, to_pos)
+
+    # Find an action Player 2 can take to reach a neighboring tile from player 1
+    action = _find_action_to_neighboring_tile(state, to_pos)
 
     # If there is no next state for first avatar, print False
-    if state is None:
+    if action is None:
         print(json.dumps(False))
     else:
         # Write JSON to STDOUT
-        print(json.dumps(_state_to_json(state)))
+        print(json.dumps())
 
 
-def _board_to_json(board: Board) -> []:
+def _action_to_json(action: Action) -> list:
     """
-    Converts given Board object to an array, where
-    each entry is an array that represents a row on the board.
-    Each said array is an ordered series of numbers that represents
-    the number of fish on the tiles.
+    Convert an Action to its valid JSON representation.
+    An action in JSON is a list consisting of two positions, where a position
+    is a list containing two integers (represents a row/column location).
 
-    :param board: Board object to parse
-    :return: resulting array
+    i.e. an Action is a [Position, Position] or False
+    a Position is a [Integer, Integer]
+
+    :param action: The action that will be converted to JSON
+    :return: a list containing two JSON positions (note that Actions that are "false" are handled outside this function)
     """
-    if not isinstance(board, Board):
-        raise TypeError('Expected Board for board!')
+    if not isinstance(action, Action):
+        raise TypeError("Expected an Action for action.")
 
-    # Create two dimensional matrix as a place holder with the
-    # right dimensions
-    matrix = []
+    # Extract positions from action
+    from_pos = action[0]
+    to_pos = action[1]
 
-    # Create place holders in matrix
-    for i in range(board.rows):
-        matrix.append([])
-        for j in range(board.cols):
-            matrix[i].append(0)
-
-    # Cycle over tiles and set items in matrix
-    for pos, tile in board.tiles.items():
-        matrix[pos[0]][pos[1]] = tile.fish_no
-
-    return matrix
+    # Return a list containing the two JSON representations of positions
+    return [[from_pos[0], from_pos[1]], [to_pos[0], to_pos[1]]]
 
 
-def _state_to_json(state: State) -> dict:
+def _get_next_state(state: State, from_pos: Position, to_pos: Position) -> State:
     """
-    Produces JSON for given state.
+    Produces the subsequent game state from trying to move the first player's avatars
+    from the given start position to the given end position. If the given action is illegal,
+    an exception will be thrown. If the game has not been started fully yet, None will be returned.
 
-    :param state: state to produce JSON for
-    :return: resulting json dictionary
+    :param state: state containing starting player list and board as extracted by initialize_state
+    :param from_pos: the starting position for the first player's desired action
+    :param to_pos: the ending position for the first player's desired action
+    :return: resulting state from executing Action(from_pos, to_pos)
     """
-    # Check params
     if not isinstance(state, State):
-        raise TypeError('Expected State object or None!')
+        raise TypeError("Expected State for state.")
+    if not isinstance(from_pos, Position):
+        raise TypeError("Expected Position for from_pos.")
+    if not isinstance(to_pos, Position):
+        raise TypeError("Expected Position for to_pos.")
 
-    json_obj = dict()
+    # Initialize player placements
+    player_placements = state.placements
 
-    json_obj['board'] = _board_to_json(state.board)
-    json_obj['players'] = []
+    # Verify that from_pos is one of player 1's current positions
+    if from_pos not in player_placements[1]:
+        raise InvalidActionException("Expected from_pos to be one of player 1's current placements")
 
-    player_order = state.get_player_order()
+    # Attempt action
+    try:
+        new_state = GameTree.try_action(GameTree(state), Action(from_pos, to_pos))
+        return new_state
+    except InvalidActionException as e:
+        raise e
+    except GameNotRunningException:
+        pass
 
-    # Cycle over player order
-    for player_id in player_order:
-        # Initialize dictionary in which to store player data
-        player_obj = {}
-
-        # Gather player data
-        player_obj['score'] = state.get_player_score(player_id)
-        player_obj['places'] = [[pos.x, pos.y] for pos in state.get_player_positions(player_id)]
-        player_obj['color'] = state.get_player_color(player_id).name.lower()
-
-        # Append player object to list
-        json_obj['players'].append(player_obj)
-
-    return json_obj
+    return None
 
 
-def _str_to_color(color_str: str) -> Color:
+def _find_action_to_neighboring_tile(state: State, to_pos: Position) -> Action:
     """
-    Converts a string color to a Color object.
+    Finds the action the second player can take to move to one of the tiles
+    that neighbors the first player's ending position if it exists.  
+    Otherwise, None is returned. 
+    
+    Actions will be searched for by checking neighboring
+    tiles in the following order: North, Northeast, Southeast, South, Southwest, Northwest.
+    
+    If there are multiple avatars that can reach neighboring tiles, a tie breaking algorithm
+    will choose the action with the top-most row of the from position, the left-most column
+    of the from position, the top-most row of the to position, and the left-most column
+    of the to position in that order.
 
-    :param color_str: string to parse
-    :return: Color object
+    :param state: the current state resulting from the first player successfully executing their desired action
+    :param to_pos: the position of the tile that the first player landed on after executing their action
+    :return: an Action the second player can take to get to a neighboring tile or None if no such action exists
     """
-    if not isinstance(color_str, str):
-        raise TypeError('Expected str for color_str!')
+    if not isinstance(state, State):
+        raise TypeError("Expected State for state.")
+    if not isinstance(to_pos, Position):
+        raise TypeError("Expected Position for to_pos.")
+    
+    # Get player placements from state
+    player_placements = state.placements 
 
-    # Capitalize
-    color_str = color_str.upper()
-
-    # Make sure color exists
-    if color_str not in Color.__dict__:
-        raise ValueError('Not such color!')
-
-    return Color[color_str]
-
-
-def _get_next_state(json_obj: dict, from_pos: list, to_pos: list) -> State:
-    """
-    Produces the subsequent game state from trying to move first player's
-    first avatar in an order of directions. If said avatar cannot go
-    in any of the specified directions, None is returned.
-
-    :param json_obj: json object (dictionary) containing player list and board
-    :return: resulting state or False.
-    """
-    if not isinstance(json_obj, dict):
-        raise TypeError('Expected dict for json_obj!')
-
-    if 'players' not in json_obj.keys():
-        raise ValueError('Expected players in object!')
-
-    if 'board' not in json_obj.keys():
-        raise ValueError('Expected board in object!')
-
-    # Retrieve player list
-    player_list = json_obj['players']
-    board_json = json_obj['board']
-
-    # Get board from json
-    board = initialize_board(board_json)
-
-    # Initialize counter to generate player ids
-    player_id_counter = 1
-
-    # Initialize empty collection to hold players
-    players = []
-
-    # Initialize collection to hold player ids and their
-    # avatar placements
-    player_placements = {}
-
-    # Cycle over each json object in the json list
-    for player in player_list:
-        # Make up Player object
-        players.append(Player(player_id_counter, "", player_id_counter,
-                              _str_to_color(player['color'])))
-        # Insert placement
-        player_placements.update({player_id_counter: player['places']})
-        # Increment id counter
-        player_id_counter += 1
-
-    # Make up state with board and players
-    state = State(board, players)
-
-    # Extract first player's poisitions from json
-    first_avatar_pos = player_placements[1][0]
-    second_avatar_pos = player_placements[1][0]
-
-    # Convert first player's positions to Position objects
-    position_1 = Position(first_avatar_pos[0], first_avatar_pos[1])
-    position_2 = Position(second_avatar_pos[0], second_avatar_pos[1])
-
-    # Determine the number of avatars per player
-    avatars_per_player_no = len(player_placements[1])
-
-    # For each i in the number of avatars per player
-    for i in range(avatars_per_player_no):
-        # For each player, place i-th avatar
-        for p_id, p_placements in player_placements.items():
-            # Retrieve current player's i-th avatar
-            placement = player_placements[p_id][i]
-            # Convert to Position object
-            position_to_place = Position(placement[0], placement[1])
-
-            # Place current player's avatar at position
-            state.place_avatar(position_to_place)
-
-    # Attempt to move in a number of directions
+    # Search each direction and see if any of player 2's positions can reach a neighboring tile
+    # in that direction
     for direction in directions_to_try:
-        # first_avatar_pos
-        next_pos = _get_next_position(first_avatar_pos, direction)
+        # The new target position for player 2 in the current direction
+        new_pos = _get_next_position(to_pos, direction)
 
-        try:
-            # Try action on game state
-            new_state = GameTree.try_action(GameTree(state), Action(first_avatar_pos, next_pos))
-            return new_state
-        except InvalidActionException:
-            pass
-        except GameNotRunningException:
-            return None
+        # List to store the potential valid actions to reach the neighboring tile in the current direction
+        valid_actions = []
 
+        for pos in player_placements[2]:
+            try:
+                # The action to be tried
+                new_action = Action(pos, new_pos)
+
+                # Try the action
+                GameTree.try_action(GameTree(state), new_action)
+                
+                # If this point is reached with no exception, it is a valid action.
+                valid_actions.append(new_action)
+            except InvalidActionException:
+                pass
+            except GameNotRunningException:
+                return None
+        
+        # If any valid actions were found, either return one of them or tiebreak
+        if len(valid_actions) > 0:
+            return min(valid_actions)
+    
     return None
 
 

@@ -38,8 +38,11 @@ def xstate() -> None:
     # Load from read string
     json_obj = json.loads(input_obj)
 
-    # Get state from json
-    state = _get_next_state(json_obj)
+    # Initialize state from json
+    init_state = _initialize_state(json_obj)
+
+    # Get next state for first avatar
+    state = _get_next_state(init_state)
 
     # If there is no next state for first avatar, print False
     if state is None:
@@ -133,14 +136,12 @@ def _str_to_color(color_str: str) -> Color:
     return Color[color_str]
 
 
-def _get_next_state(json_obj: dict) -> State:
+def initialize_state(json_obj: dict) -> State:
     """
-    Produces the subsequent game state from trying to move first player's
-    first avatar in an order of directions. If said avatar cannot go
-    in any of the specified directions, None is returned.
+    Initializes a State object from the given json representation of a state.
 
     :param json_obj: json object (dictionary) containing player list and board
-    :return: resulting state or False.
+    :return: the state described by the json obj as a State object
     """
     if not isinstance(json_obj, dict):
         raise TypeError('Expected dict for json_obj!')
@@ -181,10 +182,6 @@ def _get_next_state(json_obj: dict) -> State:
     # Make up state with board and players
     state = State(board, players)
 
-    # Get first player's first avatar's position
-    first_avatar_pos = player_placements[1][0]
-    first_avatar_pos = Position(first_avatar_pos[0], first_avatar_pos[1])
-
     # Determine the number of avatars per player
     avatars_per_player_no = len(player_placements[1])
 
@@ -199,6 +196,27 @@ def _get_next_state(json_obj: dict) -> State:
 
             # Place current player's avatar at position
             state.place_avatar(position_to_place)
+
+    return state
+
+
+def _get_next_state(state: State) -> State:
+    """
+    Produces the subsequent game state from trying to move first player's
+    first avatar in an order of directions. If said avatar cannot go
+    in any of the specified directions, None is returned.
+
+    :param state: state containing starting player list and board as extracted by initialize_state
+    :return: resulting state or False.
+    """
+    if not isinstance(state, State):
+        raise TypeError("Expected State for state.")
+
+    player_placements = state.placements
+
+    # Get first player's first avatar's position
+    first_avatar_pos = player_placements[1][0]
+    first_avatar_pos = Position(first_avatar_pos[0], first_avatar_pos[1])
 
     # Attempt to move in a number of directions
     for direction in directions_to_try:
