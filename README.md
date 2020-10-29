@@ -12,3 +12,9 @@ the number of reachable positions for the given position.
 - 4: contains test harness xstate, which serves as integration tests for our State implementation. The harness takes in a complete
 state and produces a new state if a move is possible on the current player's first avatar. Otherwise, it produces False. The directory also
 includes unit tests for said harness, as well as a series of test input and output JSON files that can be used with the harness.
+- 5: contains the test harness for milestone 5 (xtree), which checks the integrity of the GameTree by attempting to make
+an action on behalf of the current player, and then determining the best move an opponent could make
+to a tile neighboring the one the player just moved to. It determines the "best" such move by inspecting the
+neighboring tiles clockwise from North to South West and picking the first action that could get an opponent's
+avatar there. If multiple avatars can reach the same "best" tile, the avatar with the lowest source and destination
+coordinates lis picked (in order of priority: source.x, source.y, destination.x, destination.y).
