@@ -58,7 +58,7 @@ def xtree() -> None:
         print(json.dumps(False))
     else:
         # Write JSON to STDOUT
-        print(json.dumps())
+        print(json.dumps(_action_to_json(action)))
 
 
 def _action_to_json(action: Action) -> list:
@@ -162,7 +162,8 @@ def _find_action_to_neighboring_tile(state: State, to_pos: Position) -> Action:
                 new_action = Action(pos, new_pos)
 
                 # Try the action
-                GameTree.try_action(GameTree(state), new_action)
+                gt = GameTree(state)
+                gt.try_action(new_action)
                 
                 # If this point is reached with no exception, it is a valid action.
                 valid_actions.append(new_action)

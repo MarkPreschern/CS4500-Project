@@ -131,6 +131,4 @@ class XTreeTests(unittest.TestCase):
 
             # Get next state
             _get_next_state(state, Position(1, 1), Position(1, 0))
-    
-    def test_get_
 
