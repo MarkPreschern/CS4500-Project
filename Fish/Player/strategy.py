@@ -4,7 +4,6 @@ sys.path.append('../Common')
 
 from state import State
 from exceptions.InvalidGameStatus import InvalidGameStatus
-from game_status import GameStatus
 from action import Action
 from position import Position
 from constants import VERY_LARGE_NUMBER
@@ -25,14 +24,15 @@ class Strategy(object):
     DEBUG = False
 
     @staticmethod
-    def place_penguin(state: State) -> None:
+    def place_penguin(player_id: int, state: State) -> None:
         """
-        This method places a penguin for the current player by scanning down columns
+        This method places a penguin for the given player id by scanning down columns
         starting in the top-left row until a free spot is found. If all columns on one
         row are exhausted and no spot has been found, the search is resumed on the next
         row from the first (left-most) column. Once a spot has been found, an avatar is
         placed in that location on behalf of the current player.
 
+        :param player_id: id of player to place penguin for
         :param state: current state of the game
         :return: returns position at which the penguin was placed or None if no
                  place to place penguin is found
@@ -41,8 +41,11 @@ class Strategy(object):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
+        if not isinstance(player_id, int):
+            raise TypeError('Expected int for player_id!')
+
         # Make sure state is in placing phase
-        if state.game_status != GameStatus.PLACING:
+        if state.has_everyone_placed():
             raise InvalidGameStatus('Game status is not PLACING!')
 
         # Find a place to pitch avatar according to strategy by cycling over
@@ -53,7 +56,7 @@ class Strategy(object):
                 pos = Position(row, col)
                 # Pitch avatar if said position is open
                 if state.is_position_open(pos):
-                    state.place_avatar(pos)
+                    state.place_avatar(player_id, pos)
                     return pos
 
         return None
@@ -79,7 +82,7 @@ class Strategy(object):
 
         # Make sure game is running and we're not in the placing
         # stage still
-        if state.game_status != GameStatus.RUNNING:
+        if not state.has_everyone_placed():
             raise GameNotRunningException()
 
         # Make up a game tree for the state
@@ -131,7 +134,7 @@ class Strategy(object):
             raise TypeError('Expected integer for beta!')
 
         # If we have reached our depth, maximizer is stuck or game is over, return player score
-        if depth == 0 or node.state.game_status == GameStatus.OVER \
+        if depth == 0 or (not node.state.can_anyone_move()) \
                 or player_id_to_max in node.state.stuck_players:
             return node.state.get_player_score(player_id_to_max), None
 

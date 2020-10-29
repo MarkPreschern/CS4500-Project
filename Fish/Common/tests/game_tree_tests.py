@@ -7,7 +7,6 @@ from board import Board
 from color import Color
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
-from game_status import GameStatus
 from player import Player
 from position import Position
 from state import State
@@ -44,17 +43,17 @@ class GameTreeTests(unittest.TestCase):
         })
 
         # Initialize some players for testing
-        self.__p1 = Player(1, "John", 20, Color.RED)
-        self.__p2 = Player(2, "George", 21, Color.WHITE)
-        self.__p3 = Player(3, "Gary", 22, Color.BLACK)
-        self.__p4 = Player(4, "Jeanine", 23, Color.BROWN)
-        self.__p5 = Player(5, "Obama", 24, Color.RED)
-        self.__p6 = Player(6, "Fred", 32, Color.BROWN)
-        self.__p7 = Player(7, "Stewart", 33, Color.WHITE)
-        self.__p8 = Player(8, "Bobby Mon", 42, Color.BLACK)
-        self.__p9 = Player(9, "Bob Ross", 48, Color.RED)
-        self.__p10 = Player(10, "Eric Khart", 52, Color.BROWN)
-        self.__p11 = Player(11, "Ionut", 54, Color.RED)
+        self.__p1 = Player(1, "John", Color.RED)
+        self.__p2 = Player(2, "George", Color.WHITE)
+        self.__p3 = Player(3, "Gary", Color.BLACK)
+        self.__p4 = Player(4, "Jeanine", Color.BROWN)
+        self.__p5 = Player(5, "Obama", Color.RED)
+        self.__p6 = Player(6, "Fred", Color.BROWN)
+        self.__p7 = Player(7, "Stewart", Color.WHITE)
+        self.__p8 = Player(8, "Bobby Mon", Color.BLACK)
+        self.__p9 = Player(9, "Bob Ross", Color.RED)
+        self.__p10 = Player(10, "Eric Khart", Color.BROWN)
+        self.__p11 = Player(11, "Ionut", Color.RED)
 
         # ========================== STATE 1 ==========================
 
@@ -67,23 +66,23 @@ class GameTreeTests(unittest.TestCase):
         self.__state2 = State(self.__board1, [self.__p1, self.__p2, self.__p3])
         # Place all avatars
         # Player 1 place
-        self.__state2.place_avatar(Position(4, 0))
+        self.__state2.place_avatar(1, Position(4, 0))
         # Player 2 place
-        self.__state2.place_avatar(Position(0, 1))
+        self.__state2.place_avatar(2, Position(0, 1))
         # Player 3 place
-        self.__state2.place_avatar(Position(2, 2))
+        self.__state2.place_avatar(3, Position(2, 2))
         # Player 1 place
-        self.__state2.place_avatar(Position(1, 0))
+        self.__state2.place_avatar(1, Position(1, 0))
         # Player 2 place
-        self.__state2.place_avatar(Position(2, 0))
+        self.__state2.place_avatar(2, Position(2, 0))
         # Player 3 place
-        self.__state2.place_avatar(Position(3, 2))
+        self.__state2.place_avatar(3, Position(3, 2))
         # Player 1 place
-        self.__state2.place_avatar(Position(1, 1))
+        self.__state2.place_avatar(1, Position(1, 1))
         # Player 2 place
-        self.__state2.place_avatar(Position(4, 1))
+        self.__state2.place_avatar(2, Position(4, 1))
         # Player 3 place
-        self.__state2.place_avatar(Position(3, 0))
+        self.__state2.place_avatar(3, Position(3, 0))
 
         # Make up tree for this state
         self.__tree2 = GameTree(self.__state2)
@@ -98,21 +97,21 @@ class GameTreeTests(unittest.TestCase):
 
         # Set up the board with placements s.t. only 2 moves can be made
         # Player 1
-        self.__state3.place_avatar(Position(3, 0))
+        self.__state3.place_avatar(5, Position(3, 0))
         # Player 2
-        self.__state3.place_avatar(Position(0, 0))
+        self.__state3.place_avatar(6, Position(0, 0))
         # Player 3
-        self.__state3.place_avatar(Position(1, 0))
+        self.__state3.place_avatar(7, Position(1, 0))
         # Player 4
-        self.__state3.place_avatar(Position(2, 0))
+        self.__state3.place_avatar(8, Position(2, 0))
         # Player 1
-        self.__state3.place_avatar(Position(3, 1))
+        self.__state3.place_avatar(5, Position(3, 1))
         # Player 2
-        self.__state3.place_avatar(Position(0, 1))
+        self.__state3.place_avatar(6, Position(0, 1))
         # Player 3
-        self.__state3.place_avatar(Position(1, 1))
+        self.__state3.place_avatar(7, Position(1, 1))
         # Player 4
-        self.__state3.place_avatar(Position(2, 1))
+        self.__state3.place_avatar(8, Position(2, 1))
         # Make move 1 for p1
         self.__state3.move_avatar(Position(3, 1), Position(4, 1))
 
@@ -137,23 +136,23 @@ class GameTreeTests(unittest.TestCase):
             self.__p11])
 
         # Player 1
-        self.__state5.place_avatar(Position(2, 0))
+        self.__state5.place_avatar(9, Position(2, 0))
         # Player 2
-        self.__state5.place_avatar(Position(0, 1))
+        self.__state5.place_avatar(10, Position(0, 1))
         # Player 3
-        self.__state5.place_avatar(Position(0, 2))
+        self.__state5.place_avatar(11, Position(0, 2))
         # Player 1
-        self.__state5.place_avatar(Position(1, 0))
+        self.__state5.place_avatar(9, Position(1, 0))
         # Player 2
-        self.__state5.place_avatar(Position(1, 2))
+        self.__state5.place_avatar(10, Position(1, 2))
         # Player 3
-        self.__state5.place_avatar(Position(0, 0))
+        self.__state5.place_avatar(11, Position(0, 0))
         # Player 1
-        self.__state5.place_avatar(Position(3, 1))
+        self.__state5.place_avatar(9, Position(3, 1))
         # Player 2
-        self.__state5.place_avatar(Position(2, 1))
+        self.__state5.place_avatar(10, Position(2, 1))
         # Player 3
-        self.__state5.place_avatar(Position(3, 2))
+        self.__state5.place_avatar(11, Position(3, 2))
 
         # Make up tree for this state
         self.__tree5 = GameTree(self.__state5)
@@ -211,7 +210,7 @@ class GameTreeTests(unittest.TestCase):
             self.assertEqual(action, tree.state.move_log[-1])
 
             # Make sure it's game over
-            self.assertEqual(tree.state.game_status, GameStatus.OVER)
+            self.assertFalse(tree.state.can_anyone_move())
 
             # Make sure no more child states are possible for it is game
             # over

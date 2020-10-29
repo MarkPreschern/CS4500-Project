@@ -1,21 +1,17 @@
 import copy
 import pickle
 import tkinter as tk
-from collections import OrderedDict, deque
-from itertools import cycle
+from collections import deque
 
 import constants as ct
 from action import Action
 from board import Board
 from color import Color
-from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
-from exceptions.InvalidGameStatus import InvalidGameStatus
 from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
-from game_status import GameStatus
 from player import Player
 from position import Position
 from sprite_manager import SpriteManager
@@ -24,9 +20,9 @@ from sprite_manager import SpriteManager
 class State(object):
     """
     State represents the current state of a game: the state of the board,
-    the current placements of the penguins, knowledge about the players,
-    and the order in which they play. More generally speaking, a game state
-    represents a complete snapshot of a game in time.
+    the current list of players along with their id, name, color and penguin
+    placements, and the order in which they play. More generally speaking,
+    a game state represents a complete snapshot of a game in time.
     """
 
     def __init__(self, board: Board, players: [Player]):
@@ -45,49 +41,30 @@ class State(object):
         if not isinstance(players, list):
             raise TypeError('Expected list for players!')
 
+        # Check player list length
+        if len(players) == 0:
+            raise ValueError(f'Players list cannot be empty')
+
         # Make sure list consists of only player objects
         if not all(isinstance(x, Player) for x in players):
             raise TypeError('All player list objects have to of type Player!')
 
-        # Check player list length
+        # Make sure we weren't given too many players
         if len(players) < ct.MIN_PLAYERS or len(players) > ct.MAX_PLAYERS:
-            raise ValueError(f'Expected list of length <= {ct.MAX_PLAYERS} and >= {ct.MIN_PLAYERS}')
+            raise ValueError(f'Invalid player length; length has to be between {ct.MIN_PLAYERS} and'
+                             f' {ct.MAX_PLAYERS}')
 
+        # Initialize players to array of players arranged in the order they go
+        self.__players = players
+
+        # Set board
         self.__board = board
-
-        # Initialize placements as a dictionary that maps player ids to a array
-        # of avatar positions
-        self.__placements = {}
 
         # Initialize cache for all possible actions as a list of Action objects
         self.__all_possible_actions_cache = []
 
-        # Create player dictionary keyed by player ids w/ Player values
-        self.__players = OrderedDict()
-
-        # Sort player list in increasing order of age
-        players.sort(key=lambda p: p.age)
-
         # Determine # no avatars per player
         self.__avatars_per_player = 6 - len(players)
-
-        # Insert players in the order they go
-        for player in players:
-            # Add player to collection
-            self.__players.update({player.id: player})
-            # Initialize player's placements
-            self.__placements.update({player.id: []})
-
-        # Create a circular list of player ids in order in which they go
-        self.__player_order = cycle(list(self.__players.keys()))
-
-        # Define variable to keep track of whose turn it is by player_id.
-        # It is initialized to be the first player in the collection's id
-        # as the collection is sorted in increasing order of age.
-        self.__current_player_id = next(self.__player_order)
-
-        # Indicates the status of the game (placing / running / over)
-        self.__game_status = GameStatus.PLACING
 
         # Make up log of moves that have been made since the beginning
         # of the game
@@ -95,6 +72,18 @@ class State(object):
 
         # Make up cache of stuck player ids
         self.__player_stuck_cache = []
+
+    def deepcopy(self) -> 'State':
+        """
+        Returns a 'deep-copy' of the state.
+        """
+        # Copy board
+        board = pickle.loads(pickle.dumps(self.__board))
+        # Copy players
+        players = pickle.loads(pickle.dumps(self.__players))
+
+        # Return new copy of state
+        return State(board, players)
 
     @property
     def stuck_players(self) -> [int]:
@@ -140,38 +129,34 @@ class State(object):
         """
         Returns an immutable copy of placements.
         """
-        return copy.copy(self.__placements)
+        # Initialize dict of player id to Position object
+        placements = {}
+
+        # Cycles over players and add their placements to the list
+        for p in self.__players:
+            placements.update({p.id: p.places})
+
+        return placements
 
     @property
     def current_player(self) -> int:
         """
         Returns the id of the player whose turn it is.
         """
-        return self.__current_player_id
-
-    @property
-    def game_status(self) -> GameStatus:
-        """
-        Returns the status of the game (whether it is in a
-        placing, running or over state).
-        """
-        return self.__game_status
+        return self.__players[0].id
 
     def get_possible_actions(self) -> []:
         """
         Returns a list of all possible moves for the current
-        player assuming that the game is running.
+        player.
 
         :return: list of Action objects
         """
-        if self.__game_status != GameStatus.RUNNING:
-            return []
-
         # Initialize collection of possible moves
         possible_moves = []
 
         # Get player's placements
-        player_placements = self.__placements.get(self.__current_player_id)
+        player_placements = self.get_player_by_id(self.current_player).places
 
         # Cycle over each avatar position
         for position in player_placements:
@@ -192,52 +177,73 @@ class State(object):
 
         return possible_moves
 
-    def __trigger_next_turn(self):
+    def __trigger_next_turn(self, initial_shift=1):
         """
-        Triggers next turn by giving the next player
-        a turn.
+        Triggers next turn by giving the next player in the
+        player order a turn.
+
+        :param initial_shift: number of times to shift player order
+                             to the left from the get-go. A value of
+                             one means that the current player goes to
+                             the end of the order.
+        :return: None
         """
-        # Check if game over
-        if self.__game_status == GameStatus.OVER:
+        # Do not change turn if no one can move
+        if not self.can_anyone_move():
             return
 
-        # Check if another turn is warranted, otherwise call it a game.
-        if self.__game_status == GameStatus.RUNNING and not self.can_anyone_move():
-            self.__game_status = GameStatus.OVER
-            return
+        # Shift players collection in a deque
+        players_deque = deque(self.__players)
+        players_deque.rotate(-initial_shift)
 
-        # Cycle over ordered circular list until a player who
-        # can move or is still placing has been found
-        for player_id in self.__player_order:
-            if self.__game_status == GameStatus.PLACING:
-                self.__current_player_id = player_id
-                break
-            elif not self.__is_player_stuck(player_id):
-                self.__current_player_id = player_id
-                break
+        # Initialize actual shift amount
+        shift_amount = 0
 
-    def get_player_order(self) -> []:
+        # Find next player whose turn it is
+        for player in players_deque:
+            # If player is stuck, skip 'em over
+            if self.__is_player_stuck(player.id):
+                shift_amount += 1
+                continue
+            break
+
+        # Rotate as needed to get to the next player that can move
+        players_deque.rotate(-shift_amount)
+        # Update actual players collection
+        self.__players = list(players_deque)
+
+    @property
+    def player_order(self):
         """
-        Returns the order in which the players go in
-        a sorted collection of player ids.
+        Returns list of ids of all players in the game in the order
+        they go starting with the current player's id.
         """
-        # Come up with original sorting of player ids
-        original_sorting = list(self.__players.keys())
+        return [p.id for p in self.__players]
 
-        # Find the current player id in the original sorting
-        n = original_sorting.index(self.__current_player_id)
+    def get_player_by_id(self, player_id: int) -> Player:
+        """
+        Retrieves player object by the provided id if it exists.
+        Otherwise it returns throws NonExistentPlayerException.
 
-        # Rotate original sorting to get current sorting
-        # based on the current player
-        dl = deque(original_sorting)
-        # Rotate left
-        dl.rotate(-n)
+        :param: id of player to retrieve
+        :return: Player object
+        """
+        # Validate params
+        if not isinstance(player_id, int):
+            raise TypeError('Expected int for player_id!')
 
-        return list(dl)
+        # Cycle over players in search for the one with the
+        # provided id
+        for p in self.__players:
+            if p.id == player_id:
+                return p
+
+        raise NonExistentPlayerException()
 
     def get_player_score(self, player_id: int) -> int:
         """
-        Gets provided player's score.
+        Gets provided player's score or throws
+        NonExistentPlayerException() if player does not exist.
 
         :param player_id: id of player whose score
                           to retrieve
@@ -247,14 +253,12 @@ class State(object):
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player_id!')
 
-        if player_id not in self.__players.keys():
-            raise NonExistentPlayerException()
-
-        return self.__players.get(player_id).score
+        return self.get_player_by_id(player_id).score
 
     def get_player_positions(self, player_id: int) -> [Position]:
         """
-        Gets provided player's positions.
+        Gets provided player's positions or throws
+        NonExistentPlayerException() if player does not exist.
 
         :param player_id: id of player whose positions
                           to retrieve
@@ -264,15 +268,12 @@ class State(object):
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player_id!')
 
-        # Make sure this player is actually in the game
-        if player_id not in self.__placements.keys():
-            raise NonExistentPlayerException()
-
-        return self.__placements.get(player_id)
+        return self.get_player_by_id(player_id).places
 
     def get_player_color(self, player_id: int) -> Color:
         """
-        Gets provided player's color.
+        Gets provided player's color or throws
+        NonExistentPlayerException() if player does not exist.
 
         :param player_id: id of player whose color
                           to retrieve
@@ -282,20 +283,21 @@ class State(object):
         if not isinstance(player_id, int) or player_id <= 0:
             raise TypeError('Expected positive integer for player_id!')
 
-        # Make sure this player is actually in the game
-        if player_id not in self.__players.keys():
-            raise NonExistentPlayerException()
+        return self.get_player_by_id(player_id).color
 
-        return self.__players.get(player_id).color
-
-    def place_avatar(self, position: Position) -> None:
+    def place_avatar(self, player_id: int, position: Position) -> None:
         """
-        Places an avatar on behalf of the current player with at
+        Places an avatar on behalf of the given player id at
         the specified location if it is not a hole.
 
+        :param player_id: id of player to place avatar for
         :param position: position to place avatar
         :return: None
         """
+        # Validate type of player_id
+        if not isinstance(player_id, int):
+            raise TypeError('Expected int for player id!')
+
         # Validate type of position
         if not isinstance(position, Position):
             raise TypeError('Expected Position for position id!')
@@ -306,18 +308,18 @@ class State(object):
             raise InvalidPositionException("Position already occupied or hole!")
 
         # Make sure there are still avatars to place
-        if self.__has_everyone_placed():
+        if self.has_everyone_placed():
             raise InvalidActionException()
 
+        # Make sure player exists
+        if player_id not in self.player_order:
+            raise NonExistentPlayerException()
+
         # Update placement to reflect updated avatar's position
-        self.__placements[self.__current_player_id].append(position)
+        self.get_player_by_id(player_id).add_place(position)
 
-        # If everyone has placed, start game
-        if self.__has_everyone_placed():
-            self.__game_status = GameStatus.RUNNING
-
-        # Trigger next turn
-        self.__trigger_next_turn()
+        # Make sure a player that can move is up
+        self.__trigger_next_turn(0)
 
     def is_position_open(self, position: Position) -> bool:
         """
@@ -339,8 +341,8 @@ class State(object):
             return False
 
         # Check if an avatar is at position
-        for placements in self.__placements.values():
-            if position in placements:
+        for placement_arr in self.placements.values():
+            if position in placement_arr:
                 return False
 
         return True
@@ -368,10 +370,6 @@ class State(object):
             if not self.__is_path_clear(src, dst):
                 raise UnclearPathException('Target position cannot be reached!')
 
-            # Make sure everyone has placed their avatars
-            if self.__game_status != GameStatus.RUNNING:
-                raise GameNotRunningException()
-
         # Get player id for src
         player_id = self.__whose_avatar(src)
 
@@ -380,15 +378,16 @@ class State(object):
             raise InvalidActionException()
 
         # Make sure it is the current player
-        if self.__current_player_id != player_id:
+        if self.current_player != player_id:
             raise MoveOutOfTurnException(f'avatar belongs to player id {player_id} '
-                                         f'current player id: {self.__current_player_id}')
+                                         f'current player id: {self.current_player}')
 
         # Adjust player score
-        self.__players[self.__current_player_id].score += self.__board.get_tile(src).fish_no
+        self.get_player_by_id(player_id).score += self.__board.get_tile(src).fish_no
 
         # Swap out old avatar position for new
-        self.__placements[player_id][self.__placements[player_id].index(src)] = dst
+        self.get_player_by_id(player_id).swap_places(src, dst)
+
         # Clear cache for all possible actions
         self.__all_possible_actions_cache.clear()
 
@@ -412,16 +411,13 @@ class State(object):
         if not isinstance(pos, Position):
             raise TypeError('Expected Position for pos!')
 
-        # Initialize player id at place holder
-        player_id = -1
         # Get player id whose avatar exists at src
-        for pid, placements in self.__placements.items():
-            # If src is among this player's placements, set id
-            if pos in placements:
-                player_id = pid
-                break
+        for player in self.__players:
+            # If src is among this player's placements, return id
+            if pos in player.places:
+                return player.id
 
-        return player_id
+        return -1
 
     def __is_path_clear(self, pos1: Position, pos2: Position, reachable_pos=None) -> bool:
         """
@@ -458,51 +454,39 @@ class State(object):
 
         # For each in-between position
         for pos in positions_to_check:
-            # Check if an avatar has been placed on current position
-            if pos in self.__get_all_avatar_positions():
-                return False
+            # Cycle over placements of each player
+            for player_placements in self.placements.values():
+                # Check if an avatar has been placed on current position
+                if pos in player_placements:
+                    return False
 
         return True
 
-    def __get_all_avatar_positions(self) -> []:
-        """
-        Returns a list of all avatar Position objects.
-        """
-        positions = []
-
-        for placements in self.__placements.values():
-            positions.extend(placements)
-
-        return positions
-
-    def __has_everyone_placed(self) -> bool:
+    def has_everyone_placed(self) -> bool:
         """
         Returns boolean indicating if everyone has placed their
         avatars.
         :return: resulting boolean
         """
+        # Initialize counter
+        placement_count = 0
 
-        return len(self.__get_all_avatar_positions()) == self.__avatars_per_player \
+        # Cycle over player placements and add to count
+        for player_placements in self.placements.values():
+            placement_count += len(player_placements)
+
+        return placement_count == self.__avatars_per_player \
                * len(self.__players)
 
     def can_anyone_move(self) -> bool:
         """
-        Tells if any player can move any of their avatars. Can only be called
-        after everyone has finished placing their avatars.
+        Tells if any player can move any of their avatars.
 
         :return: boolean indicating whether anyone can move
         """
-        # If we're still placing, we cannot compute response
-        if self.__game_status is GameStatus.PLACING:
-            raise InvalidGameStatus()
-
-        # If game is over, no one can move
-        if self.__game_status is GameStatus.OVER:
-            return False
-
         # Cycle over players and return true if any of them
         # can move
-        for player_id in self.__players.keys():
+        for player_id in self.player_order:
             if not self.__is_player_stuck(player_id):
                 return True
 
@@ -523,30 +507,21 @@ class State(object):
             raise TypeError('Expected positive int for player_id!')
 
         # Make sure player_id is in player collection
-        if player_id not in self.__players.keys():
+        if player_id not in self.player_order:
             raise NonExistentPlayerException()
-
-        # Make sure game is running or over
-        if self.__game_status is GameStatus.PLACING:
-            raise InvalidGameStatus()
-
-        # If game is over, no one can move
-        if self.__game_status is GameStatus.OVER:
-            return True
 
         # See if player is in "forever-stuck" cache
         if player_id in self.__player_stuck_cache:
             return True
 
         # Retrieve player's positions
-        player_positions = self.__placements.get(player_id)
+        player_positions = self.get_player_by_id(player_id).places
 
         # Cycle over player's positions
         for position in player_positions:
             # Retrieve all reachable positions from this position
             reachable_pos: [Position] = self.__board.get_reachable_positions(position)
             # Make sure at least one path is clear
-
             for pos in reachable_pos:
                 if self.__is_path_clear(position, pos, reachable_pos):
                     return False
@@ -582,14 +557,13 @@ class State(object):
         canvas = self.__board.render(frame)
 
         # Render players to board
-        for player_id, positions in self.__placements.items():
-            # Retrieve player
-            player = self.__players.get(player_id)
+        for player_obj in self.__players:
             # Retrieve sprite's name based on avatar color
-            player_sprite_name = player.color.name.lower()
+            player_sprite_name = player_obj.color.name.lower()
+            player_id = player_obj.id
 
             # Cycle over player's positions
-            for pos in positions:
+            for pos in player_obj.places:
                 # De-multiplex avatar position into x & y
                 avatar_x, avatar_y = pos
 
@@ -609,4 +583,4 @@ class State(object):
 
                 # Add avatar name
                 canvas.create_text(avatar_name_x, avatar_name_y, fill="black", font="Arial 10",
-                                   text=f'{player.name}[{player_id}]')
+                                   text=f'{player_obj.name}[{player_id}]')

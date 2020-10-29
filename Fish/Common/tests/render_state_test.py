@@ -25,27 +25,24 @@ frame.grid(row=0, column=0)
 # Build board
 # b = Board.homogeneous(1, rows=10, cols=4)
 
-b = Board({
-            Position(0, 0): Tile(1),
-            Position(0, 1): Tile(2),
-            Position(0, 2): Hole(),
-            Position(1, 0): Tile(3),
-            Position(1, 1): Hole(),
-            Position(1, 2): Tile(2)
-})
+b = Board.homogeneous(2, 4, 2)
 
 # Build state
-s = State(b, [Player(9, "Bob Ross", 48, Color.RED),
-              Player(10, "Eric Khart", 52, Color.BROWN),
+state = State(b, [Player(1, "Bob Ross", Color.RED),
+              Player(2, "Eric Khart", Color.BROWN),
+              Player(3, "Bob Ross", Color.WHITE),
+              Player(4, "Eric Khart", Color.BLACK),
               ])
 
-# Player 1
-s.place_avatar(Position(0, 1))
-# Player 2
-s.place_avatar(Position(0, 0))
-# Player 3
-s.place_avatar(Position(1, 2))
-
+# Successful placement
+state.place_avatar(1, Position(0, 0))
+state.place_avatar(2, Position(0, 1))
+state.place_avatar(3, Position(1, 0))
+state.place_avatar(4, Position(1, 1))
+state.place_avatar(1, Position(2, 0))
+state.place_avatar(2, Position(2, 1))
+state.place_avatar(3, Position(3, 0))
+state.place_avatar(4, Position(3, 1))
 
 
 # Move player 1 avatar
@@ -53,6 +50,6 @@ s.place_avatar(Position(1, 2))
 # Move player 2 avatar
 # s.move_avatar(Position(4, 1), Position(3, 1))
 
-s.render(frame)
+state.render(frame)
 # Run tk mainloop
 _window.mainloop()

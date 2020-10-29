@@ -3,7 +3,6 @@ import pickle
 from action import Action
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
-from game_status import GameStatus
 from state import State
 
 
@@ -41,7 +40,7 @@ class GameTree(object):
 
         # Make sure the state is one in which everyone has finished
         # placing their penguins
-        if self.__state.game_status == GameStatus.PLACING:
+        if not self.__state.has_everyone_placed():
             raise GameNotRunningException()
 
         # Initialize dictionary of Action objects to GameTree objects (nodes).
@@ -87,7 +86,7 @@ class GameTree(object):
         # Crate child node for move if not in cache
         if move not in self.__children:
             # Make a copy of the state
-            subsequent_state: State = pickle.loads(pickle.dumps(self.__state))
+            subsequent_state: State = self.__state.deepcopy()
             # Get move to make
             src, dst = move
             # Make move
