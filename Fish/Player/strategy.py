@@ -14,13 +14,17 @@ from game_tree import GameTree
 class Strategy(object):
     """
     Purpose: This class is purported to provide a player with a strategy for placing avatars
-             and one for determining the best move by looking ahead a number of turns. The latter
-             is achieved through a min-max algorithm that maximizes the player's score for the
-             worst possible moves (for the player) played by their opponent(s).
+             and one for determining the best move by looking ahead a number of turns. The former
+             is achieved by sequentially scanning down each row from left to right starting with the
+             first row at the top of the board. If no suitable placement is found on the first row the
+             sequential scanning is repeated on the second row starting from the first (left-most) column.
+             The latter strategy is achieved through a min-max algorithm that maximizes the player's score
+             for the worst possible moves (for the player) played by their opponent(s).
 
     Interpretation: The strategy is the logic employed by a player to determine their moves in an
                     attempt to win the game by collecting the largest number of fish.
     """
+    # Initialize DEBUG flag (if enabled debug information may be written to stdout)
     DEBUG = False
 
     @staticmethod
@@ -64,10 +68,11 @@ class Strategy(object):
     @staticmethod
     def get_best_action(state: State, depth: int) -> Action:
         """
-        This method determines the best action for the current player by looking ahead depth
-        number of turns and considering the most detrimental move an opponent can make in each
-        of them. It then returns the action tied to the maximum score for the provided state's
-        current player based on those worst case scenarios.
+        This method determines the best action for the current player by looking ahead at most
+        depth number of current-player turns and considering the most detrimental move an opponent
+        can make in each of them. It then returns the action tied to the maximum score for the provided
+        state's current player based on those scenarios in which its opponents make the "worst" (most
+        score minimizing) moves for the player.
 
         :param state: state which to determine best move for current player for
         :param depth: how many the current player in the provided states gets to go at most
@@ -105,7 +110,8 @@ class Strategy(object):
         the best moves the player can make during their turn and the "best" worst moves its
         opponents can make during their turns that most minimize the player's score. It utilizes
         alpha-beta pruning to trim away edges of the tree (or player moves) that are known to
-        yield a worse score than previously computed branches.
+        yield a worse score than previously computed same-level branches. Two branches are at
+        on same level if they descend from a common node.
 
         :param node: game tree node for which to run
         :param player_id_to_max: id of player whose score to maximize (maximizer)

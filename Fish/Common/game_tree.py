@@ -10,7 +10,10 @@ class GameTree(object):
     """
     INTERPRETATION: Represents an entire game starting from a given state wherein no more
     avatars will be placed. It is generated from a state and can maintain connections to
-    subsequent game states by way of other GameTree(s).
+    subsequent game states by way of other GameTree(s). A game tree can only represent states
+    wherein the current player can move or no one can move (game over). The game tree cannot
+    represent states in which the current player is stuck as that is prevented by default by
+    the game state by skipping players that cannot move over.
 
     PURPOSE: The representation can be used by the players and the referee to check rules and
     plan their next moves.

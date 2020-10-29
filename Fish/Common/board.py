@@ -13,9 +13,31 @@ from sprite_manager import SpriteManager
 
 class Board(object):
     """
-    Represents the board on which the game is played. The board is encompasses
-    a collection of Tile(s) and Hole(s) that determine what straight line
-    paths that can be traversed  from any arbitrary position.
+    PURPOSE:        The purpose of the board is to aggregate the staple board pieces
+                    (tiles and holes) in a matrix-like setup where each tile can hold a
+                    number of fish. The arrangement of tiles and holes determines what straight
+                    line paths can be traversed from any arbitrary position. A straight line path
+                    is one that traverses tiles across their parallel edges (as opposed to corners).
+
+    INTERPRETATION: The tiles and holes (collectively denoted using AbstractTile(s)) and their
+                    respective locations on the board are stored in the "tiles" member of the
+                    class. Locations of the aforementioned game pieces are described using Position objects,
+                    which tell the x (row value) and y (column value) of the associated object.
+                    The coordinate system employed has its origin in the upper left corner (denoted using
+                    Position(0,0)) with row numbers (Position.x) increasing in value as the player moves
+                    to the right of the board, and with column numbers (Position.y) increasing in value
+                    as the player moves toward the bottom of the board.
+
+                    The board spreads out consecutive columns by the length of a tile's top side on each row and
+                    offsets every 2nd row (from the top) on the board to the right and fits it into the row above it
+                    to create an interlaced board layout where adjacent hexagons "lock" into each other. For a graphical
+                    representation of this, please see the pictures in sprites/example_board.png.
+
+                    To determine which tiles are reachable from where, the board computes an edge list (a list of all
+                    the adjacent tiles each tile on the board can access across its 6 sides). The edge list is then
+                    used to determine all the Position(s) (and therefore, tiles) that can be accessed in any given
+                    direction for a given Position.
+
     """
     DISABLE_SPRITE_MANAGER = False
     RENDER_TILE_COORDINATES = True
@@ -61,7 +83,7 @@ class Board(object):
         self.__cols = cols
         self.__tile_no = self.__rows * self.__cols
 
-        # Compute edge list for determining reachable positions
+        # Compute edge list for determining reachable positions.
         self.__edge_list = self.__compute_reachable_edge_list()
 
         if not Board.DISABLE_SPRITE_MANAGER:

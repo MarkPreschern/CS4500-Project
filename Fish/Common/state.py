@@ -19,10 +19,29 @@ from sprite_manager import SpriteManager
 
 class State(object):
     """
-    State represents the current state of a game: the state of the board,
-    the current list of players along with their id, name, color and penguin
-    placements, and the order in which they play. More generally speaking,
-    a game state represents a complete snapshot of a game in time.
+    PURPOSE:        State represents the current state of a game: the state of the board,
+                    the current list of players along with their id, name, color and penguin
+                    placements, and the order in which they play. More generally speaking,
+                    a game state represents a complete snapshot of a game in time.
+
+    INTERPRETATION: State consists of a Board object, list of Player objects and information
+                    about placements, moves and turns. The players' avatars are tracked
+                    by way of the 'places' member of a Player object, which contains Position
+                    objects describing where each of the player's avatars are located. These
+                    locations along with the information provided by the Board determine the
+                    placements and moves that can be performed.
+
+                    The State expects a list of players sorted by age in the beginning, which it
+                    then rotates throughout the game to allow the next movable player to go. A
+                    player is movable if it can move any of its penguins. When a player becomes stuck
+                    (or unmovable), it is skipped over meaning that no such state can exist wherein the
+                    current player is stuck (with the exception of a state in which all players are stuck).
+                    Upon a valid move being made, the state rotates the list of players to allow the next
+                    eligible player to go.
+
+                    On a different note, the state provides the tooling necessary to query whose turn it is,
+                    whether any moves are possibles or if all avatars have been placed. This allows for a
+                    referee to properly run a game and end it when needed.
     """
 
     def __init__(self, board: Board, players: [Player]):
@@ -54,7 +73,8 @@ class State(object):
             raise ValueError(f'Invalid player length; length has to be between {ct.MIN_PLAYERS} and'
                              f' {ct.MAX_PLAYERS}')
 
-        # Initialize players to array of players arranged in the order they go
+        # Initialize players to list of players arranged in the order they go. This list encompasses
+        # the players along with their id, name, color and penguin placements (expressed using Position objects).
         self.__players = players
 
         # Set board
@@ -76,11 +96,14 @@ class State(object):
     def deepcopy(self) -> 'State':
         """
         Returns a 'deep-copy' of the state.
+
+        Note: move_log contents are lost in the copy process and
+        the resulting copy will not have the contents of the original.
         """
         # Copy board
-        board = pickle.loads(pickle.dumps(self.__board))
+        board: Board= pickle.loads(pickle.dumps(self.__board))
         # Copy players
-        players = pickle.loads(pickle.dumps(self.__players))
+        players: [Player] = pickle.loads(pickle.dumps(self.__players))
 
         # Return new copy of state
         return State(board, players)
@@ -127,7 +150,9 @@ class State(object):
     @property
     def placements(self) -> []:
         """
-        Returns an immutable copy of placements.
+        Returns an immutable dictionary of player ids to places. Each
+        value (a.k.a places) is a list of Position objects indicating
+        where each player's avatar is placed on the board.
         """
         # Initialize dict of player id to Position object
         placements = {}

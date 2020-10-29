@@ -1329,3 +1329,45 @@ class StateTests(unittest.TestCase):
         self.assertEqual(state.get_player_by_id(3), self.__p3)
         self.assertEqual(state.get_player_by_id(2), self.__p2)
         self.assertEqual(state.get_player_by_id(4), self.__p4)
+
+    def test_deepcopy(self):
+        # Tests successful deep copy of state
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        # Place a bunch of avatars
+        state.place_avatar(1, Position(0, 0))
+        state.place_avatar(2, Position(0, 1))
+        state.place_avatar(3, Position(0, 2))
+        state.place_avatar(4, Position(1, 2))
+        state.place_avatar(1, Position(1, 0))
+        state.place_avatar(2, Position(1, 1))
+        state.place_avatar(3, Position(2, 2))
+        state.place_avatar(4, Position(2, 1))
+
+        # Make a move for p1
+        state.move_avatar(Position(0, 0), Position(2, 0))
+
+        # Make deep copy
+        copied_state = state.deepcopy()
+
+        # Make sure board was deep copied
+        self.assertNotEqual(copied_state.board, state)
+        # Make sure player list was deep copied
+        self.assertNotEqual(copied_state._State__players, state._State__players)
+        # Make sure placements are the same
+        self.assertEqual(copied_state.placements, state.placements)
+        # Make sure current player is the same
+        self.assertEqual(copied_state.current_player, state.current_player)
+        # Make sure player 1's score is the same
+        self.assertEqual(copied_state.get_player_score(1), 2)
+        self.assertEqual(copied_state.get_player_score(1), state.get_player_score(1))
+        # Make sure other players' scores are the same
+        self.assertEqual(copied_state.get_player_score(2), 0)
+        self.assertEqual(copied_state.get_player_score(3), 0)
+        self.assertEqual(copied_state.get_player_score(4), 0)
+        # Make sure possible actions are the same
+        self.assertEqual(copied_state.get_possible_actions(), state.get_possible_actions())
