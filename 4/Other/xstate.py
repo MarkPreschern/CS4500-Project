@@ -98,7 +98,7 @@ def _state_to_json(state: State) -> dict:
     json_obj['board'] = _board_to_json(state.board)
     json_obj['players'] = []
 
-    player_order = state.get_player_order()
+    player_order = state.get_original_player_order()
 
     # Cycle over player order
     for player_id in player_order:

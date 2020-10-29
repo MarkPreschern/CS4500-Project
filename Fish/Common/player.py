@@ -1,4 +1,5 @@
 from color import Color
+from position import Position
 
 
 class Player(object):
@@ -7,11 +8,10 @@ class Player(object):
     pertaining player information.
     """
 
-    def __init__(self, id: int, name: str, age: int, color: Color):
+    def __init__(self, id: int, name: str, color: Color):
         """
         Initializes a Player object.
         :param id: unique positive integer identifying player
-        :param age: positive integer representing player age
         :param color: Color object representing player color
         :return: new Player object
         """
@@ -23,18 +23,61 @@ class Player(object):
         if not isinstance(name, str):
             raise TypeError('Expected string for name!')
 
-        if not isinstance(age, int) or age <= 0:
-            raise TypeError('Expected positive int for age!')
-
         if not isinstance(color, Color):
             raise TypeError('Expected Color object for color!')
 
         # Set properties
         self.__id = id
         self.__name = name
-        self.__age = age
         self.__color = color
         self.__score = 0
+        # Initialize a list of Position objects indicating where
+        # the player's avatars live
+        self.__places = []
+
+    def add_place(self, pos: Position):
+        """
+        Adds an avatar position to player's places array.
+
+        :param pos: Position object representing player's avatar's
+                    location
+        :return: None
+        """
+        if not isinstance(pos, Position):
+            raise TypeError('Expected Position obj for pos!')
+
+        self.__places.append(pos)
+
+    def swap_places(self, src: Position, dst: Position):
+        """
+        Swaps Position object src for Position object dst in the
+        places array.
+
+        :param src: position object to swap out
+        :param dst: position object to swap in
+        :return: None
+        """
+        # Validate params
+        if not isinstance(src, Position):
+            raise TypeError('Expected Position obj for src!')
+
+        if not isinstance(dst, Position):
+            raise TypeError('Expected Position obj for dst!')
+
+        # Make sure src exists
+        if src not in self.__places:
+            raise ValueError(f'Player does not have avatar at src = {src}')
+
+        # Swap
+        self.__places[self.__places.index(src)] = dst
+
+    @property
+    def places(self) -> [Position]:
+        """
+        Returns a list of Position objects indicating where
+        the player's avatars are location w.r.t the board.
+        """
+        return self.__places.copy()
 
     @property
     def id(self) -> int:
@@ -49,13 +92,6 @@ class Player(object):
         Returns player's name.
         """
         return self.__name
-
-    @property
-    def age(self) -> int:
-        """
-        Returns player's age.
-        """
-        return self.__age
 
     @property
     def color(self) -> Color:
