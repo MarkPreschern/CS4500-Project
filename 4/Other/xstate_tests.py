@@ -63,29 +63,29 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # all avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', 10, Color.WHITE),
-            Player(2, 'bob', 8, Color.BROWN),
-            Player(3, 'bob', 12, Color.BLACK)
+            Player(1, 'bob', Color.WHITE),
+            Player(2, 'bob', Color.BROWN),
+            Player(3, 'bob', Color.BLACK)
         ])
 
         # Player 1 place
-        state.place_avatar(Position(0, 1))
+        state.place_avatar(1, Position(0, 1))
         # Player 2 place
-        state.place_avatar(Position(1, 0))
+        state.place_avatar(2, Position(1, 0))
         # Player 3 place
-        state.place_avatar(Position(1, 1))
+        state.place_avatar(3, Position(1, 1))
         # Player 1 place
-        state.place_avatar(Position(1, 2))
+        state.place_avatar(1, Position(1, 2))
         # Player 2 place
-        state.place_avatar(Position(2, 0))
+        state.place_avatar(2, Position(2, 0))
         # Player 3 place
-        state.place_avatar(Position(2, 1))
+        state.place_avatar(3, Position(2, 1))
         # Player 1 place
-        state.place_avatar(Position(2, 2))
+        state.place_avatar(1, Position(2, 2))
         # Player 2 place
-        state.place_avatar(Position(3, 1))
+        state.place_avatar(2, Position(3, 1))
         # Player 3 place
-        state.place_avatar(Position(3, 2))
+        state.place_avatar(3, Position(3, 2))
 
         # Get jsonified version
         result = _state_to_json(state)
@@ -100,31 +100,31 @@ class XStateTests(unittest.TestCase):
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
         }
 
-        self.assertEqual(result, expected_json)
+        self.assertDictEqual(result, expected_json)
 
     def test_state_to_json_success2(self):
         # Successful state to json. State is one in which
         # only some avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', 10, Color.WHITE),
-            Player(2, 'bob', 8, Color.BROWN),
-            Player(3, 'bob', 12, Color.BLACK)
+            Player(1, 'bob', Color.WHITE),
+            Player(2, 'bob', Color.BROWN),
+            Player(3, 'bob', Color.BLACK)
         ])
 
         # Player 1 place
-        state.place_avatar(Position(0, 1))
+        state.place_avatar(1, Position(0, 1))
         # Player 2 place
-        state.place_avatar(Position(1, 0))
+        state.place_avatar(2, Position(1, 0))
         # Player 3 place
-        state.place_avatar(Position(1, 1))
+        state.place_avatar(3, Position(1, 1))
         # Player 1 place
-        state.place_avatar(Position(1, 2))
+        state.place_avatar(1, Position(1, 2))
         # Player 2 place
-        state.place_avatar(Position(2, 0))
+        state.place_avatar(2, Position(2, 0))
         # Player 3 place
-        state.place_avatar(Position(2, 1))
+        state.place_avatar(3, Position(2, 1))
         # Player 1 place
-        state.place_avatar(Position(2, 2))
+        state.place_avatar(1, Position(2, 2))
 
         # Get jsonified version
         result = _state_to_json(state)
@@ -139,15 +139,15 @@ class XStateTests(unittest.TestCase):
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
         }
 
-        self.assertEqual(result, expected_json)
+        self.assertDictEqual(result, expected_json)
 
     def test_state_to_json_success3(self):
         # Successful state to json. State is one in which
         # no avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', 10, Color.WHITE),
-            Player(2, 'bob', 8, Color.BROWN),
-            Player(3, 'bob', 12, Color.BLACK)
+            Player(1, 'bob', Color.WHITE),
+            Player(2, 'bob', Color.BROWN),
+            Player(3, 'bob', Color.BLACK)
         ])
 
         # Get jsonified version
@@ -163,7 +163,7 @@ class XStateTests(unittest.TestCase):
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
         }
 
-        self.assertEqual(result, expected_json)
+        self.assertDictEqual(result, expected_json)
 
     def test_str_to_color_fail1(self):
         # Fails due to invalid color_str

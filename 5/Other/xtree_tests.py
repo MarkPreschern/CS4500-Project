@@ -131,4 +131,27 @@ class XTreeTests(unittest.TestCase):
 
             # Get next state
             _get_next_state(state, Position(1, 1), Position(1, 0))
+    
+    def test_find_action_to_neighboring_tile_fail1(self):
+        # Test failing find action to neighboring tile due to invalid state type
+        with self.assertRaises(TypeError):
+            _find_action_to_neighboring_tile("Hello", Position(3, 4))
+
+    def test_find_action_to_neighboring_tile_fail2(self):
+        # Test failing find action to neighboring tile due to invalid position type
+        with self.assertRaises(TypeError):
+            json_obj = {
+                'players': [
+                    {'score': 0, 'places': [[1, 0], [2, 0], [0, 0]], 'color': 'white'},
+                    {'score': 0, 'places': [[1, 1], [2, 1], [3, 1]], 'color': 'black'},
+                    {'score': 0, 'places': [[0, 1], [1, 2], [3, 2]], 'color': 'brown'}
+                ],
+                'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
+            }
+
+            # Initialize state from json object
+            state = initialize_state(json_obj)
+
+            _find_action_to_neighboring_tile(state, "Hello")
+
 

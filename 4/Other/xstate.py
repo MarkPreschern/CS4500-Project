@@ -98,7 +98,7 @@ def _state_to_json(state: State) -> dict:
     json_obj['board'] = _board_to_json(state.board)
     json_obj['players'] = []
 
-    player_order = state.get_original_player_order()
+    player_order = state.player_order
 
     # Cycle over player order
     for player_id in player_order:
@@ -172,8 +172,14 @@ def initialize_state(json_obj: dict) -> State:
     # Cycle over each json object in the json list
     for player in player_list:
         # Make up Player object
-        players.append(Player(player_id_counter, "", player_id_counter,
-                              _str_to_color(player['color'])))
+        new_player = Player(player_id_counter, "", _str_to_color(player['color']))
+
+        # Update player score to whatever the current score is in the state
+        new_player.score = player['score']
+
+        # Add player object to players list
+        players.append(new_player)
+
         # Insert placement
         player_placements.update({player_id_counter: player['places']})
         # Increment id counter
@@ -182,20 +188,24 @@ def initialize_state(json_obj: dict) -> State:
     # Make up state with board and players
     state = State(board, players)
 
-    # Determine the number of avatars per player
-    avatars_per_player_no = len(player_placements[1])
+    # Determine the maximum number of avatars for a single player
+    avatars_per_player_no = max(map(lambda x: len(x), player_placements.values()))
 
     # For each i in the number of avatars per player
     for i in range(avatars_per_player_no):
-        # For each player, place i-th avatar
+        # For each player, place i-th avatar if possible
         for p_id, p_placements in player_placements.items():
             # Retrieve current player's i-th avatar
-            placement = player_placements[p_id][i]
-            # Convert to Position object
-            position_to_place = Position(placement[0], placement[1])
+            try:
+                placement = player_placements[p_id][i]
 
-            # Place current player's avatar at position
-            state.place_avatar(position_to_place)
+                # Convert to Position object
+                position_to_place = Position(placement[0], placement[1])
+
+                # Place current player's avatar at position
+                state.place_avatar(p_id, position_to_place)
+            except IndexError:
+                continue
 
     return state
 
@@ -212,23 +222,30 @@ def _get_next_state(state: State) -> State:
     if not isinstance(state, State):
         raise TypeError("Expected State for state.")
 
+    # Get player's placements
     player_placements = state.placements
 
     # Get first player's first avatar's position
     first_avatar_pos = player_placements[1][0]
     first_avatar_pos = Position(first_avatar_pos[0], first_avatar_pos[1])
 
+    # Possible actions that can be taken from this state
+    possible_actions = state.get_possible_actions()
+
     # Attempt to move in a number of directions
     for direction in directions_to_try:
         # first_avatar_pos
         next_pos = _get_next_position(first_avatar_pos, direction)
 
-        try:
-            # Make up game tree
-            gt = GameTree(state)
-            # Try action on game state
-            new_state = gt.try_action(Action(first_avatar_pos, next_pos))
-            return new_state
+        try:  
+            # Set current action
+            action = Action(first_avatar_pos, next_pos)
+
+            # Check if the current action is in the list of possible actions
+            if action in possible_actions:
+                state.move_avatar(first_avatar_pos, next_pos)
+
+                return state
         except InvalidActionException:
             pass
         except GameNotRunningException:
