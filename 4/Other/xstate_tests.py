@@ -93,8 +93,8 @@ class XStateTests(unittest.TestCase):
         # Make up expected json
         expected_json = {
             'players': [
-                {'score': 0, 'places': [[0, 1], [1, 2], [2, 2]], 'color': 'brown'},
-                {'score': 0, 'places': [[1, 0], [2, 0], [3, 1]], 'color': 'white'},
+                {'score': 0, 'places': [[0, 1], [1, 2], [2, 2]], 'color': 'white'},
+                {'score': 0, 'places': [[1, 0], [2, 0], [3, 1]], 'color': 'brown'},
                 {'score': 0, 'places': [[1, 1], [2, 1], [3, 2]], 'color': 'black'}
             ],
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
@@ -132,9 +132,9 @@ class XStateTests(unittest.TestCase):
         # Make up expected json
         expected_json = {
             'players': [
-                {'score': 0, 'places': [[1, 0], [2, 0]], 'color': 'white'},
-                {'score': 0, 'places': [[1, 1], [2, 1]], 'color': 'black'},
-                {'score': 0, 'places': [[0, 1], [1, 2], [2, 2]], 'color': 'brown'}
+                {'score': 0, 'places': [[0, 1], [1, 2], [2, 2]], 'color': 'white'},
+                {'score': 0, 'places': [[1, 0], [2, 0]], 'color': 'brown'},
+                {'score': 0, 'places': [[1, 1], [2, 1]], 'color': 'black'}
             ],
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
         }
@@ -156,8 +156,8 @@ class XStateTests(unittest.TestCase):
         # Make up expected json
         expected_json = {
             'players': [
-                {'score': 0, 'places': [], 'color': 'brown'},
                 {'score': 0, 'places': [], 'color': 'white'},
+                {'score': 0, 'places': [], 'color': 'brown'},
                 {'score': 0, 'places': [], 'color': 'black'}
             ],
             'board': [[4, 4, 4], [4, 4, 4], [4, 4, 4], [4, 4, 4]]
