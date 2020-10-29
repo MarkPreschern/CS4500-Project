@@ -74,6 +74,9 @@ class Strategy(object):
         state's current player based on those scenarios in which its opponents make the "worst" (most
         score minimizing) moves for the player.
 
+        If there are multiple best action leading to the same score, then the one with the smallest
+        source row, source column, destination row or destination column is picked (in that order).
+
         :param state: state which to determine best move for current player for
         :param depth: how many the current player in the provided states gets to go at most
         :return: best Action current player can make best on mini-max strategy
@@ -113,15 +116,15 @@ class Strategy(object):
         yield a worse score than previously computed same-level branches. Two branches are at
         on same level if they descend from a common node.
 
+        If there are multiple best moves leading to the same score, then the one with the smallest
+        source row, source column, destination row or destination column is picked (in that order).
+
         :param node: game tree node for which to run
         :param player_id_to_max: id of player whose score to maximize (maximizer)
         :param depth: the number of times maximizing player is evaluated
         :param alpha: the best score of the maximizer
         :param beta: the best worst score of the minimizer (one of the player's opponents)
-        :return: tuple of integer best score and corresponding best Action object. If there are
-                 multiple best moves leading to the same score, then the one with the smallest
-                 source row, source column, destination row or destination column is picked (
-                 in that order).
+        :return: tuple of integer best score and corresponding best Action object.
         """
         # Validate params
         if not isinstance(node, GameTree):
