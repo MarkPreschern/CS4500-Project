@@ -39,7 +39,7 @@ def xstate() -> None:
     json_obj = json.loads(input_obj)
 
     # Initialize state from json
-    init_state = _initialize_state(json_obj)
+    init_state = initialize_state(json_obj)
 
     # Get next state for first avatar
     state = _get_next_state(init_state)
