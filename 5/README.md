@@ -1,23 +1,22 @@
-# xstate
+# xtree
 
-> A testing harness that ensures JSON input that represents a game state produces the correct execution of a potential
-move for the first player's first avatar. In other words, the testing harness takes a JSON representation of a game state, attempts to move the first player's first avatar in the proper order of directions (North, Northeast, Southeast, South, Southwest, Northwest), and either returns the game state produced from this execution or returns false.
+> A testing harness that tests the functionality of game tree. The harness accepts a JSON object from STDIN. This object contains a state object, a from position, and a to position. The test harness attempts to move one of the first player's avatars from the from position to the to position. If the action is illegal, the input object is considered invalid input. Otherwise, the harness will attempt to find an action that the second player can take to move to a tile that is adjacent to the one that the first player just conquered. If there is a possible action, a list of [Position, Position] is printed to STDOUT. If there is no such action, it prints false to STDOUT.
 
 ## Project structure
 
 - *xstate* (program entry point)
 - **Other/**
-	- contains program logic, unit tests, and extra json test files
+	- contains program logic, unit tests
 - **Test/**
     - contains JSON test files
 
 ## Usage
 - General usage: 
-	- `./xstate`
+	- `./xtree`
     - Running xstate will accept JSON input and produce the corresponding JSON output once program execution is ended.
 
 - To run unit tests:
-    - Run `./xstate --unit`. This will display the output of all unit tests instead of the json file test results.
+    - Run `./xtree --unit`. This will display the output of all unit tests instead of the json file test results.
 
 - To alter program logic:
-	- Edit `xstate.py` in **Other**
+	- Edit `xtree.py` in **Other**
