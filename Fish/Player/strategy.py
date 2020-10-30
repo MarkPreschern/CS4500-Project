@@ -28,7 +28,7 @@ class Strategy(object):
     DEBUG = False
 
     @staticmethod
-    def place_penguin(player_id: int, state: State) -> None:
+    def place_penguin(player_id: int, state: State) -> Position:
         """
         This method places a penguin for the given player id by scanning down columns
         starting in the top-left row until a free spot is found. If all columns on one
