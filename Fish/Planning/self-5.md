@@ -3,17 +3,17 @@
 Under each of the following elements below, indicate below where your
 TAs can find:
 
-- the data definition, including interpretation, of penguin placements for setups 
-Position: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Common/position.py#L3-L7
+- the data definition, including interpretation, of penguin placements for setups  
+`Position`: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Common/position.py#L3-L7
 
-- the data definition, including interpretation, of penguin movements for turns
-Action: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Common/action.py#L3-L8
+- the data definition, including interpretation, of penguin movements for turns  
+`Action`: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Common/action.py#L3-L8
 
-- the unit tests for the penguin placement strategy 
+- the unit tests for the penguin placement strategy  
 https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Player/Other/tests/strategy_tests.py#L286-L349
 
 - the unit tests for the penguin movement strategy; 
-  given that the exploration depth is a parameter `N`, there should be at least two unit tests for different depths 
+  given that the exploration depth is a parameter `N`, there should be at least two unit tests for different depths  
   https://github.ccs.neu.edu/CS4500-F20/wellman/blob/8c314af6f3ecd73c6ea9cb332e5936191911f05c/Fish/Player/Other/tests/strategy_tests.py#L196-L284
   
 - any game-tree functionality you had to add to create the `xtree` test harness:
