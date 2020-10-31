@@ -5,7 +5,7 @@ from position import Position
 from state import State
 
 
-class PlayerInterface(ABC):
+class IPlayer(ABC):
     """
     PURPOSE: The purpose of the interface is to provide participating
     parties with the required functionality that must be implemented by a player to enable
@@ -71,12 +71,12 @@ class PlayerInterface(ABC):
     def game_over(self, leaderboard: dict, cheating_players: list, failing_players: list) -> None:
         """
         This method is meant to notify the player that the game is over. It also provides information
-        about the leaderboard, namely the ids and respective scores of players, the ids of cheating players
+        about the leaderboard, namely the colors and respective scores of players, the colors of cheating players
         as well as those of failing players.
 
-        :param leaderboard:         dictionary of player ids mapped to their respective scores
-        :param cheating_players:    list of cheating players' ids (if any)
-        :param failing_players:     list of failing players' ids (if any)
+        :param leaderboard:         dictionary of player colors mapped to their respective scores
+        :param cheating_players:    list of cheating players' colors (if any)
+        :param failing_players:     list of failing players' colors (if any)
         :return: None
         """
         pass

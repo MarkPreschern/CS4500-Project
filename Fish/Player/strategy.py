@@ -1,5 +1,6 @@
 import sys
 
+from exceptions.OutOfTilesException import OutOfTilesException
 
 sys.path.append('../Common')
 
@@ -40,8 +41,7 @@ class Strategy(object):
 
         :param player_color: color of player to place penguin for
         :param state: current state of the game
-        :return: returns position at which the penguin was placed or None if no
-                 place to place penguin is found
+        :return: returns position at which the penguin was placed
         """
         # Validate parameters
         if not isinstance(state, State):
@@ -65,7 +65,7 @@ class Strategy(object):
                     state.place_avatar(player_color, pos)
                     return pos
 
-        return None
+        raise OutOfTilesException()
 
     @staticmethod
     def get_best_action(state: State, depth: int) -> Action:
