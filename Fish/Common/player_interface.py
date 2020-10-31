@@ -1,9 +1,11 @@
+from abc import abstractmethod, ABC
+
 from action import Action
 from position import Position
 from state import State
 
 
-class PlayerInterface(object):
+class PlayerInterface(ABC):
     """
     PURPOSE: The purpose of the interface is to provide participating
     parties with the required functionality that must be implemented by a player to enable
@@ -12,22 +14,8 @@ class PlayerInterface(object):
     INTERPRETATION: The interface is the collection of mutually agreed upon rules (protocol) the referee
     and the players subscribe to for a game of Fish to be properly carried out.
     """
-    def setup(self, player_id: int, state: State) -> None:
-        """
-        This method is used to inform the player about the initial setup of the game before
-        any placements are made. More specifically it provides it with its id, and the initial
-        state of the game, which includes the board layout, player order, and a complete list of
-        players.
-
-        :param player_id:   player's id
-        :param state:       a State object that includes the state of the board,
-                            the current placements of the penguins, knowledge about the players,
-                            and the order in which they play
-        :return: None
-        """
-        pass
-
-    def place_request(self, state: State) -> Position:
+    @abstractmethod
+    def get_placement(self, state: State) -> Position:
         """
         This method is used to prompt the user to place their avatar. It is solely used in the
         incipient or "placing" stage of the game during which there are still avatars to be
@@ -42,6 +30,7 @@ class PlayerInterface(object):
         """
         pass
 
+    @abstractmethod
     def kick_player(self, reason: str) -> None:
         """
         This method is used to kick a player for a given reason. The referee may choose to use
@@ -54,6 +43,7 @@ class PlayerInterface(object):
         """
         pass
 
+    @abstractmethod
     def sync(self, state: State) -> None:
         """
         This method is purported to ensure that all players have the current-most game state.
@@ -63,7 +53,8 @@ class PlayerInterface(object):
         """
         pass
 
-    def action_req(self, state: State) -> Action:
+    @abstractmethod
+    def get_action(self, state: State) -> Action:
         """
         This method is used to prompt the user to perform an action (move). It is issued upon each
         change of turn, when the current player is expected to make a move. A copy of the latest
@@ -76,6 +67,7 @@ class PlayerInterface(object):
         """
         pass
 
+    @abstractmethod
     def game_over(self, leaderboard: dict, cheating_players: list, failing_players: list) -> None:
         """
         This method is meant to notify the player that the game is over. It also provides information

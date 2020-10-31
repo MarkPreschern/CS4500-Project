@@ -63,24 +63,24 @@ class StrategyTests(unittest.TestCase):
         })
 
         # Initialize some players for testing
-        self.__p1 = Player(1, "John", Color.RED)
-        self.__p2 = Player(2, "George", Color.WHITE)
-        self.__p3 = Player(3, "Gary", Color.BLACK)
-        self.__p4 = Player(4, "Jeanine", Color.BROWN)
-        self.__p5 = Player(5, "Obama", Color.RED)
-        self.__p6 = Player(6, "Fred", Color.BROWN)
-        self.__p7 = Player(7, "Stewart", Color.WHITE)
-        self.__p8 = Player(8, "Bobby Mon", Color.BLACK)
-        self.__p9 = Player(9, "Bob Ross", Color.RED)
-        self.__p10 = Player(10, "Eric Khart", Color.BROWN)
-        self.__p11 = Player(11, "Ionut", Color.BLACK)
-        self.__p12 = Player(12, "Bot 1", Color.RED)
-        self.__p13 = Player(13, "Bot 2", Color.BROWN)
-        self.__p14 = Player(14, "Bot 3", Color.WHITE)
-        self.__p15 = Player(15, "Bot X", Color.RED)
-        self.__p16 = Player(16, "Bot Y", Color.BROWN)
-        self.__p17 = Player(17, "Bot Z", Color.BLACK)
-        self.__p18 = Player(18, "Bot W", Color.RED)
+        self.__p1 = Player("John", Color.RED)
+        self.__p2 = Player("George", Color.WHITE)
+        self.__p3 = Player("Gary", Color.BLACK)
+        self.__p4 = Player("Jeanine", Color.BROWN)
+        self.__p5 = Player("Obama", Color.RED)
+        self.__p6 = Player("Fred", Color.BROWN)
+        self.__p7 = Player("Stewart", Color.WHITE)
+        self.__p8 = Player("Bobby Mon", Color.BLACK)
+        self.__p9 = Player("Bob Ross", Color.RED)
+        self.__p10 = Player("Eric Khart", Color.BROWN)
+        self.__p11 = Player("Ionut", Color.BLACK)
+        self.__p12 = Player("Bot 1", Color.RED)
+        self.__p13 = Player("Bot 2", Color.BROWN)
+        self.__p14 = Player("Bot 3", Color.WHITE)
+        self.__p15 = Player("Bot X", Color.RED)
+        self.__p16 = Player("Bot Y", Color.BROWN)
+        self.__p17 = Player("Bot Z", Color.BLACK)
+        self.__p18 = Player("Bot W", Color.WHITE)
 
         # ========================== STATE 1 ==========================
 
@@ -93,23 +93,23 @@ class StrategyTests(unittest.TestCase):
         self.__state2 = State(self.__board1, [self.__p1, self.__p2, self.__p3])
         # Place all avatars
         # Player 1 place
-        self.__state2.place_avatar(1, Position(4, 2))
+        self.__state2.place_avatar(Color.RED,  Position(4, 2))
         # Player 2 place
-        self.__state2.place_avatar(2, Position(0, 1))
+        self.__state2.place_avatar(Color.WHITE,  Position(0, 1))
         # Player 3 place
-        self.__state2.place_avatar(3, Position(2, 1))
+        self.__state2.place_avatar(Color.BLACK,  Position(2, 1))
         # Player 1 place
-        self.__state2.place_avatar(1, Position(1, 0))
+        self.__state2.place_avatar(Color.RED,  Position(1, 0))
         # Player 2 place
-        self.__state2.place_avatar(2, Position(2, 0))
+        self.__state2.place_avatar(Color.WHITE,  Position(2, 0))
         # Player 3 place
-        self.__state2.place_avatar(3, Position(3, 1))
+        self.__state2.place_avatar(Color.BLACK,  Position(3, 1))
         # Player 1 place
-        self.__state2.place_avatar(1, Position(1, 1))
+        self.__state2.place_avatar(Color.RED,  Position(1, 1))
         # Player 2 place
-        self.__state2.place_avatar(2, Position(4, 1))
+        self.__state2.place_avatar(Color.WHITE,  Position(4, 1))
         # Player 3 place
-        self.__state2.place_avatar(3, Position(3, 0))
+        self.__state2.place_avatar(Color.BLACK,  Position(3, 0))
 
         # Make up game tree for state 2
         self.__tree2 = GameTree(self.__state2)
@@ -123,21 +123,21 @@ class StrategyTests(unittest.TestCase):
             self.__p8])
 
         # Player 1
-        self.__state3.place_avatar(5, Position(3, 0))
+        self.__state3.place_avatar(Color.RED,  Position(3, 0))
         # Player 2
-        self.__state3.place_avatar(6, Position(0, 0))
+        self.__state3.place_avatar(Color.BROWN,  Position(0, 0))
         # Player 3
-        self.__state3.place_avatar(7, Position(1, 0))
+        self.__state3.place_avatar(Color.WHITE,  Position(1, 0))
         # Player 4
-        self.__state3.place_avatar(8, Position(2, 0))
+        self.__state3.place_avatar(Color.BLACK,  Position(2, 0))
         # Player 1
-        self.__state3.place_avatar(5, Position(3, 1))
+        self.__state3.place_avatar(Color.RED,  Position(3, 1))
         # Player 2
-        self.__state3.place_avatar(6, Position(0, 1))
+        self.__state3.place_avatar(Color.BROWN,  Position(0, 1))
         # Player 3
-        self.__state3.place_avatar(7, Position(1, 1))
+        self.__state3.place_avatar(Color.WHITE,  Position(1, 1))
         # Player 4
-        self.__state3.place_avatar(8, Position(2, 1))
+        self.__state3.place_avatar(Color.BLACK,  Position(2, 1))
         # Make move 1 for p1
         self.__state3.move_avatar(Position(3, 1), Position(4, 1))
 
@@ -164,23 +164,23 @@ class StrategyTests(unittest.TestCase):
             self.__p11])
 
         # Player 1
-        self.__state5.place_avatar(9, Position(2, 0))
+        self.__state5.place_avatar(Color.RED,  Position(2, 0))
         # Player 2
-        self.__state5.place_avatar(10, Position(0, 1))
+        self.__state5.place_avatar(Color.BROWN,  Position(0, 1))
         # Player 3
-        self.__state5.place_avatar(11, Position(0, 2))
+        self.__state5.place_avatar(Color.BLACK,   Position(0, 2))
         # Player 1
-        self.__state5.place_avatar(9, Position(1, 0))
+        self.__state5.place_avatar(Color.RED,  Position(1, 0))
         # Player 2
-        self.__state5.place_avatar(10, Position(1, 2))
+        self.__state5.place_avatar(Color.BROWN,  Position(1, 2))
         # Player 3
-        self.__state5.place_avatar(11, Position(0, 0))
+        self.__state5.place_avatar(Color.BLACK,   Position(0, 0))
         # Player 1
-        self.__state5.place_avatar(9, Position(3, 1))
+        self.__state5.place_avatar(Color.RED,  Position(3, 1))
         # Player 2
-        self.__state5.place_avatar(10, Position(2, 1))
+        self.__state5.place_avatar(Color.BROWN,  Position(2, 1))
         # Player 3
-        self.__state5.place_avatar(11, Position(3, 2))
+        self.__state5.place_avatar(Color.BLACK,   Position(3, 2))
 
         # Make up tree for state 5
         self.__tree5 = GameTree(self.__state5)
@@ -254,34 +254,34 @@ class StrategyTests(unittest.TestCase):
 
     def test_mini_max_search_success1(self):
         # Tests base case of minimax search with a depth of 0
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, 5, 0)[0], 3)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, 6, 0)[0], 0)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, Color.RED, 0)[0], 3)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, Color.BROWN, 0)[0], 0)
 
     def test_mini_max_search_success2(self):
         # Tests base case of minimax search with a positive depth where only one move is
         # possible by Player 4 (id = 8)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, 6, 1)[0], 0)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, 7, 1)[0], 0)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, Color.BROWN, 1)[0], 0)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree3, Color.WHITE, 1)[0], 0)
 
     def test_mini_max_search_success3(self):
         # Tests base case of minimax search with a positive depth on a game state wherein
         # no more moves are possible
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, 5, 1)[0], 3)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, 6, 2)[0], 0)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, 7, 2)[0], 0)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, 8, 2)[0], 3)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, Color.RED, 1)[0], 3)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, Color.BROWN, 2)[0], 0)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, Color.WHITE, 2)[0], 0)
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree4, Color.BLACK, 2)[0], 3)
 
     def test_mini_max_search_success4(self):
         # Tests minimax search with a depth of 1 on a game at least 4 levels deep (homogeneous board)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree2, 1, 1), (2, ((1, 0), (0, 0))))
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree2, Color.RED, 1), (2, ((1, 0), (0, 0))))
 
     def test_mini_max_search_success5(self):
         # Tests minimax search with a depth of 4 on a game at least 4 levels deep (homogeneous board)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree2, 1, 4), (8, ((1, 1), (2, 2))))
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree2, Color.RED, 4), (8, ((1, 1), (2, 2))))
 
     def test_mini_max_search_success6(self):
         # Tests minimax search with a depth of 4 on a game at least 2 levels deep (heterogeneous board)
-        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree5, 9, 2), (5, ((1, 0), (3, 0))))
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree5, Color.RED, 2), (5, ((1, 0), (3, 0))))
 
     def test_place_penguin_fail1(self):
         # Tests failing place_penguin due to invalid player_id (type_wise)
@@ -296,54 +296,54 @@ class StrategyTests(unittest.TestCase):
     def test_place_penguin_fail3(self):
         # Tests failing place_penguin due to invalid state (not in placing phase)
         with self.assertRaises(InvalidGameStatus):
-            Strategy.place_penguin(1, self.__state2)
+            Strategy.place_penguin(Color.RED, self.__state2)
 
     def test_place_penguin_success1(self):
         # Tests a series of successful place_penguin calls
-        self.assertEqual(Strategy.place_penguin(15, self.__state1), (0, 0))
-        self.assertTrue((0, 0) in self.__state1.placements[15])
+        self.assertEqual(Strategy.place_penguin(Color.RED, self.__state1), (0, 0))
+        self.assertTrue((0, 0) in self.__state1.placements[Color.RED])
 
-        self.assertEqual(Strategy.place_penguin(16, self.__state1), (0, 1))
-        self.assertTrue((0, 1) in self.__state1.placements[16])
+        self.assertEqual(Strategy.place_penguin(Color.BROWN, self.__state1), (0, 1))
+        self.assertTrue((0, 1) in self.__state1.placements[Color.BROWN])
 
         # Place a bunch of avatars
-        self.__state1.place_avatar(17, Position(0, 2))
-        self.__state1.place_avatar(18, Position(1, 0))
-        self.__state1.place_avatar(15, Position(1, 2))
-        self.__state1.place_avatar(16, Position(2, 0))
+        self.__state1.place_avatar(Color.BLACK,  Position(0, 2))
+        self.__state1.place_avatar(Color.WHITE,  Position(1, 0))
+        self.__state1.place_avatar(Color.RED,  Position(1, 2))
+        self.__state1.place_avatar(Color.BROWN,  Position(2, 0))
 
         # Make sure place_penguin dodges the penguins we just manually
         # placed
-        self.assertEqual(Strategy.place_penguin(17, self.__state1), (1, 1))
-        self.assertTrue((1, 1) in self.__state1.placements[17])
+        self.assertEqual(Strategy.place_penguin(Color.BLACK, self.__state1), (1, 1))
+        self.assertTrue((1, 1) in self.__state1.placements[Color.BLACK])
 
-        self.assertEqual(Strategy.place_penguin(18, self.__state1), (2, 1))
-        self.assertTrue((2, 1) in self.__state1.placements[18])
+        self.assertEqual(Strategy.place_penguin(Color.WHITE, self.__state1), (2, 1))
+        self.assertTrue((2, 1) in self.__state1.placements[Color.WHITE])
 
     def test_place_penguin_success2(self):
         # Tests a series of successful place_penguin calls on a hole-riddled
         # heterogeneous board
 
         # p1 place
-        self.assertEqual(Strategy.place_penguin(12, self.__state6), (0, 0))
+        self.assertEqual(Strategy.place_penguin(Color.RED,  self.__state6), (0, 0))
         # p2 place
-        self.assertEqual(Strategy.place_penguin(13, self.__state6), (0, 1))
+        self.assertEqual(Strategy.place_penguin(Color.BROWN,  self.__state6), (0, 1))
         # p3 place
-        self.assertEqual(Strategy.place_penguin(14, self.__state6), (1, 0))
+        self.assertEqual(Strategy.place_penguin(Color.WHITE,  self.__state6), (1, 0))
         # p1 place
-        self.assertEqual(Strategy.place_penguin(12, self.__state6), (1, 1))
+        self.assertEqual(Strategy.place_penguin(Color.RED,  self.__state6), (1, 1))
         # p2 place
-        self.assertEqual(Strategy.place_penguin(13, self.__state6), (2, 1))
+        self.assertEqual(Strategy.place_penguin(Color.BROWN,  self.__state6), (2, 1))
         # p3 place
-        self.assertEqual(Strategy.place_penguin(14, self.__state6), (3, 0))
+        self.assertEqual(Strategy.place_penguin(Color.WHITE,  self.__state6), (3, 0))
         # p1 place
-        self.assertEqual(Strategy.place_penguin(12, self.__state6), (3, 1))
+        self.assertEqual(Strategy.place_penguin(Color.RED,  self.__state6), (3, 1))
         # p2 place
-        self.assertEqual(Strategy.place_penguin(13, self.__state6), (3, 2))
+        self.assertEqual(Strategy.place_penguin(Color.BROWN,  self.__state6), (3, 2))
         # p3 place
-        self.assertEqual(Strategy.place_penguin(14, self.__state6), (4, 1))
+        self.assertEqual(Strategy.place_penguin(Color.WHITE,  self.__state6), (4, 1))
 
         # Make sure penguins have been placed correctly on behalf of the right players
-        self.assertTrue({(0, 0), (1, 1), (3, 1)}.issubset(set(self.__state6.placements[12])))
-        self.assertTrue({(0, 1), (2, 1), (3, 2)}.issubset(set(self.__state6.placements[13])))
-        self.assertTrue({(1, 0), (3, 0), (4, 1)}.issubset(set(self.__state6.placements[14])))
+        self.assertTrue({(0, 0), (1, 1), (3, 1)}.issubset(set(self.__state6.placements[Color.RED])))
+        self.assertTrue({(0, 1), (2, 1), (3, 2)}.issubset(set(self.__state6.placements[Color.BROWN])))
+        self.assertTrue({(1, 0), (3, 0), (4, 1)}.issubset(set(self.__state6.placements[Color.WHITE])))

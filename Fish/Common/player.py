@@ -8,18 +8,13 @@ class Player(object):
     pertaining player information.
     """
 
-    def __init__(self, id: int, name: str, color: Color):
+    def __init__(self, name: str, color: Color):
         """
         Initializes a Player object.
-        :param id: unique positive integer identifying player
         :param color: Color object representing player color
+                      that identifies player
         :return: new Player object
         """
-
-        # Validate params
-        if not isinstance(id, int) or id <= 0:
-            raise TypeError('Expected positive int for id!')
-
         if not isinstance(name, str):
             raise TypeError('Expected string for name!')
 
@@ -27,7 +22,6 @@ class Player(object):
             raise TypeError('Expected Color object for color!')
 
         # Set properties
-        self.__id = id
         self.__name = name
         self.__color = color
         self.__score = 0
@@ -78,13 +72,6 @@ class Player(object):
         the player's avatars are location w.r.t the board.
         """
         return self.__places.copy()
-
-    @property
-    def id(self) -> int:
-        """
-        Returns player's id.
-        """
-        return self.__id
 
     @property
     def name(self) -> str:

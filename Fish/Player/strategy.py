@@ -1,5 +1,6 @@
 import sys
 
+
 sys.path.append('../Common')
 
 from state import State
@@ -9,6 +10,7 @@ from position import Position
 from constants import VERY_LARGE_NUMBER
 from exceptions.GameNotRunningException import GameNotRunningException
 from game_tree import GameTree
+from color import Color
 
 
 class Strategy(object):
@@ -28,15 +30,15 @@ class Strategy(object):
     DEBUG = False
 
     @staticmethod
-    def place_penguin(player_id: int, state: State) -> Position:
+    def place_penguin(player_color: Color, state: State) -> Position:
         """
-        This method places a penguin for the given player id by scanning down columns
+        This method places a penguin for the given player color by scanning down columns
         starting in the top-left row until a free spot is found. If all columns on one
         row are exhausted and no spot has been found, the search is resumed on the next
         row from the first (left-most) column. Once a spot has been found, an avatar is
         placed in that location on behalf of the current player.
 
-        :param player_id: id of player to place penguin for
+        :param player_color: color of player to place penguin for
         :param state: current state of the game
         :return: returns position at which the penguin was placed or None if no
                  place to place penguin is found
@@ -45,8 +47,8 @@ class Strategy(object):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
-        if not isinstance(player_id, int):
-            raise TypeError('Expected int for player_id!')
+        if not isinstance(player_color, Color):
+            raise TypeError('Expected int for player_color!')
 
         # Make sure state is in placing phase
         if state.has_everyone_placed():
@@ -60,7 +62,7 @@ class Strategy(object):
                 pos = Position(row, col)
                 # Pitch avatar if said position is open
                 if state.is_position_open(pos):
-                    state.place_avatar(player_id, pos)
+                    state.place_avatar(player_color, pos)
                     return pos
 
         return None
@@ -105,7 +107,7 @@ class Strategy(object):
         return best_move
 
     @staticmethod
-    def __mini_max_search(node: GameTree, player_id_to_max: int, depth: int,
+    def __mini_max_search(node: GameTree, player_color_to_max: Color, depth: int,
                           alpha: int = -VERY_LARGE_NUMBER, beta: int = VERY_LARGE_NUMBER):
         """
         Implements min-max algorithm with alpha-beta pruning. It computes the best worst
@@ -120,7 +122,7 @@ class Strategy(object):
         source row, source column, destination row or destination column is picked (in that order).
 
         :param node: game tree node for which to run
-        :param player_id_to_max: id of player whose score to maximize (maximizer)
+        :param player_color_to_max: color of player whose score to maximize (maximizer)
         :param depth: the number of times maximizing player is evaluated
         :param alpha: the best score of the maximizer
         :param beta: the best worst score of the minimizer (one of the player's opponents)
@@ -130,8 +132,8 @@ class Strategy(object):
         if not isinstance(node, GameTree):
             raise TypeError('Expected GameTree for node!')
 
-        if not isinstance(player_id_to_max, int) or player_id_to_max <= 0:
-            raise TypeError('Expected positive integer for player_id_to_max!')
+        if not isinstance(player_color_to_max, Color):
+            raise TypeError('Expected Color for player_color_to_max!')
 
         if not isinstance(depth, int) or depth < 0:
             raise TypeError('Expected integer >= 0 for depth!')
@@ -144,11 +146,11 @@ class Strategy(object):
 
         # If we have reached our depth, maximizer is stuck or game is over, return player score
         if depth == 0 or (not node.state.can_anyone_move()) \
-                or player_id_to_max in node.state.stuck_players:
-            return node.state.get_player_score(player_id_to_max), None
+                or player_color_to_max in node.state.stuck_players:
+            return node.state.get_player_score(player_color_to_max), None
 
         # If current player is maximizer, maximize
-        if node.state.current_player == player_id_to_max:
+        if node.state.current_player == player_color_to_max:
             if Strategy.DEBUG:
                 print(f'==== PLAYER {node.state.current_player} ========')
             # Initialize best value to something very negative
@@ -160,7 +162,7 @@ class Strategy(object):
             # Cycle over all possibles moves and their associated states
             for move, child_node in node.get_next():
                 # Get best score of subsequent node
-                score, _ = Strategy.__mini_max_search(child_node, player_id_to_max, depth - 1, alpha, beta)
+                score, _ = Strategy.__mini_max_search(child_node, player_color_to_max, depth - 1, alpha, beta)
 
                 # If our best move leads to the same score, pick the move with
                 # the lowest src x, dst y, dst x, dst y (in that order)
@@ -188,7 +190,7 @@ class Strategy(object):
             # Minimize, otherwise
             for move, child_node in node.get_next():
                 # Get best score of subsequent node
-                score, _ = Strategy.__mini_max_search(child_node, player_id_to_max, depth, alpha, beta)
+                score, _ = Strategy.__mini_max_search(child_node, player_color_to_max, depth, alpha, beta)
                 # Minimize player_id_to_max's score
                 best_val = min(score, best_val)
 
