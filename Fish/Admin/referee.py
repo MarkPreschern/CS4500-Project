@@ -89,7 +89,8 @@ class Referee(object):
                     At initialization, the referee is given a list of Player objects with undefined colors (.color =
                     Color.UNDEFINED). After assigning colors, the referee creates a PlayerEntity for each object,
                     which contains the essential information needed for identification in the game (namely name,
-                    color and placements). All other information pertaining to a player is scrapped.
+                    color and placements). All other information pertaining to a player is scrapped. The referee
+                    starts running the game (from the placement phase onwards) when start() is called.
 
                     Throughout the game, every time the internal game state is altered, the game tree is updated,
                     players are synchronized (by calling sync on them with the game state) and observers are notified
@@ -169,7 +170,8 @@ class Referee(object):
     def start(self) -> None:
         """
         This method starts the game by first running a series of placement rounds and then
-        prompting each player to make a move until game end.
+        prompting each player to make a move until game end. At game end, it provides all pertinent
+        parties with a copy of the game report.
 
         :return: None
         """
