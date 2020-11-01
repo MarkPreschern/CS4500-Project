@@ -144,9 +144,9 @@ class Referee(object):
         self.__avatars_per_player = 6 - len(players)
 
         # Make up list of Color holding the colors of failing players
-        self.__failing_players = []
+        self.__failing_players: [Color] = []
         # Make up list of Color holding the colors of cheating players
-        self.__cheating_players = []
+        self.__cheating_players: [Color] = []
 
         # Initialize game update callbacks as a list of callable items called every time
         # the state of the game changes
@@ -230,7 +230,7 @@ class Referee(object):
         """
         return self.__started
 
-    def __make_board(self, cols, rows) -> Board:
+    def __make_board(self, cols: int, rows: int) -> Board:
         """
         Makes a board with the given dimensions. It also applies a difficulty factor to
         the board by removing at most DIFFICULTY_FACTOR tiles. What and how many tiles
@@ -306,6 +306,9 @@ class Referee(object):
                     # Position is out-of-bounds, already occupied or a hole. Mark player
                     # as cheating & remove player from state.
                     self.__kick_player(p, PlayerKickReason.CHEATING)
+                    # Decrement avatars needed to be placed
+                    avatars_to_place -= 1
+                    continue
 
                 if Referee.DEBUG:
                     print(f'got placement of {placement} from player {p.color}')
