@@ -7,8 +7,8 @@ sys.path.append("../5/Other")
 from board import Board
 
 
-class XTreeTests(unittest.TestCase):
+class XStrategyTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(XTreeTests, self).__init__(*args, **kwargs)
+        super(XStrategyTests, self).__init__(*args, **kwargs)
 
         Board.DISABLE_SPRITE_MANAGER = True
