@@ -162,6 +162,7 @@ class GameTreeTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             GameTree("mickey mouse")
 
+    @unittest.skip("state does not check for the number of remaining avatars to place anymore")
     def test_init_fail2(self):
         # Tests failing constructor due to state not being 'started' (or due
         # to not everyone having placed their avatars).

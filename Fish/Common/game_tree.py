@@ -31,7 +31,7 @@ class GameTree(object):
         returns a new GameTree that incorporates
         a reference to the given game state.
 
-        :param state: State object to based game tree off of
+        :param state: State object in which no more penguins will be placed
         :return: resulting GameTree object
         """
         # Validate state
@@ -40,11 +40,6 @@ class GameTree(object):
 
         # Initialize state
         self.__state = state
-
-        # Make sure the state is one in which everyone has finished
-        # placing their penguins
-        if not self.__state.has_everyone_placed():
-            raise GameNotRunningException()
 
         # Initialize dictionary of Action objects to GameTree objects (nodes).
         # to hold subsequent game trees.

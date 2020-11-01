@@ -7,9 +7,8 @@ from state import State
 
 class IPlayer(ABC):
     """
-    PURPOSE: The purpose of the interface is to provide participating
-    parties with the required functionality that must be implemented by a player to enable
-    the referee and the players to communicate.
+    PURPOSE: The purpose of the interface is to provide participating parties with the required
+    functionality that must be implemented by a player to enable the referee and the players to communicate.
 
     INTERPRETATION: The interface is the collection of mutually agreed upon rules (protocol) the referee
     and the players subscribe to for a game of Fish to be properly carried out.
@@ -68,13 +67,13 @@ class IPlayer(ABC):
         pass
 
     @abstractmethod
-    def game_over(self, leaderboard: dict, cheating_players: list, failing_players: list) -> None:
+    def game_over(self, leaderboard: list, cheating_players: list, failing_players: list) -> None:
         """
         This method is meant to notify the player that the game is over. It also provides information
         about the leaderboard, namely the colors and respective scores of players, the colors of cheating players
         as well as those of failing players.
 
-        :param leaderboard:         dictionary of player colors mapped to their respective scores
+        :param leaderboard:         ordered list of dicts containing player name, color and respective score
         :param cheating_players:    list of cheating players' colors (if any)
         :param failing_players:     list of failing players' colors (if any)
         :return: None

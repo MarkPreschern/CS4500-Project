@@ -8,7 +8,6 @@ from color import Color
 from position import Position
 from state import State
 from action import Action
-from exceptions.NonExistentPlayerException import NonExistentPlayerException
 
 
 class Player(IPlayer):
@@ -29,6 +28,9 @@ class Player(IPlayer):
                     Player interface.  When this happens the player' avatars are removed (the tiles upon which they
                     rested are not) and all communication with said player is terminated.
     """
+    # Depth for our mini-max search to find the next best move. See Strategy for details.
+    SEARCH_DEPTH = 2
+
     def __init__(self, name: str, color: Color = Color.UNDEFINED) -> None:
         """
         This method is used to inform the player about the initial setup of the game before
@@ -53,8 +55,6 @@ class Player(IPlayer):
         self.__name = name
         # Initialize property to hold reason player was kicked
         self.__kicked_reason = ''
-        # Set the depth for our strategy to find the next best move.
-        self.__search_depth = 2
         # Initialize state to a place holder
         self.__state = None
 
@@ -96,13 +96,6 @@ class Player(IPlayer):
         Returns player's name.
         """
         return self.__name
-
-    @property
-    def search_depth(self) -> int:
-        """
-        Returns maximum depth mini-max search is performed to.
-        """
-        return self.__search_depth
 
     def get_placement(self, state: State) -> Position:
         """
@@ -160,15 +153,15 @@ class Player(IPlayer):
         # Update internal state
         self.__state = state
 
-        return Strategy.get_best_action(state, self.__search_depth)
+        return Strategy.get_best_action(state, Player.SEARCH_DEPTH)
 
-    def game_over(self, leaderboard: dict, cheating_players: list, failing_players: list) -> None:
+    def game_over(self, leaderboard: list, cheating_players: list, failing_players: list) -> None:
         """
         Implements PlayerInterface.game_over(dict, list, list).
         """
         # Validate params
-        if not isinstance(leaderboard, dict):
-            raise TypeError('Expected dict for leaderboard!')
+        if not isinstance(leaderboard, list):
+            raise TypeError('Expected list for leaderboard!')
 
         if not isinstance(cheating_players, list):
             raise TypeError('Expected list for cheating_players!')

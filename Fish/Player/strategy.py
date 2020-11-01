@@ -50,10 +50,6 @@ class Strategy(object):
         if not isinstance(player_color, Color):
             raise TypeError('Expected int for player_color!')
 
-        # Make sure state is in placing phase
-        if state.has_everyone_placed():
-            raise InvalidGameStatus('Game status is not PLACING!')
-
         # Find a place to pitch avatar according to strategy by cycling over
         # rows and columns
         for row in range(state.board.rows):
@@ -89,11 +85,6 @@ class Strategy(object):
 
         if not isinstance(depth, int) or depth <= 0:
             raise TypeError('Expected integer >= 0 for depth!')
-
-        # Make sure game is running and we're not in the placing
-        # stage still
-        if not state.has_everyone_placed():
-            raise GameNotRunningException()
 
         # Make up a game tree for the state
         tree = GameTree(state)

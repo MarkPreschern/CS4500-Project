@@ -145,6 +145,7 @@ class StateTests(unittest.TestCase):
 
             state.place_avatar(-1, (1, 0))
 
+    @unittest.skip("state does not check for the number of remaining avatars to place anymore")
     def test_place_avatar_fail3(self):
         # Test failure of place_avatar due to there being no more
         # avatars to place
@@ -1214,6 +1215,7 @@ class StateTests(unittest.TestCase):
         with self.assertRaises(NonExistentPlayerException):
             state.get_player_positions(Color.BLACK)
 
+    @unittest.skip("state does not check for the number of remaining avatars to place anymore")
     def test_has_everyone_placed_success1(self):
         # Tests a series of has_everyone_placed
         state = State(self.__b, players=[

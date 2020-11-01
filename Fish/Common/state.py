@@ -60,18 +60,9 @@ class State(object):
         if not isinstance(players, list):
             raise TypeError('Expected list for players!')
 
-        # Check player list length
-        if len(players) == 0:
-            raise ValueError(f'Players list cannot be empty')
-
         # Make sure list consists of only player objects
         if not all(isinstance(x, PlayerEntity) for x in players):
             raise TypeError('All player list objects have to of type Participant!')
-
-        # Make sure we weren't given too many players
-        if len(players) < ct.MIN_PLAYERS or len(players) > ct.MAX_PLAYERS:
-            raise ValueError(f'Invalid player length; length has to be between {ct.MIN_PLAYERS} and'
-                             f' {ct.MAX_PLAYERS}')
 
         # Make up list of all player colors
         player_colors = [p.color for p in players]
@@ -348,11 +339,7 @@ class State(object):
         # Make sure target position is not occupied by another player or
         # a hole
         if not self.is_position_open(position):
-            raise InvalidPositionException("Position already occupied or hole!")
-
-        # Make sure there are still avatars to place
-        if self.has_everyone_placed():
-            raise InvalidActionException()
+            raise InvalidPositionException(f"Position {position} already occupied or hole!")
 
         # Make sure player exists
         if color not in self.player_order:
@@ -377,7 +364,7 @@ class State(object):
 
         # Check if position is within bounds
         if position.x >= self.__board.rows or position.y >= self.__board.cols:
-            raise InvalidPositionException('Outside the bounds of the board!')
+            raise InvalidPositionException(f'{position} is outside the bounds of the board!')
 
         # Check if tile is a hole
         if self.__board.get_tile(position).is_hole:
@@ -504,22 +491,6 @@ class State(object):
                     return False
 
         return True
-
-    def has_everyone_placed(self) -> bool:
-        """
-        Returns boolean indicating if everyone has placed their
-        avatars.
-        :return: resulting boolean
-        """
-        # Initialize counter
-        placement_count = 0
-
-        # Cycle over player placements and add to count
-        for player_placements in self.placements.values():
-            placement_count += len(player_placements)
-
-        return placement_count == self.__avatars_per_player \
-               * len(self.__players)
 
     def can_anyone_move(self) -> bool:
         """

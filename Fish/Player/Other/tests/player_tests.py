@@ -120,7 +120,7 @@ class PlayerTests(unittest.TestCase):
 
         # Make sure Strategy.get_action was called with the
         # right params
-        mock.assert_called_with(self.__state1, p.search_depth)
+        mock.assert_called_with(self.__state1, Player.SEARCH_DEPTH)
         # Make sure state got updated
         self.assertEqual(p.state, self.__state1)
 
@@ -163,17 +163,17 @@ class PlayerTests(unittest.TestCase):
         p = Player('bob', Color.BROWN)
 
         with self.assertRaises(TypeError):
-            p.game_over({}, '', [])
+            p.game_over([], '', [])
 
     def test_game_over_fail3(self):
         # Tests game_over that fails due to invalid failing_players
         p = Player('bob', Color.BROWN)
 
         with self.assertRaises(TypeError):
-            p.game_over({}, [], '')
+            p.game_over([], [], '')
 
     def test_game_over_success(self):
         # Tests successful game_over
         p = Player('bob', Color.BROWN)
 
-        p.game_over({}, [], [])
+        p.game_over([], [], [])
