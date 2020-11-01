@@ -8,17 +8,18 @@ from color import Color
 from position import Position
 from state import State
 from action import Action
+from exceptions.NonExistentPlayerException import NonExistentPlayerException
 
 
-class PlayerX(IPlayer):
+class Player(IPlayer):
     """
     PURPOSE:        This class implements the functionality of a player as laid out in the IPlayer. It leverages
                     a series of strategies for placing and moving avatars with the goal of collecting winning the game.
 
     INTERPRETATION: A Player is an entity that takes part in the Fish game and that is called upon by the referee
                     on its turn to either make a placement or a move. At the beginning of the game, the player is
-                    initialized with an initial state (describing the board and other players) and its player id (to be
-                    able to identify itself). A Player object may also be called upon with a State via the sync
+                    initialized with an initial state (describing the board and other players) and its name and color
+                    (to be able to identify itself). A Player object may also be called upon with a State via the sync
                     method to be updated with the latest state of the game if an alteration to said state has occurred.
                     Finally, a Player object will be notified when a game is over about the leaderboard, cheating and
                     failing players.
@@ -28,14 +29,12 @@ class PlayerX(IPlayer):
                     Player interface.  When this happens the player' avatars are removed (the tiles upon which they
                     rested are not) and all communication with said player is terminated.
     """
-
-    def __init__(self, color: Color, state: State) -> None:
+    def __init__(self, name: str, color: Color = Color.UNDEFINED) -> None:
         """
         This method is used to inform the player about the initial setup of the game before
-        any placements are made. More specifically it provides it with its color and the initial
-        state of the game, which includes the board layout, player order, and a complete list of
-        players.
+        any placements are made. More specifically it provides it with its name and its color.
 
+        :param name:        player's name
         :param color:       player's color
         :param state:       a State object that includes the state of the board,
                             the current placements of the penguins, knowledge about the players,
@@ -43,19 +42,21 @@ class PlayerX(IPlayer):
         :return: None
         """
         # Validate params
+        if not isinstance(name, str):
+            raise TypeError('Expected str for name!')
+
         if not isinstance(color, Color):
             raise TypeError('Expected Color for color!')
 
-        if not isinstance(state, State):
-            raise TypeError('Expected State for state!')
-
         # Set properties
         self.__color = color
-        self.__state = state
+        self.__name = name
         # Initialize property to hold reason player was kicked
         self.__kicked_reason = ''
         # Set the depth for our strategy to find the next best move.
         self.__search_depth = 2
+        # Initialize state to a place holder
+        self.__state = None
 
     @property
     def kicked_reason(self) -> str:
@@ -64,6 +65,44 @@ class PlayerX(IPlayer):
         an empty string if they have not been kicked.
         """
         return self.__kicked_reason
+
+    @property
+    def state(self) -> State:
+        """
+        Returns the game state as stored by the player.
+        """
+        return self.__state
+
+    @property
+    def color(self) -> Color:
+        """
+        Returns player's color.
+        """
+        return self.__color
+
+    @color.setter
+    def color(self, color) -> None:
+        """
+        Sets player's color to given color.
+        """
+        if not isinstance(color, Color):
+            raise TypeError('Expected Color for color!')
+
+        self.__color = color
+
+    @property
+    def name(self) -> str:
+        """
+        Returns player's name.
+        """
+        return self.__name
+
+    @property
+    def search_depth(self) -> int:
+        """
+        Returns maximum depth mini-max search is performed to.
+        """
+        return self.__search_depth
 
     def get_placement(self, state: State) -> Position:
         """
@@ -76,13 +115,13 @@ class PlayerX(IPlayer):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
-        # Update state
+        # Update internal state
         self.__state = state
 
         # Figure out placement via strategy
         return Strategy.place_penguin(self.__color, state)
 
-    def kick_player(self, reason: str) -> None:
+    def kick(self, reason: str) -> None:
         """
         Implements PlayerInterface.kick_player(str)
         """
@@ -92,6 +131,8 @@ class PlayerX(IPlayer):
 
         # Print reason why we got kicked.
         self.__kicked_reason = reason
+
+        # A real player may find this information more useful than an A.I. would.
 
     def sync(self, state: State) -> None:
         """
@@ -103,6 +144,8 @@ class PlayerX(IPlayer):
 
         # Update internal state
         self.__state = state
+        # A real player may decide what to do with this information, but an A.I. will use
+        # the state received via get_action and get_placement to decide on a response.
 
     def get_action(self, state: State) -> Action:
         """
@@ -114,10 +157,24 @@ class PlayerX(IPlayer):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
+        # Update internal state
+        self.__state = state
+
         return Strategy.get_best_action(state, self.__search_depth)
 
     def game_over(self, leaderboard: dict, cheating_players: list, failing_players: list) -> None:
         """
-        Implements PlayerInterface.game_over(dict, dict, list).
+        Implements PlayerInterface.game_over(dict, list, list).
         """
-        pass
+        # Validate params
+        if not isinstance(leaderboard, dict):
+            raise TypeError('Expected dict for leaderboard!')
+
+        if not isinstance(cheating_players, list):
+            raise TypeError('Expected list for cheating_players!')
+
+        if not isinstance(failing_players, list):
+            raise TypeError('Expected list for failing_players!')
+
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.

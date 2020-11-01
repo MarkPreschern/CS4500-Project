@@ -7,7 +7,7 @@ sys.path.append("../Fish/Common")
 
 from xboard import initialize_board
 from xstate import initialize_state, _get_next_position
-from player import Player
+from player_entity import CorePlayer
 from board import Board
 from movement_direction import MovementDirection
 from color import Color

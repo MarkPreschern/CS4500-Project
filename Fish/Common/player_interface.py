@@ -31,7 +31,7 @@ class IPlayer(ABC):
         pass
 
     @abstractmethod
-    def kick_player(self, reason: str) -> None:
+    def kick(self, reason: str) -> None:
         """
         This method is used to kick a player for a given reason. The referee may choose to use
         this on a player who has violated the rules of the game (i.e. making an invalid move or

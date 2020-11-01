@@ -13,7 +13,7 @@ from xstate import _state_to_json, initialize_state
 from hole import Hole
 from state import State
 from color import Color
-from player import Player
+from player_entity import CorePlayer
 from action import Action
 from movement_direction import MovementDirection
 from exceptions.InvalidActionException import InvalidActionException

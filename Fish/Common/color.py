@@ -9,4 +9,5 @@ class Color(Enum):
     WHITE = 1
     BROWN = 2
     BLACK = 3
+    UNDEFINED = 999
 

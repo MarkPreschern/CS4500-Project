@@ -11,7 +11,7 @@ from xstate import _board_to_json, _state_to_json, _str_to_color, _get_next_posi
 from hole import Hole
 from state import State
 from color import Color
-from player import Player
+from player_entity import CorePlayer
 from movement_direction import MovementDirection
 
 
@@ -63,9 +63,9 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # all avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', Color.WHITE),
-            Player(2, 'bob', Color.BROWN),
-            Player(3, 'bob', Color.BLACK)
+            CorePlayer(1, 'bob', Color.WHITE),
+            CorePlayer(2, 'bob', Color.BROWN),
+            CorePlayer(3, 'bob', Color.BLACK)
         ])
 
         # Player 1 place
@@ -106,9 +106,9 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # only some avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', Color.WHITE),
-            Player(2, 'bob', Color.BROWN),
-            Player(3, 'bob', Color.BLACK)
+            CorePlayer(1, 'bob', Color.WHITE),
+            CorePlayer(2, 'bob', Color.BROWN),
+            CorePlayer(3, 'bob', Color.BLACK)
         ])
 
         # Player 1 place
@@ -145,9 +145,9 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # no avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            Player(1, 'bob', Color.WHITE),
-            Player(2, 'bob', Color.BROWN),
-            Player(3, 'bob', Color.BLACK)
+            CorePlayer(1, 'bob', Color.WHITE),
+            CorePlayer(2, 'bob', Color.BROWN),
+            CorePlayer(3, 'bob', Color.BLACK)
         ])
 
         # Get jsonified version

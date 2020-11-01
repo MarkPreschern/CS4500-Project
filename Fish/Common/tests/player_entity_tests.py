@@ -5,28 +5,28 @@ from position import Position
 
 sys.path.append('../')
 
-from player import Player
+from player_entity import PlayerEntity
 from color import  Color
 
 
-class PlayerTests(unittest.TestCase):
+class PlayerEntityTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(PlayerTests, self).__init__(*args, **kwargs)
+        super(PlayerEntityTests, self).__init__(*args, **kwargs)
 
     def test_init_fail1(self):
-        # Tests failing Player constructor due to invalid name
+        # Tests failing constructor due to invalid name
 
         with self.assertRaises(TypeError):
-            Player(23, Color.BLACK)
+            PlayerEntity(23, Color.BLACK)
 
     def test_init_fail2(self):
-        # Tests failing Player constructor due to invalid color
+        # Tests failing constructor due to invalid color
         with self.assertRaises(TypeError):
-            Player('T-Bone', 'BLACK')
+            PlayerEntity('T-Bone', 'BLACK')
 
     def test_init_success(self):
         # Tests successful Avatar constructor
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         self.assertEqual(player.name, 'seth')
         self.assertEqual(player.color, Color.WHITE)
@@ -35,14 +35,14 @@ class PlayerTests(unittest.TestCase):
 
     def test_add_place_fail1(self):
         # Tests a failing add_place due to invalid position (type-wise)
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         with self.assertRaises(TypeError):
             player.add_place('ok')
 
     def test_add_place_success1(self):
         # Tests a series of successful add_place calls
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         player.add_place(Position(1, 0))
         self.assertEqual(player.places, [Position(1, 0)])
@@ -55,7 +55,7 @@ class PlayerTests(unittest.TestCase):
 
     def test_swap_places_fail1(self):
         # Tests a failing swap_places due to invalid src (type-wise)
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         player.add_place(Position(1, 0))
         player.add_place(Position(2, 0))
@@ -65,7 +65,7 @@ class PlayerTests(unittest.TestCase):
 
     def test_swap_places_fail2(self):
         # Tests a failing swap_places due to invalid dst (type-wise)
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         player.add_place(Position(1, 0))
         player.add_place(Position(2, 0))
@@ -75,7 +75,7 @@ class PlayerTests(unittest.TestCase):
 
     def test_swap_places_fail3(self):
         # Tests a failing swap_places due to invalid src (non existent)
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         player.add_place(Position(1, 0))
         player.add_place(Position(2, 0))
@@ -85,7 +85,7 @@ class PlayerTests(unittest.TestCase):
 
     def test_swap_places_success1(self):
         # Tests a successful swap_places
-        player = Player('seth', Color.WHITE)
+        player = PlayerEntity('seth', Color.WHITE)
 
         # Add places
         player.add_place(Position(1, 0))
@@ -101,21 +101,21 @@ class PlayerTests(unittest.TestCase):
 
     def test_score_fail1(self):
         # Tests failing score due to invalid type
-        player = Player('iBot', Color.WHITE)
+        player = PlayerEntity('iBot', Color.WHITE)
 
         with self.assertRaises(TypeError):
             player.score = -1
 
     def test_score_fail2(self):
         # Tests failing score due to invalid type
-        player = Player('iBot', Color.WHITE)
+        player = PlayerEntity('iBot', Color.WHITE)
 
         with self.assertRaises(TypeError):
             player.score = 'whaa'
 
     def test_score_success(self):
         # Tests successful score setter & getter
-        player = Player('iBot', Color.WHITE)
+        player = PlayerEntity('iBot', Color.WHITE)
 
         # Increment player's score by 10
         player.score += 10

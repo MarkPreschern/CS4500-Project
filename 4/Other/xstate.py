@@ -5,7 +5,7 @@ sys.path.append("../3/Other")
 sys.path.append("../Fish/Common")
 
 from xboard import initialize_board
-from player import Player
+from player_entity import CorePlayer
 from board import Board
 from movement_direction import MovementDirection
 from color import Color
@@ -172,7 +172,7 @@ def initialize_state(json_obj: dict) -> State:
     # Cycle over each json object in the json list
     for player in player_list:
         # Make up Player object
-        new_player = Player(player_id_counter, "", _str_to_color(player['color']))
+        new_player = CorePlayer(player_id_counter, "", _str_to_color(player['color']))
 
         # Update player score to whatever the current score is in the state
         new_player.score = player['score']

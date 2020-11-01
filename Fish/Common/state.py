@@ -12,7 +12,7 @@ from exceptions.InvalidPositionException import InvalidPositionException
 from exceptions.MoveOutOfTurnException import MoveOutOfTurnException
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from exceptions.UnclearPathException import UnclearPathException
-from player import Player
+from player_entity import PlayerEntity
 from position import Position
 from sprite_manager import SpriteManager
 
@@ -44,7 +44,7 @@ class State(object):
                     referee to properly run a game and end it when needed.
     """
 
-    def __init__(self, board: Board, players: [Player]):
+    def __init__(self, board: Board, players: [PlayerEntity]):
         """
         Initializes a State object with the given board and player list.
 
@@ -65,8 +65,8 @@ class State(object):
             raise ValueError(f'Players list cannot be empty')
 
         # Make sure list consists of only player objects
-        if not all(isinstance(x, Player) for x in players):
-            raise TypeError('All player list objects have to of type Player!')
+        if not all(isinstance(x, PlayerEntity) for x in players):
+            raise TypeError('All player list objects have to of type Participant!')
 
         # Make sure we weren't given too many players
         if len(players) < ct.MIN_PLAYERS or len(players) > ct.MAX_PLAYERS:
@@ -109,7 +109,7 @@ class State(object):
         # Copy board
         board: Board= pickle.loads(pickle.dumps(self.__board))
         # Copy players
-        players: [Player] = pickle.loads(pickle.dumps(self.__players))
+        players: [PlayerEntity] = pickle.loads(pickle.dumps(self.__players))
 
         # Return new copy of state
         return State(board, players)
@@ -137,6 +137,13 @@ class State(object):
         Returns the number of players currently in the game.
         """
         return len(self.__players)
+
+    @property
+    def players(self) -> [PlayerEntity]:
+        """
+        Returns a copy of the state's list of PlayerEntity objects.
+        """
+        return pickle.loads(pickle.dumps(self.__players))
 
     @property
     def move_log(self) -> []:
@@ -175,6 +182,26 @@ class State(object):
         Returns the color of the player whose turn it is.
         """
         return self.__players[0].color
+
+    def remove_player(self, color: Color) -> None:
+        """
+        Removes player with given color from the game.
+        """
+        # Validate params
+        if not isinstance(color, Color):
+            raise TypeError('Expected Color for color!')
+
+        # Cycle over players until one matching color is found
+        for player in self.__players:
+            if player.color == color:
+                # Remove player
+                self.__players.remove(player)
+                # Recompute stuck players
+                self.can_anyone_move()
+                return
+
+        # Could not find player to remove
+        raise NonExistentPlayerException()
 
     def get_possible_actions(self) -> []:
         """
@@ -251,13 +278,13 @@ class State(object):
         """
         return [p.color for p in self.__players]
 
-    def get_player_by_color(self, color: Color) -> Player:
+    def get_player_by_color(self, color: Color) -> PlayerEntity:
         """
-        Retrieves player object by the provided color if it exists.
+        Retrieves PlayerEntity object by the provided color if it exists.
         Otherwise it returns throws NonExistentPlayerException.
 
         :param: color of player to retrieve
-        :return: Player object
+        :return: PlayerEntity object
         """
         # Validate params
         if not isinstance(color, Color):
@@ -500,13 +527,18 @@ class State(object):
 
         :return: boolean indicating whether anyone can move
         """
+        # Set flag to indicate no one is stuck so far
+        at_least_one_stuck = False
+
         # Cycle over players and return true if any of them
         # can move
         for player_color in self.player_order:
             if not self.__is_player_stuck(player_color):
-                return True
+                at_least_one_stuck = True
+                # don't break as we want to check if anybody
+                # else is stuck
 
-        return False
+        return at_least_one_stuck
 
     def __is_player_stuck(self, player_color: Color) -> bool:
         """
@@ -526,10 +558,6 @@ class State(object):
         if player_color not in self.player_order:
             raise NonExistentPlayerException()
 
-        # See if player is in "forever-stuck" cache
-        if player_color in self.__player_stuck_cache:
-            return True
-
         # Retrieve player's positions
         player_positions = self.get_player_by_color(player_color).places
 
@@ -540,10 +568,15 @@ class State(object):
             # Make sure at least one path is clear
             for pos in reachable_pos:
                 if self.__is_path_clear(position, pos, reachable_pos):
+                    # Remove them from player stuck cache if they're in there
+                    if player_color in self.__player_stuck_cache:
+                        self.__player_stuck_cache.remove(player_color)
                     return False
 
-        # Cache that player is indefinitely stuck
-        self.__player_stuck_cache.append(player_color)
+        # Add them to cache if they're not already there
+        if player_color not in self.__player_stuck_cache:
+            # Cache that player is indefinitely stuck
+            self.__player_stuck_cache.append(player_color)
 
         # If we haven't returned thus far, no positions are reachable
         return True

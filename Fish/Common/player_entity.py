@@ -2,18 +2,25 @@ from color import Color
 from position import Position
 
 
-class Player(object):
+class PlayerEntity(object):
     """
-    Represents a player in the game and contains all
-    pertaining player information.
+    PURPOSE:        The purpose of this class is to abstract away the sensitive information
+                    associated with a Player and solely provide a means to keep track of its
+                    name, color and avatar placements.
+
+    INTERPRETATION: Represents a player in the game and contains the minimum information needed
+                    to identify the player in the game without revealing any sensitive information.
+                    It also holds information about the player's placement in the game via the 'places'
+                    member, which is a list containing Position objects' describing the locations of the
+                    player's avatars.
     """
 
     def __init__(self, name: str, color: Color):
         """
-        Initializes a Player object.
+        Initializes a PlayerEntity object.
         :param color: Color object representing player color
                       that identifies player
-        :return: new Player object
+        :return: new PlayerEntity object
         """
         if not isinstance(name, str):
             raise TypeError('Expected string for name!')

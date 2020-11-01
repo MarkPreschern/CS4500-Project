@@ -7,7 +7,7 @@ from board import Board
 from color import Color
 from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
-from player import Player
+from player_entity import PlayerEntity
 from position import Position
 from state import State
 from tile import Tile
@@ -43,17 +43,17 @@ class GameTreeTests(unittest.TestCase):
         })
 
         # Initialize some players for testing
-        self.__p1 = Player("John", Color.RED)
-        self.__p2 = Player("George", Color.WHITE)
-        self.__p3 = Player("Gary", Color.BLACK)
-        self.__p4 = Player("Jeanine", Color.BROWN)
-        self.__p5 = Player("Obama", Color.RED)
-        self.__p6 = Player("Fred", Color.BROWN)
-        self.__p7 = Player("Stewart", Color.WHITE)
-        self.__p8 = Player("Bobby Mon", Color.BLACK)
-        self.__p9 = Player("Bob Ross", Color.WHITE)
-        self.__p10 = Player("Eric Khart", Color.BROWN)
-        self.__p11 = Player("Ionut", Color.RED)
+        self.__p1 = PlayerEntity("John", Color.RED)
+        self.__p2 = PlayerEntity("George", Color.WHITE)
+        self.__p3 = PlayerEntity("Gary", Color.BLACK)
+        self.__p4 = PlayerEntity("Jeanine", Color.BROWN)
+        self.__p5 = PlayerEntity("Obama", Color.RED)
+        self.__p6 = PlayerEntity("Fred", Color.BROWN)
+        self.__p7 = PlayerEntity("Stewart", Color.WHITE)
+        self.__p8 = PlayerEntity("Bobby Mon", Color.BLACK)
+        self.__p9 = PlayerEntity("Bob Ross", Color.WHITE)
+        self.__p10 = PlayerEntity("Eric Khart", Color.BROWN)
+        self.__p11 = PlayerEntity("Ionut", Color.RED)
 
         # ========================== STATE 1 ==========================
 

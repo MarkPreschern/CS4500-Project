@@ -4,7 +4,7 @@ import unittest
 sys.path.append('../')
 
 from state import State
-from player import Player
+from player_entity import PlayerEntity
 from board import Board
 from color import Color
 from collections import OrderedDict
@@ -22,11 +22,11 @@ class StateTests(unittest.TestCase):
         super(StateTests, self).__init__(*args, **kwargs)
 
         # Initialize some players for testing
-        self.__p1 = Player("John", Color.RED)
-        self.__p2 = Player("George", Color.WHITE)
-        self.__p3 = Player("Gary", Color.BLACK)
-        self.__p4 = Player("Jeanine", Color.BROWN)
-        self.__p5 = Player("Jen", Color.BROWN)
+        self.__p1 = PlayerEntity("John", Color.RED)
+        self.__p2 = PlayerEntity("George", Color.WHITE)
+        self.__p3 = PlayerEntity("Gary", Color.BLACK)
+        self.__p4 = PlayerEntity("Jeanine", Color.BROWN)
+        self.__p5 = PlayerEntity("Jen", Color.BROWN)
 
         # Initialize board for testing
         self.__b = Board.homogeneous(2, 7, 3)
@@ -1324,3 +1324,206 @@ class StateTests(unittest.TestCase):
         self.assertEqual(copied_state.get_player_score(Color.BROWN), 0)
         # Make sure possible actions are the same
         self.assertEqual(copied_state.get_possible_actions(), state.get_possible_actions())
+
+    def test_remove_player_fail1(self):
+        # Tests remove_player failing due to invalid Color (type-wise)
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4])
+
+        with self.assertRaises(TypeError):
+            state.remove_player('ok')
+
+    def test_remove_player_fail2(self):
+        # Tests remove_player failing due to in valid Color
+        # (player with provided color does not exist)
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            ])
+
+        with self.assertRaises(NonExistentPlayerException):
+            state.remove_player(Color.BROWN)
+
+    def test_remove_player_fail3(self):
+        # Tests remove_player failing due to the player having
+        # already been removed
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            ])
+
+        # Remove
+        state.remove_player(Color.RED)
+
+        with self.assertRaises(NonExistentPlayerException):
+            # Remove again
+            state.remove_player(Color.RED)
+
+    def test_remove_player_success1(self):
+        # Tests successful remove_player on a state where no avatars
+        # have been placed
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4
+            ])
+
+        # Make sure player to remove is there
+        self.assertIn(Color.BROWN, state.player_order)
+        self.assertIn(Color.BROWN, state.placements)
+        # Remove player
+        state.remove_player(Color.BROWN)
+        # Check again
+        self.assertNotIn(Color.BROWN, state.player_order)
+        self.assertNotIn(Color.BROWN, state.placements)
+
+    def test_remove_player_success2(self):
+        # Tests successful remove_player on a state where the current player
+        # is being removed
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4
+            ])
+
+        # Make sure player to remove is there
+        self.assertIn(Color.RED, state.player_order)
+        self.assertIn(Color.RED, state.placements)
+        self.assertEqual(Color.RED, state.current_player)
+        # Remove player
+        state.remove_player(Color.RED)
+        # Check again
+        self.assertNotIn(Color.RED, state.player_order)
+        self.assertNotIn(Color.RED, state.placements)
+        self.assertNotEqual(state.current_player, Color.RED)
+
+    def test_remove_player_success3(self):
+        # Tests successful remove_player on a state where placement
+        # have been made and continue to be made after a player is remove.
+        # It tests to verify that positions on avatars rest open
+        # up when their respective player gets removed.
+
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4
+            ])
+
+        # Place a bunch of avatars
+        state.place_avatar(Color.RED,  Position(0, 0))
+        state.place_avatar(Color.WHITE,  Position(0, 1))
+        state.place_avatar(Color.BLACK,  Position(0, 2))
+        state.place_avatar(Color.BROWN,  Position(1, 2))
+
+        self.assertEqual(state.players_no, 4)
+        # Make sure player to remove is there
+        self.assertIn(Color.BROWN, state.player_order)
+        self.assertIn(Color.BROWN, state.placements)
+        # Make sure player we're gonna remove after is there
+        self.assertIn(Color.BLACK, state.placements)
+        self.assertIn(Color.BLACK, state.player_order)
+        # Make sure position is occupied
+        self.assertFalse(state.is_position_open(Position(1, 2)))
+        # Remove player
+        state.remove_player(Color.BROWN)
+        # Check again
+        self.assertNotIn(Color.BROWN, state.player_order)
+        self.assertNotIn(Color.BROWN, state.placements)
+        # Make sure player we're gonna remove after is still there
+        self.assertIn(Color.BLACK, state.placements)
+        self.assertIn(Color.BLACK, state.player_order)
+        # Make sure position opens up and tile is not removed
+        self.assertTrue(state.is_position_open(Position(1, 2)))
+
+        state.place_avatar(Color.RED,  Position(1, 0))
+        state.place_avatar(Color.WHITE,  Position(1, 1))
+        state.place_avatar(Color.BLACK,  Position(2, 2))
+
+        # Make sure black player's positions are closed prior to him
+        # being removed
+        self.assertFalse(state.is_position_open(Position(2, 2)))
+        self.assertFalse(state.is_position_open(Position(0, 2)))
+
+        self.assertEqual(state.players_no, 3)
+        # Remove another player
+        state.remove_player(Color.BLACK)
+
+        # Make sure player neither removed players are there
+        self.assertNotIn(Color.BLACK, state.placements)
+        self.assertNotIn(Color.BLACK, state.player_order)
+        # Make sure both of black player's position have now become
+        # available
+        self.assertTrue(state.is_position_open(Position(2, 2)))
+        self.assertTrue(state.is_position_open(Position(0, 2)))
+        self.assertEqual(state.players_no, 2)
+
+    def test_remove_player_success4(self):
+        # Tests successful remove_player on a case wherein both placements
+        # and moves have been made and players become unstuck
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2,
+            self.__p3,
+            self.__p4
+        ])
+
+        self.assertEqual(state.players_no, 4)
+
+        # Place a bunch of avatars
+        state.place_avatar(Color.RED, Position(0, 0))
+        state.place_avatar(Color.BLACK, Position(2, 0))
+        state.place_avatar(Color.BROWN, Position(5, 0))
+        state.place_avatar(Color.RED, Position(6, 1))
+        state.place_avatar(Color.WHITE, Position(6, 0))
+        state.place_avatar(Color.BLACK, Position(4, 0))
+        state.place_avatar(Color.BROWN, Position(3, 0))
+
+        # Make move
+        state.move_avatar(Position(0, 0), Position(1, 0))
+
+        # Make sure BLACK is stuck now
+        self.assertIn(Color.BLACK, state.stuck_players)
+        # Make sure WHITE is stuck
+        self.assertIn(Color.WHITE, state.stuck_players)
+
+        # Make sure position we just moved to is now closed
+        self.assertFalse(state.is_position_open(Position(1, 0)))
+
+        # Make sure RED still exists
+        self.assertIn(Color.RED, state.placements)
+        self.assertIn(Color.RED, state.player_order)
+
+        # Remove player
+        state.remove_player(Color.RED)
+
+        # Make sure BLACK is unstuck now
+        self.assertNotIn(Color.BLACK, state.stuck_players)
+        # Make sure WHITE is still stuck
+        self.assertIn(Color.WHITE, state.stuck_players)
+
+        # Make sure position we just moved to is now open
+        self.assertTrue(state.is_position_open(Position(1, 0)))
+
+        # Make sure player removed player isn't there
+        self.assertNotIn(Color.RED, state.placements)
+        self.assertNotIn(Color.RED, state.player_order)
+        self.assertEqual(state.players_no, 3)
+
+        # Remove BROWN
+        state.remove_player(Color.BROWN)
+        # Make sure WHITE is unstuck now
+        self.assertNotIn(Color.WHITE, state.stuck_players)
+        # Make sure player removed player isn't there
+        self.assertNotIn(Color.BROWN, state.placements)
+        self.assertNotIn(Color.BROWN, state.player_order)
+        self.assertEqual(state.players_no, 2)
