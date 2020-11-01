@@ -20,7 +20,7 @@ from cheating_player3 import CheatingPlayer3
 from cheating_player4 import CheatingPlayer4
 from failing_player1 import FailingPlayer1
 from failing_player2 import FailingPlayer2
-from mock import patch
+from unittest.mock import patch
 
 
 class RefereeTests(unittest.TestCase):
