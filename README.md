@@ -18,3 +18,4 @@ to a tile neighboring the one the player just moved to. It determines the "best"
 neighboring tiles clockwise from North to South West and picking the first action that could get an opponent's
 avatar there. If multiple avatars can reach the same "best" tile, the avatar with the lowest source and destination
 coordinates lis picked (in order of priority: source.x, source.y, destination.x, destination.y).
+- 6: contains the test harness for milestone 6 (xstrategy), which checks the integrity of a player strategy that determines the best action a player can take. See the README in 6 for more information.
