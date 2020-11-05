@@ -5,7 +5,7 @@ sys.path.append("../3/Other")
 sys.path.append("../Fish/Common")
 
 from xboard import initialize_board
-from player_entity import CorePlayer
+from player_entity import PlayerEntity
 from board import Board
 from movement_direction import MovementDirection
 from color import Color
@@ -101,14 +101,14 @@ def _state_to_json(state: State) -> dict:
     player_order = state.player_order
 
     # Cycle over player order
-    for player_id in player_order:
+    for player_color in player_order:
         # Initialize dictionary in which to store player data
         player_obj = {}
 
         # Gather player data
-        player_obj['score'] = state.get_player_score(player_id)
-        player_obj['places'] = [[pos.x, pos.y] for pos in state.get_player_positions(player_id)]
-        player_obj['color'] = state.get_player_color(player_id).name.lower()
+        player_obj['score'] = state.get_player_score(player_color)
+        player_obj['places'] = [[pos.x, pos.y] for pos in state.get_player_positions(player_color)]
+        player_obj['color'] = player_color.name.lower()
 
         # Append player object to list
         json_obj['players'].append(player_obj)
@@ -159,9 +159,6 @@ def initialize_state(json_obj: dict) -> State:
     # Get board from json
     board = initialize_board(board_json)
 
-    # Initialize counter to generate player ids
-    player_id_counter = 1
-
     # Initialize empty collection to hold players
     players = []
 
@@ -172,7 +169,7 @@ def initialize_state(json_obj: dict) -> State:
     # Cycle over each json object in the json list
     for player in player_list:
         # Make up Player object
-        new_player = CorePlayer(player_id_counter, "", _str_to_color(player['color']))
+        new_player = PlayerEntity("", _str_to_color(player['color']))
 
         # Update player score to whatever the current score is in the state
         new_player.score = player['score']
@@ -181,9 +178,7 @@ def initialize_state(json_obj: dict) -> State:
         players.append(new_player)
 
         # Insert placement
-        player_placements.update({player_id_counter: player['places']})
-        # Increment id counter
-        player_id_counter += 1
+        player_placements.update({_str_to_color(player['color']): player['places']})
 
     # Make up state with board and players
     state = State(board, players)
@@ -194,16 +189,16 @@ def initialize_state(json_obj: dict) -> State:
     # For each i in the number of avatars per player
     for i in range(avatars_per_player_no):
         # For each player, place i-th avatar if possible
-        for p_id, p_placements in player_placements.items():
+        for p_color, p_placements in player_placements.items():
             # Retrieve current player's i-th avatar
             try:
-                placement = player_placements[p_id][i]
+                placement = player_placements[p_color][i]
 
                 # Convert to Position object
                 position_to_place = Position(placement[0], placement[1])
 
                 # Place current player's avatar at position
-                state.place_avatar(p_id, position_to_place)
+                state.place_avatar(p_color, position_to_place)
             except IndexError:
                 continue
 
@@ -225,8 +220,10 @@ def _get_next_state(state: State) -> State:
     # Get player's placements
     player_placements = state.placements
 
+    first_player_color = state.players[0].color
+
     # Get first player's first avatar's position
-    first_avatar_pos = player_placements[1][0]
+    first_avatar_pos = player_placements[first_player_color][0]
     first_avatar_pos = Position(first_avatar_pos[0], first_avatar_pos[1])
 
     # Possible actions that can be taken from this state

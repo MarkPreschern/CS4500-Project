@@ -7,7 +7,7 @@ sys.path.append("../Fish/Common")
 
 from xboard import initialize_board
 from xstate import initialize_state, _get_next_position
-from player_entity import CorePlayer
+from player_entity import PlayerEntity
 from board import Board
 from movement_direction import MovementDirection
 from color import Color
@@ -105,8 +105,11 @@ def _get_next_state(state: State, from_pos: Position, to_pos: Position) -> State
     # Initialize player placements
     player_placements = state.placements
 
+    # Get first player color (it's currently the first player's turn)
+    first_player_color = state.current_player
+
     # Verify that from_pos is one of player 1's current positions
-    if from_pos not in player_placements[1]:
+    if from_pos not in player_placements[first_player_color]:
         raise InvalidActionException("Expected from_pos to be one of player 1's current placements")
 
     # Attempt action
@@ -145,7 +148,10 @@ def _find_action_to_neighboring_tile(state: State, to_pos: Position) -> Action:
         raise TypeError("Expected Position for to_pos.")
     
     # Get player placements from state
-    player_placements = state.placements 
+    player_placements = state.placements
+
+    # Second player's color
+    second_player_color = state.player_order[0]
 
     # Search each direction and see if any of player 2's positions can reach a neighboring tile
     # in that direction
@@ -156,7 +162,7 @@ def _find_action_to_neighboring_tile(state: State, to_pos: Position) -> Action:
         # List to store the potential valid actions to reach the neighboring tile in the current direction
         valid_actions = []
 
-        for pos in player_placements[2]:
+        for pos in player_placements[second_player_color]:
             try:
                 # The action to be tried
                 new_action = Action(pos, new_pos)

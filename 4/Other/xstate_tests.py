@@ -11,7 +11,7 @@ from xstate import _board_to_json, _state_to_json, _str_to_color, _get_next_posi
 from hole import Hole
 from state import State
 from color import Color
-from player_entity import CorePlayer
+from player_entity import PlayerEntity
 from movement_direction import MovementDirection
 
 
@@ -63,29 +63,29 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # all avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            CorePlayer(1, 'bob', Color.WHITE),
-            CorePlayer(2, 'bob', Color.BROWN),
-            CorePlayer(3, 'bob', Color.BLACK)
+            PlayerEntity('bob', Color.WHITE),
+            PlayerEntity('bob', Color.BROWN),
+            PlayerEntity('bob', Color.BLACK)
         ])
 
         # Player 1 place
-        state.place_avatar(1, Position(0, 1))
+        state.place_avatar(Color.WHITE, Position(0, 1))
         # Player 2 place
-        state.place_avatar(2, Position(1, 0))
+        state.place_avatar(Color.BROWN, Position(1, 0))
         # Player 3 place
-        state.place_avatar(3, Position(1, 1))
+        state.place_avatar(Color.BLACK, Position(1, 1))
         # Player 1 place
-        state.place_avatar(1, Position(1, 2))
+        state.place_avatar(Color.WHITE, Position(1, 2))
         # Player 2 place
-        state.place_avatar(2, Position(2, 0))
+        state.place_avatar(Color.BROWN, Position(2, 0))
         # Player 3 place
-        state.place_avatar(3, Position(2, 1))
+        state.place_avatar(Color.BLACK, Position(2, 1))
         # Player 1 place
-        state.place_avatar(1, Position(2, 2))
+        state.place_avatar(Color.WHITE, Position(2, 2))
         # Player 2 place
-        state.place_avatar(2, Position(3, 1))
+        state.place_avatar(Color.BROWN, Position(3, 1))
         # Player 3 place
-        state.place_avatar(3, Position(3, 2))
+        state.place_avatar(Color.BLACK, Position(3, 2))
 
         # Get jsonified version
         result = _state_to_json(state)
@@ -106,25 +106,25 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # only some avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            CorePlayer(1, 'bob', Color.WHITE),
-            CorePlayer(2, 'bob', Color.BROWN),
-            CorePlayer(3, 'bob', Color.BLACK)
+            PlayerEntity('bob', Color.WHITE),
+            PlayerEntity('bob', Color.BROWN),
+            PlayerEntity('bob', Color.BLACK)
         ])
 
         # Player 1 place
-        state.place_avatar(1, Position(0, 1))
+        state.place_avatar(Color.WHITE, Position(0, 1))
         # Player 2 place
-        state.place_avatar(2, Position(1, 0))
+        state.place_avatar(Color.BROWN, Position(1, 0))
         # Player 3 place
-        state.place_avatar(3, Position(1, 1))
+        state.place_avatar(Color.BLACK, Position(1, 1))
         # Player 1 place
-        state.place_avatar(1, Position(1, 2))
+        state.place_avatar(Color.WHITE, Position(1, 2))
         # Player 2 place
-        state.place_avatar(2, Position(2, 0))
+        state.place_avatar(Color.BROWN, Position(2, 0))
         # Player 3 place
-        state.place_avatar(3, Position(2, 1))
+        state.place_avatar(Color.BLACK, Position(2, 1))
         # Player 1 place
-        state.place_avatar(1, Position(2, 2))
+        state.place_avatar(Color.WHITE, Position(2, 2))
 
         # Get jsonified version
         result = _state_to_json(state)
@@ -145,9 +145,9 @@ class XStateTests(unittest.TestCase):
         # Successful state to json. State is one in which
         # no avatars have been placed
         state = State(Board.homogeneous(4, 4, 3), [
-            CorePlayer(1, 'bob', Color.WHITE),
-            CorePlayer(2, 'bob', Color.BROWN),
-            CorePlayer(3, 'bob', Color.BLACK)
+            PlayerEntity('bob', Color.WHITE),
+            PlayerEntity('bob', Color.BROWN),
+            PlayerEntity('bob', Color.BLACK)
         ])
 
         # Get jsonified version

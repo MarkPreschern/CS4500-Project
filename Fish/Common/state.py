@@ -98,7 +98,7 @@ class State(object):
         the resulting copy will not have the contents of the original.
         """
         # Copy board
-        board: Board= pickle.loads(pickle.dumps(self.__board))
+        board: Board = pickle.loads(pickle.dumps(self.__board))
         # Copy players
         players: [PlayerEntity] = pickle.loads(pickle.dumps(self.__players))
 
