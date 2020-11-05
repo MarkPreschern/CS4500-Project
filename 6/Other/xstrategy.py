@@ -11,7 +11,6 @@ from strategy import Strategy
 
 
 def xstrategy():
-    Strategy.DEBUG = True
     # Initialize objects to read to
     input_obj = ""
 
