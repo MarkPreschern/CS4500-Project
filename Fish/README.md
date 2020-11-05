@@ -4,6 +4,9 @@
 
 ## Project structure
 
+- **Admin/**: contains code related to running tournaments/games
+  - **Other/mocks**: contains mock players that cheat/fail for use in testing
+  - **Other/tests**: contains unit tests for the files in the Admin directory
 - **Common/**: contains all source code and visual assets that accompany the source code
   - **ext/**: contains helpers for testing
   - **sprites/**: contains visual assets (i.e. sprites for tiles, player pieces, and fish)
