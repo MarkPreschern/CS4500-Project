@@ -20,11 +20,11 @@ def xstrategy():
         input_obj += k
 
     # Load from read string
-    json_obj = json.loads(input_obj)
+    json_list = json.loads(input_obj)
 
-    # Get desired depth and state from json_obj
-    depth = json_obj['D']
-    state = json_obj['state']
+    # Get desired depth and state from json_list
+    depth = json_list[0]
+    state = json_list[1]
 
     # Find the first player in the json state
     first_player_color = state['players'][0]['color']
