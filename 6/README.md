@@ -1,4 +1,4 @@
-# xtree
+# xstrategy
 
 > A testing harness that tests the functionality of `strategy.py`. The harness consumes JSON input from STDIN in the form of a JSON list. The JSON list has a depth and a state. The harness will then compute the best action that the first player in the state can take (using either avatar). It will output the best action to STDOUT, where an Action can either be a list of Positions or false.
 
