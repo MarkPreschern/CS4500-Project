@@ -48,18 +48,25 @@ class Referee(object):
                     from taking any more turns (that includes placing and moving).
 
     INTERPRETATION: The referee could best be described as the engine that runs a game of Fish. It receives
-                    a list of Player objects that is sorted by age and a row and column dimensions of the board from
-                    the tournament manager, sets up a game board (based on the dimensions received) and assigns each
-                    player a color. It then prompts each player for a placement by having them return a Position
-                    object containing the row and column number they wish to place their avatar. After it finishes
-                    prompting users for placements, it prompts each movable player for an Action object (made up
-                    of a Position describing the place on the board the move is made from and another describing the
-                    place the move is made to).
+                    a list of Player objects that is sorted by age and row and column dimensions of the board from
+                    the tournament manager, sets up a homogeneous game board of the specified size and assigns each
+                    player a color. The board the referee creates is homogeneous (has the same random number of fish on
+                    each tile) and may have holes in it (see paragraph on "difficulty factor"). When signaled to kick
+                    off the game (via start()) it then prompts each player for a placement by having them return a
+                    Position object containing the row and column number they wish to place their avatar. After it
+                    finishes prompting users for placements it prompts each movable player for an Action object
+                    (made up of a Position describing the place on the board the move is made from and another
+                    describing the place the move is made to).
 
                     To setup the game board, the referee applies a "difficulty factor" - a Natural number that speaks to
                     the maximum number of Tiles the referee will try to remove. This factor is adjustable and can be
                     leveraged to make a game more challenging or less so. The referee will randomly pick the tiles to
                     remove and may even end up removing 0 tiles for a difficulty factor D > 0.
+
+                    The referee also maintains a master copy of the game State which it updates throughout the course of
+                    the game to reflect the players' positions, score etc.. Given the state's design, the current player
+                    in it will always be unstuck (stuck players are automatically skipped) unless all players are stuck,
+                    in which case the referee ends the game.
 
                     It also provides functionality that external observers can employ to follow the game. An
                     observer or tournament manager subscribe via `subscribe_game_updates` to receive an update with
@@ -83,14 +90,16 @@ class Referee(object):
 
                     }
 
-                    Upon determining that no more moves can be made, the referee ends the game and provides all players
-                    and subscribed observers with the final game report.
+                    Upon determining that no more moves can be made (by calling can_anyone_move() on the internal state)
+                    , the referee ends the game and provides all players and subscribed observers with the final game
+                    report.
 
                     At initialization, the referee is given a list of Player objects with undefined colors (.color =
                     Color.UNDEFINED). After assigning colors, the referee creates a PlayerEntity for each object,
                     which contains the essential information needed for identification in the game (namely name,
                     color and placements). All other information pertaining to a player is scrapped. The referee
-                    starts running the game (from the placement phase onwards) when start() is called.
+                    starts running the game (from the placement phase onwards) when start() is called on it (presumably
+                    the tournament manager would call it to kick off the game).
 
                     Throughout the game, every time the internal game state is altered, the game tree is updated,
                     players are synchronized (by calling sync on them with the game state) and observers are notified
