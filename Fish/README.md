@@ -9,6 +9,8 @@
   - **sprites/**: contains visual assets (i.e. sprites for tiles, player pieces, and fish)
   - **tests/**: contains tests for source code
 - **Planning/**: contains documentation detailing system design and project planning
+- **Player/**: contains files related to Player implementation, including a concrete implementation of the Player interface and a strategy for placing/moving penguins during the game
+  - **Other/tests**: contains tests for the files in the Player directory
 
 ## Usage
 - General usage: 
