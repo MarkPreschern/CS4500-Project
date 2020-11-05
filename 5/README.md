@@ -4,7 +4,7 @@
 
 ## Project structure
 
-- *xstate* (program entry point)
+- *xtree* (program entry point)
 - **Other/**
 	- contains program logic, unit tests
 - **Test/**
