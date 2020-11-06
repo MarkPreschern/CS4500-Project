@@ -41,7 +41,7 @@ https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d332
 
 - the "one-turn" per player function  
 https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L361-L392  
-**Note:** our `__run_game` method that we referenced above has the capability to run a single player turn. However, this functionality is nested in a while-loop that runs all player turns in order for the duration of the game.
+**Note:** our `__run_game` method that we referenced above has the capability to run a single player turn. However, this functionality is nested in a while-loop that runs all player turns in order for the duration of the game. Moreover, our state implementation takes care of the transition between player turns when a valid action has been made ensuring one turn per player (see here https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Common/state.py#L39-L40 ).
 
 
 - a unit test for the "one-turn per player" function with a well-behaved player 
@@ -66,7 +66,7 @@ https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d332
 - the place where the referee re-initializes the game tree when a player is kicked out for cheating and/or failing  
   - When the referee kicks a player, they invoke `__kick_player` here: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L379  
   - After invoking `__kick_player`, the `__fire_game_state_changed` function is invoked here: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L359  
-  - **The game state is updated at this line in __fire_game_state_changed:** https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L418  
+  - **The game tree is updated at this line in __fire_game_state_changed:** https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L418  
 
 
 
