@@ -21,8 +21,8 @@ https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d332
 
 
 - this function must initialize the game tree for the players that survived the start-up phase  
-Function Definition: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L179-L202  
-Line where game tree is initialized: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L197
+  - Function Definition: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L179-L202  
+  - Line where game tree is initialized: https://github.ccs.neu.edu/CS4500-F20/wellman/blob/ad69dab4fcd1f23eb39751b10d3320ccdeb02bc2/Fish/Admin/referee.py#L197
 
 
 - a unit test for the "loop till final game state"  function  
