@@ -6,3 +6,4 @@ E/Other/__pycache__/*
 E/Other/*.pyc
 .DS_Store
 .vscode
+*.idea

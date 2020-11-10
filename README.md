@@ -1,4 +1,4 @@
-# CS4500 - Andrew Nedea and Jason Kemly
+# CS4500 - Andrew Nedea and Mark Preschern
 
 ## Folders in this Repo
 - B: the code in B is meant to provide a tool that can infinitely output any command line arguments that you provide. The output can also be limited to 20 lines. This folder contains Assignment B of the TAHBPL series of assignments.
