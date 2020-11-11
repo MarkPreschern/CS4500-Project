@@ -1,7 +1,6 @@
 import pickle
 
 from action import Action
-from exceptions.GameNotRunningException import GameNotRunningException
 from exceptions.InvalidActionException import InvalidActionException
 from state import State
 

@@ -2,12 +2,11 @@ import operator
 import sys
 from random import randrange
 
-
 sys.path.append('../Common/')
 sys.path.append('../')
 sys.path.append('../Admin/Other/')
 
-from player import Player
+from player_interface import IPlayer
 import constants as ct
 from board import Board
 from state import State
@@ -48,7 +47,7 @@ class Referee(object):
                     from taking any more turns (that includes placing and moving).
 
     INTERPRETATION: The referee could best be described as the engine that runs a game of Fish. It receives
-                    a list of Player objects that is sorted by age and row and column dimensions of the board from
+                    a list of IPlayer objects that is sorted by age and row and column dimensions of the board from
                     the tournament manager, sets up a homogeneous game board of the specified size and assigns each
                     player a color. The board the referee creates is homogeneous (has the same random number of fish on
                     each tile) and may have holes in it (see paragraph on "difficulty factor"). When signaled to kick
@@ -94,7 +93,7 @@ class Referee(object):
                     , the referee ends the game and provides all players and subscribed observers with the final game
                     report.
 
-                    At initialization, the referee is given a list of Player objects with undefined colors (.color =
+                    At initialization, the referee is given a list of IPlayer objects with undefined colors (.color =
                     Color.UNDEFINED). After assigning colors, the referee creates a PlayerEntity for each object,
                     which contains the essential information needed for identification in the game (namely name,
                     color and placements). All other information pertaining to a player is scrapped. The referee
@@ -111,14 +110,14 @@ class Referee(object):
     # Initialize difficulty factor
     DIFFICULTY_FACTOR = 2
 
-    def __init__(self, rows: int, cols: int, players: [Player]) -> None:
+    def __init__(self, rows: int, cols: int, players: [IPlayer]) -> None:
         """
-        Initializes a referee for a game with a board of size row x col and a given (ordered) list of Player
+        Initializes a referee for a game with a board of size row x col and a given (ordered) list of IPlayer
         objects.
 
         :param rows: row dimension of the board
         :param cols: column dimension of the board
-        :param players: list of Player objects sorted in increasing order of age
+        :param players: list of IPlayer objects sorted in increasing order of age
         :return: None
         """
         # Validate params
@@ -131,9 +130,9 @@ class Referee(object):
         if not isinstance(players, list):
             raise TypeError('Expected list for players!')
 
-        # Make sure list consists of only player objects
-        if not all(isinstance(x, Player) for x in players):
-            raise TypeError('All player list objects have to of type Player!')
+        # Make sure list consists of only IPlayer objects
+        if not all(isinstance(x, IPlayer) for x in players):
+            raise TypeError('All player list objects have to of type IPlayer!')
 
         # Make sure we weren't given too many players
         if len(players) < ct.MIN_PLAYERS or len(players) > ct.MAX_PLAYERS:
@@ -149,7 +148,7 @@ class Referee(object):
             players[k].color = Color(k)
 
         # Set properties
-        self.__players: [Player] = players
+        self.__players: [IPlayer] = players
         self.__avatars_per_player = 6 - len(players)
 
         # Make up list of Color holding the colors of failing players
@@ -202,7 +201,7 @@ class Referee(object):
         self.__fire_game_over()
 
     @property
-    def players(self) -> [Player]:
+    def players(self) -> [IPlayer]:
         """
         Returns (copy) collection of players referee oversees.
         """
@@ -329,16 +328,16 @@ class Referee(object):
         # Check if any players remain after placement (everyone might have gotten kicked)
         return self.__state.players_no != 0
 
-    def __kick_player(self, player_obj: Player, reason: PlayerKickReason):
+    def __kick_player(self, player_obj: IPlayer, reason: PlayerKickReason):
         """
         Kicks provided Player from the game.
 
-        :param player_obj: Player object to kick
+        :param player_obj: IPlayer object to kick
         :param reason: reason (str) they're being kicked
         """
         # Validate params
-        if not isinstance(player_obj, Player):
-            raise TypeError('Expected Player object for player_obj!')
+        if not isinstance(player_obj, IPlayer):
+            raise TypeError('Expected IPlayer object for player_obj!')
 
         if not isinstance(reason, PlayerKickReason):
             raise TypeError('Expected PlayerKickReason for reason!')
@@ -375,7 +374,7 @@ class Referee(object):
                 action: Action = current_player_obj.get_action(self.__state)
 
                 if not isinstance(action, Action):
-                    # If anything but an Action object was returned Player failed
+                    # If anything but an Action object was returned player failed
                     self.__kick_player(current_player_obj, PlayerKickReason.FAILING)
                 else:
                     # Use game tree to validate action (will throw InvalidPositionException if
@@ -391,12 +390,12 @@ class Referee(object):
             except InvalidActionException:
                 self.__kick_player(current_player_obj, PlayerKickReason.CHEATING)
 
-    def __get_player_by_color(self, color: Color) -> Player:
+    def __get_player_by_color(self, color: Color) -> IPlayer:
         """
-        Retrieves Player object with provided color.
+        Retrieves IPlayer object with provided color.
 
         :param color: Color of player to retrieve
-        :return: associated Player object
+        :return: associated IPlayer object
         """
         # Validate params
         if not isinstance(color, Color):

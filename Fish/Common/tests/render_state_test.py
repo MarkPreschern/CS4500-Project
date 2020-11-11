@@ -53,16 +53,16 @@ state = State(b, [PlayerEntity("Bob Ross", Color.RED),
 
 # Place a bunch of avatars
 state.place_avatar(Color.RED, Position(0, 0))
-state.place_avatar(Color.WHITE, Position(0, 1))
-
-state.place_avatar(Color.RED, Position(0, 2))
 state.place_avatar(Color.WHITE, Position(1, 0))
 
-state.place_avatar(Color.RED, Position(1, 1))
-state.place_avatar(Color.WHITE, Position(1, 2))
-
 state.place_avatar(Color.RED, Position(2, 0))
-state.place_avatar(Color.WHITE, Position(2, 2))
+state.place_avatar(Color.WHITE, Position(0, 1))
+
+state.place_avatar(Color.RED, Position(3, 0))
+state.place_avatar(Color.WHITE, Position(0, 2))
+
+state.place_avatar(Color.RED, Position(2, 2))
+state.place_avatar(Color.WHITE, Position(1, 2))
 
 # Move player 1 avatar
 # state.move_avatar(Position(2, 1), Position(1, 1))

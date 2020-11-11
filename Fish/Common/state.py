@@ -348,8 +348,18 @@ class State(object):
         # Update placement to reflect updated avatar's position
         self.get_player_by_color(color).add_place(position)
 
-        # Make sure a player that can move is up
-        self.__trigger_next_turn(0)
+        if self.__all_avatars_have_been_placed:
+            # Proceed to the next unstuck player
+            self.__trigger_next_turn(0)
+
+    @property
+    def __all_avatars_have_been_placed(self) -> bool:
+        """
+        Tells whether all avatars have been placed.
+        """
+        placed_avatars_no = sum([len(p.places) for p in self.__players])
+
+        return placed_avatars_no == len(self.__players) * self.__avatars_per_player
 
     def is_position_open(self, position: Position) -> bool:
         """
@@ -498,18 +508,18 @@ class State(object):
 
         :return: boolean indicating whether anyone can move
         """
-        # Set flag to indicate no one is stuck so far
-        at_least_one_stuck = False
+        # Set flag to indicate at least player can move
+        at_least_one_can_move = False
 
         # Cycle over players and return true if any of them
         # can move
         for player_color in self.player_order:
             if not self.__is_player_stuck(player_color):
-                at_least_one_stuck = True
+                at_least_one_can_move = True
                 # don't break as we want to check if anybody
                 # else is stuck
 
-        return at_least_one_stuck
+        return at_least_one_can_move
 
     def __is_player_stuck(self, player_color: Color) -> bool:
         """

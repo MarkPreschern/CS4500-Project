@@ -10,6 +10,8 @@ from color import Color
 from collections import OrderedDict
 from position import Position
 from action import Action
+from hole import Hole
+from tile import Tile
 
 from exceptions.InvalidActionException import InvalidActionException
 from exceptions.InvalidPositionException import InvalidPositionException
@@ -799,7 +801,7 @@ class StateTests(unittest.TestCase):
             self.__p3,
             self.__p4])
 
-        # Set up the board with placements s.t. all of player 2's avatars are
+        # Set up the board with placements s.t. all of player 1's avatars are
         # blocked
         state.place_avatar(Color.RED,  Position(0, 0))
         state.place_avatar(Color.WHITE,  Position(3, 0))
@@ -810,16 +812,61 @@ class StateTests(unittest.TestCase):
         state.place_avatar(Color.BLACK,  Position(1, 1))
         state.place_avatar(Color.BROWN,  Position(2, 1))
 
-        # Verify that it is player 1's turn
+        # Verify that it is player 2's turn
         self.assertEqual(state.current_player, Color.WHITE)
         self.assertSequenceEqual(state.player_order, [Color.WHITE, Color.BLACK, Color.BROWN, Color.RED])
 
-        # Move one of player 1's avatars
+        # Move one of player 2's avatars
         state.move_avatar(Position(3, 1), Position(4, 1))
 
         # Verify that it is actually player 4's turn and that p2 and p3 have been skipped
         self.assertEqual(state.current_player, Color.BROWN)
         self.assertSequenceEqual(state.player_order, [Color.BROWN, Color.RED, Color.WHITE, Color.BLACK])
+
+    def test_current_player_temporarily_stuck(self):
+        # Tests a game in which the first player to go had all its avatars stuck at least once
+        # through the placing phase, but can now move and is first to make a move.
+        new_b = Board({
+            Position(0, 0): Tile(2),
+            Position(0, 1): Tile(2),
+            Position(0, 2): Tile(2),
+
+            Position(1, 0): Tile(2),
+            Position(1, 1): Tile(2),
+            Position(1, 2): Tile(2),
+
+
+            Position(2, 0): Tile(2),
+            Position(2, 1): Hole(),
+            Position(2, 2): Tile(2),
+
+
+            Position(3, 0): Tile(2),
+            Position(3, 1): Tile(2),
+            Position(3, 2): Tile(2)
+        })
+
+        state = State(new_b, players=[
+            self.__p1,
+            self.__p2])
+
+        # Set up the board with placements such that RED is stuck at least once in the course
+        # of placing the avatars
+        state.place_avatar(Color.RED, Position(0, 0))
+        state.place_avatar(Color.WHITE, Position(1, 0))
+
+        state.place_avatar(Color.RED, Position(2, 0))
+        state.place_avatar(Color.WHITE, Position(0, 1))
+
+        state.place_avatar(Color.RED, Position(3, 0))
+        state.place_avatar(Color.WHITE, Position(0, 2))
+        # RED is still stuck
+        state.place_avatar(Color.RED, Position(2, 2))
+        # RED can now move
+        state.place_avatar(Color.WHITE, Position(1, 2))
+
+        # Make sure the player order is correct now that RED can move again
+        self.assertSequenceEqual(state.player_order, [Color.RED, Color.WHITE])
 
     def test_game_over1(self):
         # Test the game until the game is over
@@ -895,7 +942,7 @@ class StateTests(unittest.TestCase):
         # Player 3
         state.place_avatar(Color.BLACK,  Position(3, 0))
         # Make sure player 1 is not longer up and 2 is up instead
-        self.assertEqual(state.player_order, [Color.WHITE, Color.BLACK, Color.BROWN, Color.RED])
+        self.assertEqual(state.player_order, [Color.RED, Color.WHITE, Color.BLACK, Color.BROWN])
         # Player 4
         state.place_avatar(Color.BROWN,  Position(3, 1))
 

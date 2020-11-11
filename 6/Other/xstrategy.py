@@ -31,7 +31,6 @@ def xstrategy():
     # Load the json state into a State object
     initialized_state = initialize_state(state)
 
-
     # Check if the first player in the array is stuck and print false to STDOUT if so
     if first_player_color in initialized_state.stuck_players:
         print(json.dumps(False))
