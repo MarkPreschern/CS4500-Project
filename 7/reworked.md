@@ -36,6 +36,8 @@ only current-player-can-move is obvious
 
  - choosing turn action: purpose statement doesn't specify what happens
 when the current player does not have valid moves
+    - fix 1: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Player/strategy.py#L76-L78
+    - fix 2: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Player/strategy.py#L116-L117
 
  - no separate function to handle a single turn (1 player making 1 move)
  
