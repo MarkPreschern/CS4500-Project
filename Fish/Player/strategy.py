@@ -73,7 +73,9 @@ class Strategy(object):
         score minimizing) moves for the player.
 
         If there are multiple best action leading to the same score, then the one with the smallest
-        source row, source column, destination row or destination column is picked (in that order).
+        source row, source column, destination row or destination column is picked (in that order). If the current
+        player gets stuck during the tree traversal and the provided depth has not been reached, the traversal is
+        aborted and the best running move is returned.
 
         :param state: state which to determine best move for current player for
         :param depth: how many the current player in the provided states gets to go at most
@@ -111,6 +113,8 @@ class Strategy(object):
 
         If there are multiple best moves leading to the same score, then the one with the smallest
         source row, source column, destination row or destination column is picked (in that order).
+        If the maximizing player becomes stuck at any point in the tree traversal, the search is aborted and
+        its current score is returned.
 
         :param node: game tree node for which to run
         :param player_color_to_max: color of player whose score to maximize (maximizer)
