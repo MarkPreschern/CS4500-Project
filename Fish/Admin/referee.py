@@ -20,6 +20,7 @@ from color import Color
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 import pickle
 from game_tree import GameTree
+from func_timeout import func_timeout
 
 
 class Referee(object):
@@ -40,8 +41,12 @@ class Referee(object):
                     A failing player is one that fails to return either a placement or an action. More specifically,
                     if a player returns an object of the wrong type (something that is not a Position for
                     get_placement or something that is not an Action for get_action), it is marked as failing.
-                    Similarly, in the version of the game involving remote communication, a player that takes takes more
-                    than ten seconds to respond to the referee with either action or placement is marked out as failing.
+                    Similarly, if a player takes takes more than PLAYER_TIMEOUT seconds to respond to the referee or
+                    throws any exception(s), it is marked out as failing.
+
+                    The referee will prompt the players for moves and placements by passing a deep copy of its
+                    game state. This means that exogenous players will not be able to affect the state maintained
+                    by the referee.
 
                     The referee will remove the cheating and failing players' avatars from the game and prevent them
                     from taking any more turns (that includes placing and moving).
@@ -109,6 +114,8 @@ class Referee(object):
 
     # Initialize difficulty factor
     DIFFICULTY_FACTOR = 2
+    # Initialize player timeout (number of seconds a player is allowd to take to make a move/placement)
+    PLAYER_TIMEOUT = 1
 
     def __init__(self, rows: int, cols: int, players: [IPlayer]) -> None:
         """
@@ -295,8 +302,8 @@ class Referee(object):
                     avatars_to_place -= 1
                     continue
 
-                # Get placement for player
-                placement = p.get_placement(self.__state.deepcopy())
+                # Get placement for player using a deep copy of state
+                placement = self.__timed_player_call(p, 'get_placement', args=(self.__state.deepcopy(),))
 
                 # Validate placement received
                 if not isinstance(placement, Position):
@@ -367,28 +374,58 @@ class Referee(object):
         """
         # Run game by prompting players for actions until nobody can move
         while self.__state.can_anyone_move():
-            current_player_obj = self.__get_player_by_color(self.__state.current_player)
+            self.__run_turn()
 
-            try:
-                # Get action from player
-                action: Action = current_player_obj.get_action(self.__state)
+    def __timed_player_call(self, player: IPlayer, method_name: str, args: tuple):
+        """
+        Attempts to call given method on a IPlayer object and return its return value. If a timeout
+        or exception occurs, None is returned instead.
 
-                if not isinstance(action, Action):
-                    # If anything but an Action object was returned player failed
-                    self.__kick_player(current_player_obj, PlayerKickReason.FAILING)
-                else:
-                    # Use game tree to validate action (will throw InvalidPositionException if
-                    # action is illegal)
-                    self.__state = self.__game_tree.try_action(action)
+        :param player: IPlayer object to run method on
+        :param method_name: str name of the method to call on IPlayer obj
+        :param args: tuple containing the arguments to pass to method to be called
+        :return: return call result or None on failure
+        """
+        # Validate params
+        if not isinstance(player, IPlayer):
+            raise TypeError('Expected IPlayer for player!')
 
-                    if Referee.DEBUG:
-                        print(f'{current_player_obj.color} just moved from {action.src} to {action.dst}')
-                    self.__fire_game_state_changed()
-            except AssertionError as e:
-                # Raise assertion errors are these are used for testing
-                raise e
-            except InvalidActionException:
-                self.__kick_player(current_player_obj, PlayerKickReason.CHEATING)
+        if not isinstance(method_name, str):
+            raise TypeError('Expected str for method_name!')
+
+        if not isinstance(args, tuple):
+            raise TypeError('Expected tuple for args!')
+
+        try:
+            return func_timeout(Referee.PLAYER_TIMEOUT, getattr(player, method_name), args)
+        except:
+            return None
+
+    def __run_turn(self):
+        """
+        This method runs a single turn by prompting the current player in the internal state
+        to make a move.
+        """
+        current_player_obj = self.__get_player_by_color(self.__state.current_player)
+        try:
+            # Get action from player using a deep copy of state
+            action = self.__timed_player_call(current_player_obj, 'get_action', args=(self.__state.deepcopy(),))
+            # If call was not successful or anything but an Action object was returned, the player failed
+            if not isinstance(action, Action):
+                self.__kick_player(current_player_obj, PlayerKickReason.FAILING)
+            else:
+                # Use game tree to validate action (will throw InvalidPositionException if
+                # action is illegal)
+                self.__state = self.__game_tree.try_action(action)
+
+                if Referee.DEBUG:
+                    print(f'{current_player_obj.color} just moved from {action.src} to {action.dst}')
+                self.__fire_game_state_changed()
+        except AssertionError as e:
+            # Raise assertion errors are these are used for testing
+            raise e
+        except InvalidActionException:
+            self.__kick_player(current_player_obj, PlayerKickReason.CHEATING)
 
     def __get_player_by_color(self, color: Color) -> IPlayer:
         """

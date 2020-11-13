@@ -20,6 +20,10 @@ from cheating_player3 import CheatingPlayer3
 from cheating_player4 import CheatingPlayer4
 from failing_player1 import FailingPlayer1
 from failing_player2 import FailingPlayer2
+from failing_player3 import FailingPlayer3
+from failing_player4 import FailingPlayer4
+from failing_player5 import FailingPlayer5
+from failing_player6 import FailingPlayer6
 from unittest.mock import patch
 
 
@@ -42,6 +46,10 @@ class RefereeTests(unittest.TestCase):
         self.__p11 = Player('iHaxor')
         self.__p12 = Player('Razorsharp')
         self.__p13 = Player('Sony')
+        self.__p14 = Player('Sony 2')
+        self.__p15 = Player('Sony 3')
+        self.__p16 = Player('Sony 4')
+        self.__p17 = Player('Sony 5')
 
         # Make up player that cheats in placing
         self.__cheating_player1 = CheatingPlayer1('iCrack :P')
@@ -61,6 +69,14 @@ class RefereeTests(unittest.TestCase):
         self.__failing_player2 = FailingPlayer2('iFail v2')
         # Make up another player that fails in making a move / action
         self.__failing_player3 = FailingPlayer2('iFail v2')
+        # Make up another player that enters an infinite loop in making a move / action
+        self.__failing_player4 = FailingPlayer3('iFail v3')
+        # Make up another player throws an exception in making a move / action
+        self.__failing_player5 = FailingPlayer4('iFail v4')
+        # Make up another player that enters an infinite loop in making a placement
+        self.__failing_player6 = FailingPlayer5('iFail v5')
+        # Make up another player throws an exception in making a placement
+        self.__failing_player7 = FailingPlayer6('iFail v6')
 
         # Set seed to add some predictability as to what kind of board
         # the referee is gonna setup
@@ -398,9 +414,128 @@ class RefereeTests(unittest.TestCase):
                                  ])
 
                 # Make sure game_over was called on the players
-                mock.assert_called_with(report['leaderboardd'], report['cheating_players'],
+                mock.assert_called_with(report['leaderboard'], report['cheating_players'],
                                         report['failing_players'])
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
 
+    def test_start_success_move_timeout(self):
+        # Tests a game in which a player times out in making a move
+        referee = Referee(3, 4, [self.__p14, self.__failing_player4])
+
+        with patch.object(self.__p14, 'game_over') as mock:
+            # Make up observer callback to validate game report
+            def game_report_observer(report: dict):
+                self.assertEqual(report['cheating_players'], [
+                ])
+                self.assertEqual(report['failing_players'], [
+                    Color.WHITE
+                ])
+
+                # All players should have the same score
+                self.assertEqual(report['leaderboard'],
+                                 [
+                                     {
+                                         'name': 'Sony 2',
+                                         'color': Color.RED,
+                                         'score': 24
+                                     }
+                                 ])
+
+                # Make sure game_over was called on the players
+                mock.assert_called_with(report['leaderboard'], report['cheating_players'],
+                                        report['failing_players'])
+
+            referee.subscribe_final_game_report(game_report_observer)
+            referee.start()
+
+    def test_start_success_move_exception(self):
+        # Tests a game in which a player throws an Exception in making a move
+        referee = Referee(3, 4, [self.__p15, self.__failing_player5])
+
+        with patch.object(self.__p15, 'game_over') as mock:
+            # Make up observer callback to validate game report
+            def game_report_observer(report: dict):
+                self.assertEqual(report['cheating_players'], [
+                ])
+                self.assertEqual(report['failing_players'], [
+                    Color.WHITE
+                ])
+
+                # All players should have the same score
+                self.assertEqual(report['leaderboard'],
+                                 [
+                                     {
+                                         'name': 'Sony 3',
+                                         'color': Color.RED,
+                                         'score': 28
+                                     }
+                                 ])
+
+                # Make sure game_over was called on the players
+                mock.assert_called_with(report['leaderboard'], report['cheating_players'],
+                                        report['failing_players'])
+
+            referee.subscribe_final_game_report(game_report_observer)
+            referee.start()
+
+    def test_start_success_placement_timeout(self):
+        # Tests a game in which a player times out in making a placement
+        referee = Referee(3, 4, [self.__p16, self.__failing_player6])
+
+        with patch.object(self.__p16, 'game_over') as mock:
+            # Make up observer callback to validate game report
+            def game_report_observer(report: dict):
+                self.assertEqual(report['cheating_players'], [
+                ])
+                self.assertEqual(report['failing_players'], [
+                    Color.WHITE
+                ])
+
+                # All players should have the same score
+                self.assertEqual(report['leaderboard'],
+                                 [
+                                     {
+                                         'name': 'Sony 4',
+                                         'color': Color.RED,
+                                         'score': 28
+                                     }
+                                 ])
+
+                # Make sure game_over was called on the players
+                mock.assert_called_with(report['leaderboard'], report['cheating_players'],
+                                        report['failing_players'])
+
+            referee.subscribe_final_game_report(game_report_observer)
+            referee.start()
+
+    def test_start_success_placement_exception(self):
+        # Tests a game in which a player throws an Exception in making a placement
+        referee = Referee(3, 4, [self.__p17, self.__failing_player7])
+
+        with patch.object(self.__p17, 'game_over') as mock:
+            # Make up observer callback to validate game report
+            def game_report_observer(report: dict):
+                self.assertEqual(report['cheating_players'], [
+                ])
+                self.assertEqual(report['failing_players'], [
+                    Color.WHITE
+                ])
+
+                # All players should have the same score
+                self.assertEqual(report['leaderboard'],
+                                 [
+                                     {
+                                         'name': 'Sony 5',
+                                         'color': Color.RED,
+                                         'score': 7
+                                     }
+                                 ])
+
+                # Make sure game_over was called on the players
+                mock.assert_called_with(report['leaderboard'], report['cheating_players'],
+                                        report['failing_players'])
+
+            referee.subscribe_final_game_report(game_report_observer)
+            referee.start()
