@@ -14,7 +14,7 @@ to go in the wrong order.
 moves unless all penguins had been placed.
     - The gist of the fix was to remove any checks in `place_avatar` and `move_avatar` about the status of the
     game (which indicated if all avatars had been placed).
-    - unit test: 
+    - unit test: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/2ab6084356020116dafca067cde47aca4e4848c4/Fish/Common/tests/state_tests.py#L380-L410
     - fix part 1: https://github.ccs.neu.edu/CS4500-F20/wellman/commit/06b285e749135677b54370a7ece5d2c80cb4704a#diff-3c0c742881289081d1c3cfb361c6da0eL371-L374
         - you might have to scroll down to 'state.py' and expand as git won't unravel / pan automatically
     - fix part 2: https://github.ccs.neu.edu/CS4500-F20/wellman/commit/06b285e749135677b54370a7ece5d2c80cb4704a#diff-3c0c742881289081d1c3cfb361c6da0eL315-L320
