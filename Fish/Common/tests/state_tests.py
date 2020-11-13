@@ -377,6 +377,38 @@ class StateTests(unittest.TestCase):
 
         self.assertSequenceEqual(state.placements, expected)
 
+    def test_move_avatar_success2(self):
+        # Test successful moves of two avatars for a state that is not reachable, but that
+        # could be setup for client-sided "experiments". The state involves two players
+        # with an invalid & unequal number of avatars.
+        state = State(self.__b, players=[
+            self.__p1,
+            self.__p2])
+
+        # Player 1 place
+        state.place_avatar(Color.RED,  Position(4, 0))
+        # Player 2 place
+        state.place_avatar(Color.WHITE,  Position(0, 1))
+        # Player 1 place
+        state.place_avatar(Color.RED,  Position(1, 0))
+
+        # Test a move
+        state.move_avatar(Position(1, 0), Position(0, 0))
+        expected = {
+                Color.RED: [Position(4, 0), Position(0, 0)],
+                Color.WHITE: [Position(0, 1)]
+        }
+
+        self.assertSequenceEqual(state.placements, expected)
+
+        # Test a second move
+        state.move_avatar(Position(0, 1), Position(2, 1))
+        expected = {Color.RED: [Position(4, 0), Position(0, 0)],
+                    Color.WHITE: [Position(2, 1)],
+                    }
+
+        self.assertSequenceEqual(state.placements, expected)
+
     def test_move_through_another_avatar(self):
         # Tests failing move due to an avatar in the way
         state = State(self.__b, players=[
