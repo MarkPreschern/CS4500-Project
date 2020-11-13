@@ -41,18 +41,28 @@ when the current player does not have valid moves
 
  - no separate function to handle a single turn (1 player making 1 move)
  
+    - fix: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/4c61de7e9c8cb445edf3561023b10543457d73f7/Fish/Admin/referee.py#L404-L428
+ 
  - Referee documentation does not address all abnormal player conditions
 (note that even failing to respond can already happen
  without remote communication, e.g. if the player goes into an infinite loop)
 What is missing:
-* calls to player methods that result in exceptions  
-* player possibly mutates referee's trusted data structures
+
+    * calls to player methods that result in exceptions  
+    
+    * player possibly mutates referee's trusted data structures
   -- no deduction for that
   (e.g. when `self.__state` is passed to the player
    in `current_player_obj.get_action(self.__state)`);
   if mutation of referee's data is impossible, document why that is the case
 
+    - fix: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/4c61de7e9c8cb445edf3561023b10543457d73f7/Fish/Admin/referee.py#L44-L49
+
 - no separate method/function that implements protection of calls to player
+
+    - fix: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/4c61de7e9c8cb445edf3561023b10543457d73f7/Fish/Admin/referee.py#L379-L402
 
 - unit tests only cover one abnormal condition (players failing in one way,
 but e.g. no exceptions)
+
+    - fix: https://github.ccs.neu.edu/CS4500-F20/quintana/blob/4c61de7e9c8cb445edf3561023b10543457d73f7/Fish/Admin/Other/tests/referee_tests.py#L423-L541
