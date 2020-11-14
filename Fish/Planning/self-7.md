@@ -47,10 +47,10 @@ critical elements of the project, though by no means all of them.
     - We had already addressed the point of having a proper definition & interpretation for GameTree and did not see the need to revisit it. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/commit/3744c1375e3b654b8b854e01b2eeb5e3fe90ea39#diff-a2b85550c39cc14472cf741196ccb390R10-R19).
 
 - a purpose statement for the "maximin strategy" functionality on trees
-    - We already had a purpose statement for "maximin" and only saw the need to clarify what would happen if the maximizing player became stuck and the search depth had not been reached. We admittedly forgot to add this to our TODO list as it was a very small change. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/commit/61981ac2ec08e44f119f4b0beb25817545bf3c0a#diff-8668b6307021688899b1d56141354730R73-R118) for fix. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Player/strategy.py#L105-L119) and [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Player/strategy.py#L69-L78) for the complete purpose statements for our "maximin strategy" implementation.
+    - We already had a purpose statement for "maximin" and only saw the need to clarify what would happen if the maximizing player became stuck and the search depth had not been reached. We admittedly forgot to add this to our TODO list as it was a very small change. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/commit/61981ac2ec08e44f119f4b0beb25817545bf3c0a#diff-8668b6307021688899b1d56141354730R73-R118) for fix. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/9981d988be3aa1b66594cae83d8beae39509b2b7/Fish/Player/strategy.py#L105-L119) and [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/9981d988be3aa1b66594cae83d8beae39509b2b7/Fish/Player/strategy.py#L69-L78) for the complete purpose statements for our "maximin strategy" implementation.
 
 - two unit tests for the "maximin" functionality 
-    - We already had unit tests for "maximin" and did not see the need to revisit them. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Player/Other/tests/strategy_tests.py#L196-L285) for our tests.
+    - We already had unit tests for "maximin" and did not see the need to revisit them. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/9981d988be3aa1b66594cae83d8beae39509b2b7/Fish/Player/Other/tests/strategy_tests.py#L196-L285) for our tests.
 
 ### General Issues
 
@@ -77,6 +77,6 @@ Explain your favorite "debt removal" action via a paragraph with
 supporting evidence (i.e. citations to git commit links, todo, `bug.md`
 and/or `reworked.md`).
 
-- Our favorite debt removal action was addressing the failing Staff integration tests from Milestone 6. It was not required for Milestone 7, but we decided to eliminate virtually all the technical debt we had left as we had no failing staff integration tests from previous milestones. It was an interesting bug because it pointed to an issue with our State that we thought we had fixed: shifting the player list to the next eligible player that can move. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blame/master/7/bugs.md#L1-L10) for more information.
+- Our favorite debt removal action was addressing the failing Staff integration tests from Milestone 6. It was not required for Milestone 7, but we decided to eliminate virtually all the technical debt we had left as we had no failing staff integration tests from previous milestones. It was an interesting bug because it pointed to an issue with our State that we thought we had fixed: shifting the player list to the next eligible player that can move. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blame/9981d988be3aa1b66594cae83d8beae39509b2b7/7/bugs.md#L1-L10) for more information.
 
 
