@@ -58,7 +58,7 @@ Point to at least two of the following three points of remediation:
 
 
 - the replacement of `null` for the representation of holes with an actual representation 
-    - We never represented holes using `null`, so there was no need to add this to our TODO list.
+    - We never represented holes using `null`, so there was no need to add this to our TODO list. See [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/master/Fish/Common/hole.py) for our latest Hole representation.
 
 - one name refactoring that replaces a misleading name with a self-explanatory name
     - We never had any knowledge of a method / variable or otherwise with a misleading name. We made a best effort to name our variables and functions appropriately. As such, we did not have to add this to our TODO list.
