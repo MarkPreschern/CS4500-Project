@@ -19,6 +19,7 @@ from game_tree_tests import GameTreeTests
 from strategy_tests import StrategyTests
 from player_tests import PlayerTests
 from referee_tests import RefereeTests
+from manager_tests import ManagerTests
 
 
 def _create_test_suite(test_cases: [unittest.TestCase]) -> unittest.TestSuite:
@@ -43,6 +44,7 @@ if __name__ == '__main__':
     # Make up collection of test cases
     tests = [BoardTests, RefereeTests, TileTests, HoleTests, AbstractTileTests, StateTests,
                 PlayerTests, GameTreeTests, StrategyTests, PlayerEntityTests]
+    # tests = [BoardTests, ManagerTests]
 
     # Make up runner to run suite
     runner = unittest.TextTestRunner()

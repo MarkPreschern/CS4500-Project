@@ -191,6 +191,10 @@ class Referee(object):
         self.__started = False
         # Make up flag to indicate whether the game has ended
         self.__game_over = False
+        # Initialize empty game reports that will be fleshed out at game end
+        self.__game_report = {}
+        # Initialize empty list of IPlayer to hold winners (players with the highest score in the game)
+        self.__winners = []
 
     @property
     def game_over(self) -> bool:
@@ -198,6 +202,20 @@ class Referee(object):
         Tells whether the game run by this referee has ended.
         """
         return self.__game_over
+
+    @property
+    def game_report(self) -> dict:
+        """
+        Retrieves game report for the game.
+        """
+        return self.__game_report.copy()
+
+    @property
+    def winners(self) -> [IPlayer]:
+        """
+        Retrieves the winners in this game.
+        """
+        return self.__winners
 
     def start(self) -> None:
         """
@@ -325,7 +343,7 @@ class Referee(object):
                     continue
 
                 # Get placement for player using a deep copy of state
-                placement = self.__timed_player_call(p, 'get_placement', args=(self.__state.deepcopy(),))
+                placement = Referee.__timed_player_call(p, 'get_placement', args=(self.__state.deepcopy(),))
 
                 # Validate placement received
                 if not isinstance(placement, Position):
@@ -398,7 +416,8 @@ class Referee(object):
         while self.__state.can_anyone_move():
             self.__run_turn()
 
-    def __timed_player_call(self, player: IPlayer, method_name: str, args: tuple):
+    @staticmethod
+    def __timed_player_call(player: IPlayer, method_name: str, args: tuple):
         """
         Attempts to call given method on a IPlayer object and return its return value. If a timeout
         or exception occurs, None is returned instead.
@@ -431,7 +450,7 @@ class Referee(object):
         current_player_obj = self.__get_player_by_color(self.__state.current_player)
         try:
             # Get action from player using a deep copy of state
-            action = self.__timed_player_call(current_player_obj, 'get_action', args=(self.__state.deepcopy(),))
+            action = Referee.__timed_player_call(current_player_obj, 'get_action', args=(self.__state.deepcopy(),))
             # If call was not successful or anything but an Action object was returned, the player failed
             if not isinstance(action, Action):
                 self.__kick_player(current_player_obj, PlayerKickReason.FAILING)
@@ -538,22 +557,29 @@ class Referee(object):
         observers.
         """
         # Retrieve report
-        report = self.__get_game_report()
+        self.__report = self.__get_game_report()
 
         # Set flag
         self.__game_over = True
 
+        # Determine highest score in the game
+        max_score = max([p['score'] for p in self.__report['leaderboard']])
+
+        # Determine winners with the highest scores
+        self.__winners = [p for p in self.__report['leaderboard'] if p['score'] == max_score]
+
         if Referee.DEBUG:
-            print(f'Game over report: {report}')
+            print(f'Game over report: {self.__report}')
 
         # Give each player a copy of the report
         for player in self.__players:
-            player.game_over(report['leaderboard'], report['cheating_players'], report['failing_players'])
+            player.game_over(self.__report['leaderboard'], self.__report['cheating_players'],
+                             self.__report['failing_players'])
 
         # Cycle over game update callbacks and call each observer with the report
         for callback in self.__game_over_callbacks:
             try:
-                callback(report)
+                callback(self.__report)
             except AssertionError as e:
                 # Raise assertion exceptions are these are used for testing
                 raise e

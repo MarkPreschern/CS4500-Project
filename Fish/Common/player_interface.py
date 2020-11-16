@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 from action import Action
 from position import Position
 from state import State
+from player_status import PlayerStatus
 
 
 class IPlayer(ABC):
@@ -76,6 +77,17 @@ class IPlayer(ABC):
         :param leaderboard:         ordered list of dicts containing player name, color and respective score
         :param cheating_players:    list of cheating players' colors (if any)
         :param failing_players:     list of failing players' colors (if any)
+        :return: None
+        """
+        pass
+
+    @abstractmethod
+    def status_update(self, status: PlayerStatus) -> None:
+        """
+        This method is meant to provide the player with a status of their ranking. It will tell the player
+        whether it's lost or won the game or tournament.
+
+        :param status: PlayerStatus to inform the player
         :return: None
         """
         pass

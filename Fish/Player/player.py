@@ -8,6 +8,7 @@ from color import Color
 from position import Position
 from state import State
 from action import Action
+from player_status import PlayerStatus
 
 
 class Player(IPlayer):
@@ -168,6 +169,16 @@ class Player(IPlayer):
 
         if not isinstance(failing_players, list):
             raise TypeError('Expected list for failing_players!')
+
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.
+
+    def status_update(self, status: PlayerStatus) -> None:
+        """
+        Implements PlayerInterface.status_update(PlayerStatus)
+        """
+        if not isinstance(status, PlayerStatus):
+            raise TypeError('Expected PlayerStatus for status!')
 
         # A real player may decide what to do with this information, but an A.I. could
         # care less.

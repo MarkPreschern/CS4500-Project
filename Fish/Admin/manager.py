@@ -5,15 +5,16 @@ sys.path.append('../')
 sys.path.append('../Admin/Other/')
 
 from player_interface import IPlayer
+from manager_interface import IManager
 from referee import Referee
 import constants as ct
 
 
-class Manager(object):
+class Manager(IManager):
     """
-    PURPOSE:        The purpose of this class is to run a tournament of games of Fish for a given set of players
-                    (IPlayer objects) and determine the winner(s). The set of players is assumed to be in order of
-                    increasing age and may consist of any player implementing IPlayer.
+    PURPOSE:        The purpose of this class is to implement IManager to run a tournament of games of Fish
+                    (IPlayer objects) and determine the winner(s) for a given set of players. The set of players is
+                    assumed to be in order of increasing age and may consist of any player implementing IPlayer.
 
     INTERPRETATION: The manager uses a knock-out elimination system to determine which players may proceed to the
                     next round. A round is simply a set of Fish games that start simultaneously and end with the
@@ -54,6 +55,24 @@ class Manager(object):
 
         self.__players = players
 
+        # Initialize list to hold last round's winners
+        self.__last_round_winners = []
+
+    def run_tournament(self):
+        """
+        Implements IManager.run_tournament()
+        """
+        # Run first run & gets players qualified to next
+        qualified_players = self.__run_round()
+
+        while len(qualified_players) > 1:
+            # Get next round's players
+            qualified_players = self.__run_round()
+
+            #if se
+
+            self.__last_round_winners = qualified_players
+
     def __run_round(self) -> [IPlayer]:
         """
         Runs a round of the tournament and returns list of
@@ -74,7 +93,7 @@ class Manager(object):
             for k in range(len(games), 0, -1):
                 if games[k].game_over:
                     # Extend list of qualified players to include this game's winners
-                    qualified_players.extend(games[k].get_winners())
+                    qualified_players.extend(games[k].winners)
                     # Remove game from list
                     games.remove(games[k])
 
