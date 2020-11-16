@@ -117,7 +117,7 @@ class Referee(object):
     # Initialize player timeout (number of seconds a player is allowd to take to make a move/placement)
     PLAYER_TIMEOUT = 1
 
-    def __init__(self, rows: int, cols: int, players: [IPlayer]) -> None:
+    def __init__(self, rows: int, cols: int, players: [IPlayer], fish_no: int = None) -> None:
         """
         Initializes a referee for a game with a board of size row x col and a given (ordered) list of IPlayer
         objects.
@@ -125,6 +125,7 @@ class Referee(object):
         :param rows: row dimension of the board
         :param cols: column dimension of the board
         :param players: list of IPlayer objects sorted in increasing order of age
+        :param fish_no: Number of fish to be placed on each tile on the board
         :return: None
         """
         # Validate params
@@ -150,6 +151,13 @@ class Referee(object):
         if cols * rows < len(players):
             raise ValueError('Board dimensions are too small to accomodate all players!')
 
+        # Make sure fish is between 1 and 5 or is equal to None (default value, means that the user didn't specify a
+        # fish number.
+        if fish_no is not None and\
+                (not isinstance(fish_no, int) or fish_no < ct.MIN_FISH_PER_TILE or fish_no > ct.MAX_FISH_PER_TILE):
+            raise ValueError('Expected positive int between 1 and 5 inclusive for fish!')
+
+
         # Assign each player the color that correspond to their position in the player list
         for k in range(len(players)):
             players[k].color = Color(k)
@@ -172,7 +180,7 @@ class Referee(object):
         self.__game_over_callbacks = []
 
         # Make up a board
-        self.__board = self.__make_board(cols, rows)
+        self.__board = self.__make_board(cols, rows, fish_no)
 
         # Make up state from board & list of PlayerEntity objects
         self.__state = State(self.__board, [PlayerEntity(p.name, p.color) for p in players])
@@ -254,7 +262,7 @@ class Referee(object):
         """
         return self.__started
 
-    def __make_board(self, cols: int, rows: int) -> Board:
+    def __make_board(self, cols: int, rows: int, fish_no: int) -> Board:
         """
         Makes a board with the given dimensions. It also applies a difficulty factor to
         the board by removing at most DIFFICULTY_FACTOR tiles. What and how many tiles
@@ -262,10 +270,15 @@ class Referee(object):
 
         :param cols: number of columns for the board
         :param rows: number of rows for the board
+        :param fish: number of fish to be placed on each tile on the board
         :return: resulting Board object
         """
+
+        # number of fish as a range or set number
+        fish_no = randrange(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE) if fish_no is None else fish_no
+
         # Make up board
-        board = Board.homogeneous(randrange(ct.MIN_FISH_PER_TILE, ct.MAX_FISH_PER_TILE), rows, cols)
+        board = Board.homogeneous(fish_no, rows, cols)
         # Determine number of tiles to remove given difficulty factor
         tiles_to_remove = min(Referee.DIFFICULTY_FACTOR,
                               rows * cols - len(self.__players) * self.__avatars_per_player)

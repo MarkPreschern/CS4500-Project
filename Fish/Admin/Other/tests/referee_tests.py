@@ -127,6 +127,17 @@ class RefereeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Referee(1, 2, [self.__p1, self.__p2, self.__p3, self.__p4])
 
+    def test_init_fail8(self):
+        # Tests failing init due to improper fish number 0
+        with self.assertRaises(ValueError):
+            Referee(5, 5, [self.__p1, self.__p2, self.__p3, self.__p4], 0)
+
+    def test_init_fail10(self):
+        # Tests failing init due to improper fish number 6
+        with self.assertRaises(ValueError):
+            Referee(5, 5, [self.__p1, self.__p2, self.__p3, self.__p4], 6)
+
+
     def test_init_success1(self):
         # Tests successful 4-player init
         referee = Referee(2, 4, [self.__p1, self.__p2, self.__p3, self.__p4])
