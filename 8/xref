@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+import argparse
+import sys
+import unittest
+
+sys.path.append("Other/")
+
+from xref import xref
+from xref_tests import XRefTests
+
+
+if __name__ == "__main__":
+    # Add optional argument to enable unit testing
+    parser = argparse.ArgumentParser(description="Run xref or unit tests")
+    parser.add_argument("-u", "--unit", help="Run unit tests", action="store_true")
+
+    args = vars(parser.parse_args())
+
+    # Reset the command line arguments to prevent "unit" argument from being
+    # passed to xref
+    sys.argv = ["xref"]
+
+    # If unit argument was provided, run the unit tests. Otherwise, call xref
+    if args['unit']:
+        unittest.main()
+    else:
+        xref()
