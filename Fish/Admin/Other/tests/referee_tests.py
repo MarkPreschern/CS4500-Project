@@ -254,6 +254,7 @@ class RefereeTests(unittest.TestCase):
         referee.start()
 
         self.assertTrue(referee.started)
+        self.assertCountEqual(referee.winners, [self.__p2])
 
     def test_start_success2(self):
         # Tests a game in which a player cheats by making an illegal placement
@@ -262,7 +263,7 @@ class RefereeTests(unittest.TestCase):
         # Make up observer callback to validate game report
         def game_report_observer(report: dict):
             self.assertEqual(report['cheating_players'], [
-                Color.BROWN
+                self.__cheating_player1
             ])
             self.assertEqual(report['failing_players'], [])
 
@@ -283,6 +284,7 @@ class RefereeTests(unittest.TestCase):
 
         referee.subscribe_final_game_report(game_report_observer)
         referee.start()
+        self.assertEqual(referee.winners, [self.__p4])
 
     def test_start_success3(self):
         # Tests a game in which a player cheats by making an illegal action (moving in place)
@@ -291,7 +293,7 @@ class RefereeTests(unittest.TestCase):
         # Make up observer callback to validate game report
         def game_report_observer(report: dict):
             self.assertEqual(report['cheating_players'], [
-                Color.WHITE
+                self.__cheating_player3
             ])
             self.assertEqual(report['failing_players'], [])
 
@@ -306,6 +308,7 @@ class RefereeTests(unittest.TestCase):
 
         referee.subscribe_final_game_report(game_report_observer)
         referee.start()
+        self.assertEqual(referee.winners, [self.__p6])
 
     def test_start_success4(self):
         # Tests a game in which a player cheats by making an illegal action
@@ -317,7 +320,7 @@ class RefereeTests(unittest.TestCase):
         # Make up observer callback to validate game report
         def game_report_observer(report: dict):
             self.assertEqual(report['cheating_players'], [
-                Color.BROWN, Color.BLACK
+                self.__cheating_player4, self.__cheating_player2
             ])
             self.assertEqual(report['failing_players'], [])
 
@@ -338,6 +341,7 @@ class RefereeTests(unittest.TestCase):
 
         referee.subscribe_final_game_report(game_report_observer)
         referee.start()
+        self.assertCountEqual(referee.winners, [self.__p7, self.__p8])
 
     def test_start_success5(self):
         # Tests a game in which a player fails to make a placement
@@ -348,7 +352,7 @@ class RefereeTests(unittest.TestCase):
         def game_report_observer(report: dict):
             self.assertEqual(report['cheating_players'], [])
             self.assertEqual(report['failing_players'], [
-                Color.BROWN
+                self.__failing_player1
             ])
 
             # All players should have the same score
@@ -368,6 +372,7 @@ class RefereeTests(unittest.TestCase):
 
         referee.subscribe_final_game_report(game_report_observer)
         referee.start()
+        self.assertCountEqual(referee.winners, [self.__p9])
 
     def test_start_success6(self):
         # Tests a game in which a player fails to make a move
@@ -377,7 +382,7 @@ class RefereeTests(unittest.TestCase):
         def game_report_observer(report: dict):
             self.assertEqual(report['cheating_players'], [])
             self.assertEqual(report['failing_players'], [
-                Color.WHITE
+                self.__failing_player2
             ])
 
             # All players should have the same score
@@ -397,6 +402,7 @@ class RefereeTests(unittest.TestCase):
 
         referee.subscribe_final_game_report(game_report_observer)
         referee.start()
+        self.assertCountEqual(referee.winners, [self.__p11])
 
     def test_start_success7(self):
         # Tests a game in which a player cheats (by trying to move its first avatar to its second
@@ -407,10 +413,10 @@ class RefereeTests(unittest.TestCase):
             # Make up observer callback to validate game report
             def game_report_observer(report: dict):
                 self.assertEqual(report['cheating_players'], [
-                    Color.BROWN
+                    self.__cheating_player5
                 ])
                 self.assertEqual(report['failing_players'], [
-                    Color.WHITE
+                    self.__failing_player3
                 ])
 
                 # All players should have the same score
@@ -429,6 +435,7 @@ class RefereeTests(unittest.TestCase):
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
+            self.assertCountEqual(referee.winners, [self.__p13])
 
     def test_start_success_move_timeout(self):
         # Tests a game in which a player times out in making a move
@@ -440,7 +447,7 @@ class RefereeTests(unittest.TestCase):
                 self.assertEqual(report['cheating_players'], [
                 ])
                 self.assertEqual(report['failing_players'], [
-                    Color.WHITE
+                    self.__failing_player4
                 ])
 
                 # All players should have the same score
@@ -459,6 +466,7 @@ class RefereeTests(unittest.TestCase):
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
+            self.assertCountEqual(referee.winners, [self.__p14])
 
     def test_start_success_move_exception(self):
         # Tests a game in which a player throws an Exception in making a move
@@ -470,7 +478,7 @@ class RefereeTests(unittest.TestCase):
                 self.assertEqual(report['cheating_players'], [
                 ])
                 self.assertEqual(report['failing_players'], [
-                    Color.WHITE
+                    self.__failing_player5
                 ])
 
                 # All players should have the same score
@@ -489,6 +497,7 @@ class RefereeTests(unittest.TestCase):
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
+            self.assertCountEqual(referee.winners, [self.__p15])
 
     def test_start_success_placement_timeout(self):
         # Tests a game in which a player times out in making a placement
@@ -500,7 +509,7 @@ class RefereeTests(unittest.TestCase):
                 self.assertEqual(report['cheating_players'], [
                 ])
                 self.assertEqual(report['failing_players'], [
-                    Color.WHITE
+                    self.__failing_player6
                 ])
 
                 # All players should have the same score
@@ -519,6 +528,7 @@ class RefereeTests(unittest.TestCase):
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
+            self.assertCountEqual(referee.winners, [self.__p16])
 
     def test_start_success_placement_exception(self):
         # Tests a game in which a player throws an Exception in making a placement
@@ -530,7 +540,7 @@ class RefereeTests(unittest.TestCase):
                 self.assertEqual(report['cheating_players'], [
                 ])
                 self.assertEqual(report['failing_players'], [
-                    Color.WHITE
+                    self.__failing_player7
                 ])
 
                 # All players should have the same score
@@ -549,3 +559,4 @@ class RefereeTests(unittest.TestCase):
 
             referee.subscribe_final_game_report(game_report_observer)
             referee.start()
+            self.assertCountEqual(referee.winners, [self.__p17])

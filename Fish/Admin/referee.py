@@ -153,10 +153,9 @@ class Referee(object):
 
         # Make sure fish is between 1 and 5 or is equal to None (default value, means that the user didn't specify a
         # fish number.
-        if fish_no is not None and\
+        if fish_no is not None and \
                 (not isinstance(fish_no, int) or fish_no < ct.MIN_FISH_PER_TILE or fish_no > ct.MAX_FISH_PER_TILE):
             raise ValueError('Expected positive int between 1 and 5 inclusive for fish!')
-
 
         # Assign each player the color that correspond to their position in the player list
         for k in range(len(players)):
@@ -166,10 +165,10 @@ class Referee(object):
         self.__players: [IPlayer] = players
         self.__avatars_per_player = 6 - len(players)
 
-        # Make up list of Color holding the colors of failing players
-        self.__failing_players: [Color] = []
-        # Make up list of Color holding the colors of cheating players
-        self.__cheating_players: [Color] = []
+        # Make up list of IPlayer holding failing players
+        self.__failing_players: [IPlayer] = []
+        # Make up list of IPlayer holding cheating players
+        self.__cheating_players: [IPlayer] = []
 
         # Initialize game update callbacks as a list of callable items called every time
         # the state of the game changes
@@ -250,9 +249,9 @@ class Referee(object):
         return pickle.loads(pickle.dumps(self.__players))
 
     @property
-    def cheating_players(self) -> [Color]:
+    def cheating_players(self) -> [IPlayer]:
         """
-        Returns collection of Color objects corresponding to cheating
+        Returns collection of IPlayer objects corresponding to cheating
         players.
 
         :return: resulting list of Color
@@ -260,9 +259,9 @@ class Referee(object):
         return self.__cheating_players
 
     @property
-    def failing_players(self) -> [Color]:
+    def failing_players(self) -> [IPlayer]:
         """
-        Returns collection of Color objects corresponding to failing
+        Returns collection of IPlayer objects corresponding to failing
         players.
 
         :return: resulting list of Color
@@ -338,7 +337,7 @@ class Referee(object):
             # wish to place their avatars
             for p in self.__players:
                 # Check if player has either failed or cheated; if they have, skip 'em over
-                if p.color in self.__failing_players or p.color in self.__cheating_players:
+                if p in self.__failing_players or p in self.__cheating_players:
                     avatars_to_place -= 1
                     continue
 
@@ -393,9 +392,9 @@ class Referee(object):
             print(f'Kicking {player_obj.color} for reason {reason}')
 
         if reason == PlayerKickReason.CHEATING:
-            self.__cheating_players.append(player_obj.color)
+            self.__cheating_players.append(player_obj)
         else:
-            self.__failing_players.append(player_obj.color)
+            self.__failing_players.append(player_obj)
 
         # Notify player WHY they're being kicked
         player_obj.kick(reason.name)
@@ -538,7 +537,7 @@ class Referee(object):
         # Cycle over rule-abiding players and collect their name, color & score
         for p in self.__state.players:
             # Only add player to leaderboard if they were rule-abiding
-            if p.color not in self.__failing_players and p.color not in self.__cheating_players:
+            if p not in self.__failing_players and p not in self.__cheating_players:
                 leaderboard.append({'name': p.name, 'color': p.color, 'score': p.score})
 
         # Sort leader board in decreasing order of score
@@ -550,6 +549,11 @@ class Referee(object):
             'failing_players': self.__failing_players,
             'leaderboard': leaderboard
         }
+
+    def __get_player_by_name(self, name: str) -> IPlayer:
+        for p in self.__players:
+            if p.name == name:
+                return p
 
     def __fire_game_over(self) -> None:
         """
@@ -565,8 +569,10 @@ class Referee(object):
         # Determine highest score in the game
         max_score = max([p['score'] for p in self.__report['leaderboard']])
 
-        # Determine winners with the highest scores
-        self.__winners = [p for p in self.__report['leaderboard'] if p['score'] == max_score]
+        # Determine names of winners
+        winner_names = [p['name'] for p in self.__report['leaderboard'] if p['score'] == max_score]
+        # Determine winners with the highest scores by name
+        self.__winners = [self.__get_player_by_name(name) for name in winner_names]
 
         if Referee.DEBUG:
             print(f'Game over report: {self.__report}')

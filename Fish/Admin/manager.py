@@ -6,8 +6,10 @@ sys.path.append('../Admin/Other/')
 
 from player_interface import IPlayer
 from manager_interface import IManager
+from player_status import PlayerStatus
 from referee import Referee
 import constants as ct
+from typing import Callable
 
 
 class Manager(IManager):
@@ -32,7 +34,8 @@ class Manager(IManager):
                     each game, the player that proceeds onto the next round is the player that has collected the
                     most fish. If multiple players have collected the same highest number of fish, they all proceed
                     onto the next round. It is also conceivable that no players proceed to the next round if all players
-                    have been eliminate in the course of a game (by cheating or failing).
+                    have been eliminate in the course of a game (by cheating or failing). Moreover, a player that loses
+                    a game, loses the tournament.
 
                     The tournament ends when two rounds produce the exact same winners in a row, there are too few
                     players for a single game or when the final game of all outstanding players has been played. At
@@ -55,51 +58,109 @@ class Manager(IManager):
 
         self.__players = players
 
-        # Initialize list to hold last round's winners
-        self.__last_round_winners = []
+        # Initialize list to hold tournament winners
+        self.__tournament_winners = []
+        # Initialize list to hold tournament losers
+        self.__tournament_losers = []
+
+    def subscribe_tournament_updates(self, callback: Callable) -> None:
+        pass
+
+    def get_tournament_statistics(self) -> dict:
+        pass
 
     def run_tournament(self):
         """
         Implements IManager.run_tournament()
         """
-        # Run first run & gets players qualified to next
-        qualified_players = self.__run_round()
+        # Run first round & get players qualified to next
+        winners, losers = self.__run_round()
 
-        while len(qualified_players) > 1:
-            # Get next round's players
-            qualified_players = self.__run_round()
+        # Run tournament so long as enough players remain to warrant another round or until two consecutive
+        # rounds have produced the same winners.
+        while len(winners) > 1:
+            # Get this round's winners & losers
+            winners, losers = self.__run_round()
+            # Initialize list to hold IPlayer objects that fail to acknowledge that they won
+            failing_winners = []
 
-            #if se
+            # Notify this round's winners that they won
+            for winner in winners:
+                try:
+                    winner.status_update(PlayerStatus.WON_GAME)
+                except:
+                    # If an exception was thrown the winner becomes a loser.
+                    failing_winners.append(winner)
 
-            self.__last_round_winners = qualified_players
+            # Remove failing winners from winners and add them to losers
+            for failing_winner in failing_winners:
+                winners.remove(failing_winner)
+                losers.append(failing_winner)
+
+            # Notify this round's losers that they've lost
+            for loser in losers:
+                try:
+                    loser.status_update(PlayerStatus.LOST_GAME)
+                except:
+                    # Nothing to do.
+                    pass
+
+            # Trim down set of players to winners
+            self.__players = winners
+
+            # See if the previous & current round have produced the same winners
+            if set(self.__players) == set(winners):
+                # Tournament is over.
+                break
+
+        # Outstanding players have won the tournament
+        for player in self.__players:
+            try:
+                player.status_update(PlayerStatus.WON_TOURNAMENT)
+            except:
+                # If a winning player throws an exception, they become a loser
+                player.status_update(PlayerStatus.LOST_GAME)
+                self.__tournament_losers.append(player)
+            else:
+                self.__tournament_winners.append(player)
 
     def __run_round(self) -> [IPlayer]:
         """
         Runs a round of the tournament and returns list of
         IPlayer objects qualified to the next round of the tournament.
 
-        :return: resulting list of IPlayer objects representing winners of this round
+        :return: resulting IPlayer lists of winning and losing players
         """
         # Make round (list of Referee)
         games = self.__make_round_games()
 
-        # Initialize list to contain IPlayer objects qualified to next round
-        qualified_players = []
+        # Initialize list to contain IPlayer objects that won
+        winners = []
+        # Initialize list to contain IPlayer objects that lost
+        losers = []
 
         games_in_progress = len(games)
 
         while games_in_progress > 0:
             # Cycle over games
-            for k in range(len(games), 0, -1):
+            for k in range(len(games) - 1, -1, -1):
+                # Start game if needed
+                if not games[k].started:
+                    games[k].start()
+
+                # Check if game over
                 if games[k].game_over:
                     # Extend list of qualified players to include this game's winners
-                    qualified_players.extend(games[k].winners)
+                    winners.extend(games[k].winners)
+                    # Extend list of losers to include failing & cheating players
+                    losers.extend(games[k].cheating_players)
+                    losers.extend(games[k].failing_players)
                     # Remove game from list
                     games.remove(games[k])
 
             games_in_progress = len(games)
 
-        return qualified_players
+        return winners, losers
 
     def __make_round_games(self):
         """
