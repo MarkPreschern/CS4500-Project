@@ -29,19 +29,15 @@ class Player(IPlayer):
                     Player interface.  When this happens the player' avatars are removed (the tiles upon which they
                     rested are not) and all communication with said player is terminated.
     """
-    # Depth for our mini-max search to find the next best move. See Strategy for details.
-    SEARCH_DEPTH = 2
 
-    def __init__(self, name: str, color: Color = Color.UNDEFINED) -> None:
+    def __init__(self, name: str, color: Color = Color.UNDEFINED, search_depth: int = 1) -> None:
         """
         This method is used to inform the player about the initial setup of the game before
         any placements are made. More specifically it provides it with its name and its color.
 
         :param name:        player's name
         :param color:       player's color
-        :param state:       a State object that includes the state of the board,
-                            the current placements of the penguins, knowledge about the players,
-                            and the order in which they play
+        :param search_depth depth for our mini-max search to find the next best move. See Strategy for details.
         :return: None
         """
         # Validate params
@@ -51,9 +47,13 @@ class Player(IPlayer):
         if not isinstance(color, Color):
             raise TypeError('Expected Color for color!')
 
+        if not isinstance(search_depth, int) or search_depth < 1:
+            raise TypeError('Expected an int greater than zero for search_depth!')
+
         # Set properties
         self.__color = color
         self.__name = name
+        self.__search_depth = search_depth
         # Initialize property to hold reason player was kicked
         self.__kicked_reason = ''
         # Initialize state to a place holder
@@ -154,7 +154,7 @@ class Player(IPlayer):
         # Update internal state
         self.__state = state
 
-        return Strategy.get_best_action(state, Player.SEARCH_DEPTH)
+        return Strategy.get_best_action(state, self.__search_depth)
 
     def game_over(self, leaderboard: list, cheating_players: list, failing_players: list) -> None:
         """

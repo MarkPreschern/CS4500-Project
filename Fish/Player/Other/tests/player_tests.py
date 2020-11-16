@@ -12,7 +12,6 @@ from board import Board
 from color import Color
 from position import Position
 from state import State
-from exceptions.NonExistentPlayerException import NonExistentPlayerException
 from unittest.mock import patch
 
 
@@ -72,6 +71,16 @@ class PlayerTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             Player(123, Color.BLACK)
 
+    def test_init_fail3(self):
+        # Tests init failing due to invalid search depth
+        with self.assertRaises(TypeError):
+            Player('bob', Color.BLACK, '1')
+
+    def test_init_fail4(self):
+        # Tests init failing due to invalid search depth value
+        with self.assertRaises(TypeError):
+            Player('bob', Color.BLACK, 0)
+
     def test_init_success(self):
         # Tests successful init
         p =  Player('drew', Color.BROWN)
@@ -120,7 +129,7 @@ class PlayerTests(unittest.TestCase):
 
         # Make sure Strategy.get_action was called with the
         # right params
-        mock.assert_called_with(self.__state1, Player.SEARCH_DEPTH)
+        mock.assert_called_with(self.__state1, p._Player__search_depth)
         # Make sure state got updated
         self.assertEqual(p.state, self.__state1)
 

@@ -29,8 +29,6 @@ from unittest.mock import patch
 class RefereeTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(RefereeTests, self).__init__(*args, **kwargs)
-        # Make depth one to keep run time to a minimum
-        Player.SEARCH_DEPTH = 1
 
         self.__p1 = Player('Bob')
         self.__p2 = Player('Jim')
