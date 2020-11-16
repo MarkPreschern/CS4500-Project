@@ -181,6 +181,15 @@ class Referee(object):
 
         # Make up flag to indicate whether the game has started
         self.__started = False
+        # Make up flag to indicate whether the game has ended
+        self.__game_over = False
+
+    @property
+    def game_over(self) -> bool:
+        """
+        Tells whether the game run by this referee has ended.
+        """
+        return self.__game_over
 
     def start(self) -> None:
         """
@@ -517,6 +526,9 @@ class Referee(object):
         """
         # Retrieve report
         report = self.__get_game_report()
+
+        # Set flag
+        self.__game_over = True
 
         if Referee.DEBUG:
             print(f'Game over report: {report}')

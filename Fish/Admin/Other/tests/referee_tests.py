@@ -2,9 +2,6 @@ import unittest
 import sys
 import random
 
-from position import Position
-from state import State
-
 sys.path.append('Player/')
 sys.path.append('Admin/')
 sys.path.append('Admin/Other')
@@ -14,6 +11,8 @@ sys.path.append('../../../Common')
 from referee import Referee
 from player import Player
 from color import Color
+from position import Position
+from state import State
 from cheating_player1 import CheatingPlayer1
 from cheating_player2 import CheatingPlayer2
 from cheating_player3 import CheatingPlayer3
