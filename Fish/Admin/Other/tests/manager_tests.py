@@ -1,6 +1,8 @@
 import unittest
 import sys
 from unittest.mock import patch
+import random
+
 
 sys.path.append('Player/')
 sys.path.append('Admin/')
@@ -10,6 +12,7 @@ sys.path.append('../../../Common')
 
 from manager import Manager
 from player import Player
+from referee import Referee
 
 
 class ManagerTests(unittest.TestCase):
@@ -33,6 +36,12 @@ class ManagerTests(unittest.TestCase):
         self.__p15 = Player('Sony 3')
         self.__p16 = Player('Sony 4')
         self.__p17 = Player('Sony 5')
+
+        # Set seed to add some predictability as to what kind of board
+        # the referee is gonna setup
+        random.seed(900)
+
+        Referee.DIFFICULTY_FACTOR = 2
 
     def test_divide_players1(self):
         # Tests a 6 = 4 + 2 player divide
@@ -115,5 +124,17 @@ class ManagerTests(unittest.TestCase):
 
         # Make sure we have the right number of games
         self.assertEqual(len(winners), 1)
-        self.assertCountEqual(winners, [self.__p4])
-        # self.assertCountEqual(losers, [self.__p2, self.__p3, self.__p4])
+        self.assertCountEqual(winners, [self.__p1])
+        self.assertCountEqual(losers, [self.__p2, self.__p3, self.__p4])
+
+    def test_run_round2(self):
+        # Tests the running of a 2-game round
+        manager = Manager([self.__p1, self.__p2, self.__p3, self.__p4, self.__p5,
+                           self.__p6, self.__p7, self.__p8])
+
+        winners, losers = manager._Manager__run_round()
+
+        # Make sure we have the right number of games
+        self.assertEqual(len(winners), 1)
+        self.assertCountEqual(winners, [self.__p1])
+        self.assertCountEqual(losers, [self.__p2, self.__p3, self.__p4])

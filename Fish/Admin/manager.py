@@ -152,9 +152,8 @@ class Manager(IManager):
                 if games[k].game_over:
                     # Extend list of qualified players to include this game's winners
                     winners.extend(games[k].winners)
-                    # Extend list of losers to include failing & cheating players
-                    losers.extend(games[k].cheating_players)
-                    losers.extend(games[k].failing_players)
+                    # Extend list of losers to include this game's losers
+                    losers.extend(games[k].losers)
                     # Remove game from list
                     games.remove(games[k])
 

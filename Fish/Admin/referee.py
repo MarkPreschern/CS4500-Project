@@ -78,15 +78,15 @@ class Referee(object):
                     move, or is kicked). They can also subscribe to an end game report via `subscribe_final_game_report`
                     to receive a copy of the final game report.
 
-                    The final game report encompasses a list of the cheating players' colors, a list of the failing
-                    players' colors and a list of dictionary objects sorted in decreasing order of score,
+                    The final game report encompasses a list of the cheating players, a list of the failing
+                    players and a list of dictionary objects sorted in decreasing order of score,
                     each object containing a rule-abiding player's name, color and score.
 
                     Here's an example of what the report may look like:
 
                     {
-                        'cheating_players': [Color.BROWN],
-                        'failing_players': [Color.RED],
+                        'cheating_players': [IPlayer],
+                        'failing_players': [IPlayer],
                         'leaderboard': [
                             {'name': 'Winner', 'color': Color.BLACK, 'score': 99},
                             {'name': 'Runner-up', 'color': Color.WHITE, 'score': 40}
@@ -192,8 +192,10 @@ class Referee(object):
         self.__game_over = False
         # Initialize empty game reports that will be fleshed out at game end
         self.__game_report = {}
-        # Initialize empty list of IPlayer to hold winners (players with the highest score in the game)
+        # Initialize empty list of IPlayer to hold winners (player(s) with the highest score in the game)
         self.__winners = []
+        # Initialize empty list of IPlayer to hold losers
+        self.__losers = []
 
     @property
     def game_over(self) -> bool:
@@ -215,6 +217,13 @@ class Referee(object):
         Retrieves the winners in this game.
         """
         return self.__winners
+
+    @property
+    def losers(self) -> [IPlayer]:
+        """
+        Retrieves the losers in this game.
+        """
+        return self.__losers
 
     def start(self) -> None:
         """
@@ -571,8 +580,15 @@ class Referee(object):
 
         # Determine names of winners
         winner_names = [p['name'] for p in self.__report['leaderboard'] if p['score'] == max_score]
+        loser_names = [p['name'] for p in self.__report['leaderboard'] if p['score'] < max_score]
+
         # Determine winners with the highest scores by name
         self.__winners = [self.__get_player_by_name(name) for name in winner_names]
+        # Determine losers by adding players with scores < highest_score, failing & cheating players
+        self.__losers = [self.__get_player_by_name(name) for name in loser_names]
+
+        self.__losers.extend(self.__report['failing_players'])
+        self.__losers.extend(self.__report['cheating_players'])
 
         if Referee.DEBUG:
             print(f'Game over report: {self.__report}')
