@@ -7,7 +7,7 @@ import unittest
 sys.path.append("Other/")
 
 from xref import xref
-from xref_tests import XRefTests
+# from xref_tests import XRefTests
 
 
 if __name__ == "__main__":
