@@ -115,7 +115,7 @@ class Referee(object):
     # Initialize difficulty factor
     DIFFICULTY_FACTOR = 2
     # Initialize player timeout (number of seconds a player is allowd to take to make a move/placement)
-    PLAYER_TIMEOUT = 1
+    PLAYER_TIMEOUT = 5
 
     def __init__(self, rows: int, cols: int, players: [IPlayer], fish_no: int = None) -> None:
         """

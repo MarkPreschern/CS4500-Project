@@ -1,0 +1,9 @@
+{
+  "row": 5,
+  "column": 4,
+  "players": [
+    ["Maximilliana", 1],
+    ["Maximilliano", 1]
+  ],
+  "fish": 3
+}

@@ -56,4 +56,4 @@ def xref():
     referee.start()
 
     # Print referee winners
-    print([winner.name for winner in referee.winners])
+    print(sorted([winner.name for winner in referee.winners]))
