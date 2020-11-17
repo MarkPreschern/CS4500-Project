@@ -82,12 +82,23 @@ class IPlayer(ABC):
         pass
 
     @abstractmethod
-    def status_update(self, status: PlayerStatus) -> None:
+    def status_update(self, status: PlayerStatus) -> bool:
         """
         This method is meant to provide the player with a status of their ranking. It will tell the player
-        whether it's lost or won the game or tournament.
+        whether it's lost or won the game or tournament. Player must respond with True in a timely manner
+        or else it is removed.
 
         :param status: PlayerStatus to inform the player
-        :return: None
+        :return: boolean indicating whether player accepts status or not
+        """
+        pass
+
+    @abstractmethod
+    def tournament_has_started(self) -> bool:
+        """
+        This method is meant to inform the player that the tournament it is partaking in has started. Player must
+        respond with True in a timely manner or else it is removed.
+
+        :return: boolean indicating whether player accepts status or not
         """
         pass

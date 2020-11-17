@@ -8,7 +8,6 @@ sys.path.append('Common/tests')
 sys.path.append('Player/Other/tests')
 sys.path.append('Admin/Other/tests')
 
-
 from board_tests import BoardTests
 from tile_tests import TileTests
 from hole_tests import HoleTests
@@ -42,9 +41,9 @@ def _create_test_suite(test_cases: [unittest.TestCase]) -> unittest.TestSuite:
 
 if __name__ == '__main__':
     # Make up collection of test cases
-    tests = [BoardTests, RefereeTests, TileTests, HoleTests, AbstractTileTests, StateTests,
-                PlayerTests, GameTreeTests, StrategyTests, PlayerEntityTests]
-    # tests = [BoardTests, ManagerTests]
+    tests = [BoardTests, TileTests, HoleTests, AbstractTileTests, StateTests,
+             PlayerTests, GameTreeTests, StrategyTests, PlayerEntityTests, RefereeTests, ManagerTests]
+    #tests = [BoardTests, ManagerTests]
 
     # Make up runner to run suite
     runner = unittest.TextTestRunner()

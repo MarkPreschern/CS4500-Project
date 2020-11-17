@@ -20,7 +20,7 @@ from color import Color
 from exceptions.NonExistentPlayerException import NonExistentPlayerException
 import pickle
 from game_tree import GameTree
-from func_timeout import func_timeout
+import utils
 
 
 class Referee(object):
@@ -109,6 +109,13 @@ class Referee(object):
                     players are synchronized (by calling sync on them with the game state) and observers are notified
                     with a version of the latest one. This keeps all parties informed and the game tree up to date for
                     rule-checking.
+
+    DEFINITIONS:    A losing player is one that does not obtain the largest number of fish in the game, or is one that
+                    cheats or fails.
+
+                    A winning player is one that obtains the largest number of fish in the game (and does not cheat).
+                    There can be multiple winning players if multiple players obtain the same largest number of fish
+                    in the game.
     """
     DEBUG = False
 
@@ -190,8 +197,8 @@ class Referee(object):
         self.__started = False
         # Make up flag to indicate whether the game has ended
         self.__game_over = False
-        # Initialize empty game reports that will be fleshed out at game end
-        self.__game_report = {}
+        # Initialize empty game report that will be fleshed out at game end
+        self.__report = {}
         # Initialize empty list of IPlayer to hold winners (player(s) with the highest score in the game)
         self.__winners = []
         # Initialize empty list of IPlayer to hold losers
@@ -209,7 +216,7 @@ class Referee(object):
         """
         Retrieves game report for the game.
         """
-        return self.__game_report.copy()
+        return self.__report.copy()
 
     @property
     def winners(self) -> [IPlayer]:
@@ -351,7 +358,8 @@ class Referee(object):
                     continue
 
                 # Get placement for player using a deep copy of state
-                placement = Referee.__timed_player_call(p, 'get_placement', args=(self.__state.deepcopy(),))
+                placement = utils.timed_call(Referee.PLAYER_TIMEOUT, p, 'get_placement',
+                                                    args=(self.__state.deepcopy(),))
 
                 # Validate placement received
                 if not isinstance(placement, Position):
@@ -424,32 +432,6 @@ class Referee(object):
         while self.__state.can_anyone_move():
             self.__run_turn()
 
-    @staticmethod
-    def __timed_player_call(player: IPlayer, method_name: str, args: tuple):
-        """
-        Attempts to call given method on a IPlayer object and return its return value. If a timeout
-        or exception occurs, None is returned instead.
-
-        :param player: IPlayer object to run method on
-        :param method_name: str name of the method to call on IPlayer obj
-        :param args: tuple containing the arguments to pass to method to be called
-        :return: return call result or None on failure
-        """
-        # Validate params
-        if not isinstance(player, IPlayer):
-            raise TypeError('Expected IPlayer for player!')
-
-        if not isinstance(method_name, str):
-            raise TypeError('Expected str for method_name!')
-
-        if not isinstance(args, tuple):
-            raise TypeError('Expected tuple for args!')
-
-        try:
-            return func_timeout(Referee.PLAYER_TIMEOUT, getattr(player, method_name), args)
-        except:
-            return None
-
     def __run_turn(self):
         """
         This method runs a single turn by prompting the current player in the internal state
@@ -458,7 +440,8 @@ class Referee(object):
         current_player_obj = self.__get_player_by_color(self.__state.current_player)
         try:
             # Get action from player using a deep copy of state
-            action = Referee.__timed_player_call(current_player_obj, 'get_action', args=(self.__state.deepcopy(),))
+            action = utils.timed_call(Referee.PLAYER_TIMEOUT, current_player_obj, 'get_action',
+                                       args=(self.__state.deepcopy(),))
 
             # If call was not successful or anything but an Action object was returned, the player failed
             if not isinstance(action, Action):

@@ -173,7 +173,7 @@ class Player(IPlayer):
         # A real player may decide what to do with this information, but an A.I. could
         # care less.
 
-    def status_update(self, status: PlayerStatus) -> None:
+    def status_update(self, status: PlayerStatus) -> bool:
         """
         Implements PlayerInterface.status_update(PlayerStatus)
         """
@@ -182,3 +182,10 @@ class Player(IPlayer):
 
         # A real player may decide what to do with this information, but an A.I. could
         # care less.
+        return True
+
+    def tournament_has_started(self) -> bool:
+        """
+        Implements PlayerInterface.tournament_has_started()
+        """
+        return True
