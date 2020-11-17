@@ -1,6 +1,6 @@
 # xref
 
-> A testing harness that tests the functionality of `referee.py`. The harness consumes JSON input from STDIN in the form of a JSON object. The JSON object contains a row number, a columns number, a player object containing a list of players arranged in ascending order of age with their corresponding depth, and a fish number. The harness will then compute the result of running the specified game as an array of strings representing players that shared first place. It will output the array to STDOUT.
+> A testing harness that tests the functionality of `referee.py`. The harness consumes JSON input from STDIN in the form of a JSON object. The JSON object contains a row number, a column number, a player object containing a list of players arranged in ascending order of age with their corresponding depth, and a fish number. The harness will then compute the result of running the specified game as an array of strings representing players that shared first place. It will output the array to STDOUT.
 
 ## Project structure
 

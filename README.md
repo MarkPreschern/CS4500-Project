@@ -20,3 +20,4 @@ avatar there. If multiple avatars can reach the same "best" tile, the avatar wit
 coordinates lis picked (in order of priority: source.x, source.y, destination.x, destination.y).
 - 6: contains the test harness for milestone 6 (xstrategy), which checks the integrity of a player strategy that determines the best action a player can take. See the README in 6 for more information.
 - 7: contains a series of markdown files documenting outstanding issues, bug fixes and reworked items.
+- 8: contains the test harness for milestone 8 (xref), which checks the integrity of a referee running a full game and producing as output the winning player(s). See the README in 8 for more information.
