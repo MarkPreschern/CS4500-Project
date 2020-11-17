@@ -1,11 +1,11 @@
 import sys
 
-from exceptions.OutOfTilesException import OutOfTilesException
 
 sys.path.append('../Common')
 
 from state import State
 from exceptions.InvalidGameStatus import InvalidGameStatus
+from exceptions.OutOfTilesException import OutOfTilesException
 from action import Action
 from position import Position
 from constants import VERY_LARGE_NUMBER

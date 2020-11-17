@@ -1,14 +1,14 @@
 import sys
 
-sys.path.append('../Common')
+sys.path.append('../Common/')
 
-from player_interface import IPlayer
 from strategy import Strategy
 from color import Color
 from position import Position
 from state import State
 from action import Action
 from player_status import PlayerStatus
+from player_interface import IPlayer
 
 
 class Player(IPlayer):

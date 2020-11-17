@@ -6,8 +6,8 @@ sys.path.append('../Common/')
 sys.path.append('../')
 sys.path.append('../Admin/Other/')
 
-from player_interface import IPlayer
 import constants as ct
+from player_interface import IPlayer
 from board import Board
 from state import State
 from action import Action
