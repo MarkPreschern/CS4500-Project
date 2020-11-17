@@ -26,28 +26,32 @@ frame.grid(row=0, column=0)
 # b = Board.homogeneous(1, rows=10, cols=4)
 
 b = Board({
-    Position(0, 0): Tile(2),
-    Position(0, 1): Tile(2),
-    Position(0, 2): Tile(2),
+    Position(0, 0): Tile(3),
+    Position(0, 1): Tile(3),
+    Position(0, 2): Tile(3),
 
-    Position(1, 0): Tile(2),
-    Position(1, 1): Tile(2),
-    Position(1, 2): Tile(2),
-
-
-    Position(2, 0): Tile(2),
-    Position(2, 1): Hole(),
-    Position(2, 2): Tile(2),
+    Position(1, 0): Tile(3),
+    Position(1, 1): Tile(3),
+    Position(1, 2): Tile(3),
 
 
-    Position(3, 0): Tile(2),
-    Position(3, 1): Tile(2),
-    Position(3, 2): Tile(2)
+    Position(2, 0): Tile(3),
+    Position(2, 1): Tile(3),
+    Position(2, 2): Tile(3),
+
+
+    Position(3, 0): Tile(3),
+    Position(3, 1): Tile(3),
+    Position(3, 2): Tile(3),
+
+    Position(4, 0): Tile(3),
+    Position(4, 1): Tile(3),
+    Position(4, 2): Tile(3)
 })
 
 # Build state
-state = State(b, [PlayerEntity("Bob Ross", Color.RED),
-                  PlayerEntity("Eric Khart", Color.WHITE)
+state = State(b, [PlayerEntity("John", Color.RED),
+                  PlayerEntity("Johnny", Color.WHITE)
                   ])
 
 

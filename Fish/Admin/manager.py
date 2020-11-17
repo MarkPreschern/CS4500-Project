@@ -22,7 +22,7 @@ class Manager(IManager):
                     next round. A round is simply a set of Fish games that start simultaneously and end with the
                     players that qualify to the next round. To make up a game, the tournament creates a referee
                     and provides it with the list of players and the board size of that game. The board size is
-                    described by GAME_BOARD_ROWS and GAME_BOARD_COLS, respectively.
+                    configurable at the initialization of the manager.
 
                     To allocate players to the games in a round, the manager determines the minimum number of games
                     needed to fit all the players. If any outstanding players remain that are too few to form a game,
@@ -42,19 +42,27 @@ class Manager(IManager):
                     this point, the manager informs the remaining active players whether they won or lost. Failure on
                     the part of a player to accept this information will result in the player becoming a "loser".
     """
-    GAME_BOARD_ROWS = 5
-    GAME_BOARD_COLS = 5
-
-    def __init__(self, players: [IPlayer]):
+    def __init__(self, players: [IPlayer], board_row_no:int = 5, board_col_no:int = 5):
         """
         Initializes the tournament manager with the list of IPlayer objects.
 
         :param players: list of IPlayer
+        :param board_row_no: number of rows to game board used in the tournament
+        :param board_col_no: number of cols to game board used in the tournament
         :return: None
         """
         # Validate params
         if not isinstance(players, list):
             raise TypeError('Expected list of IPlayer for players!')
+
+        if not isinstance(board_row_no, int):
+            raise TypeError('Expected int for board_row_no')
+
+        if not isinstance(board_col_no, int):
+            raise TypeError('Expected int for board_col_no')
+
+        self.__board_row_no = board_row_no
+        self.__board_col_no = board_col_no
 
         self.__players = players
 
@@ -62,6 +70,20 @@ class Manager(IManager):
         self.__tournament_winners = []
         # Initialize list to hold tournament losers
         self.__tournament_losers = []
+
+    @property
+    def tournament_winners(self):
+        """
+        Returns a list of IPlayer objects representing the tournament winners.
+        """
+        return self.__tournament_winners
+
+    @property
+    def tournament_losers(self):
+        """
+        Returns a list of IPlayer objects representing the tournament losers.
+        """
+        return self.__tournament_losers
 
     def subscribe_tournament_updates(self, callback: Callable) -> None:
         pass
@@ -75,12 +97,17 @@ class Manager(IManager):
         """
         # Run first round & get players qualified to next
         winners, losers = self.__run_round()
+        # Trim down player list to winners
+        self.__players = winners
 
+        print(f'1st rounds winners: {[winner.name for winner in winners]} losers: {[loser.name for loser in losers]}')
         # Run tournament so long as enough players remain to warrant another round or until two consecutive
         # rounds have produced the same winners.
         while len(winners) > 1:
             # Get this round's winners & losers
             winners, losers = self.__run_round()
+
+            print(f'this rounds winners: {[winner.name for winner in winners]} losers: {[loser.name for loser in losers]}')
             # Initialize list to hold IPlayer objects that fail to acknowledge that they won
             failing_winners = []
 
@@ -105,13 +132,16 @@ class Manager(IManager):
                     # Nothing to do.
                     pass
 
-            # Trim down set of players to winners
-            self.__players = winners
-
             # See if the previous & current round have produced the same winners
             if set(self.__players) == set(winners):
+                print('produced same winners x2')
                 # Tournament is over.
+                # Trim down set of players to winners
+                self.__players = winners
                 break
+
+            # Trim down set of players to winners
+            self.__players = winners
 
         # Outstanding players have won the tournament
         for player in self.__players:
@@ -172,7 +202,7 @@ class Manager(IManager):
 
         # For each list of players (game), make up a referee
         for player_list in divide:
-            referee: Referee = Referee(Manager.GAME_BOARD_ROWS, Manager.GAME_BOARD_COLS, player_list)
+            referee: Referee = Referee(self.__board_row_no, self.__board_col_no, player_list)
             # referee.subscribe_final_game_report(blah)
             games.append(referee)
 

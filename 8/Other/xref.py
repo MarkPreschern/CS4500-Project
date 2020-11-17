@@ -49,8 +49,8 @@ def xref():
         players.append(Player(name=p[0], search_depth=p[1]))
 
     # Create Referee
-    referee = Referee(rows, columns, players, fish)
     Referee.DIFFICULTY_FACTOR = 0
+    referee = Referee(rows, columns, players, fish)
 
     # Run complete game
     referee.start()
