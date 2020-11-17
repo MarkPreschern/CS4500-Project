@@ -95,7 +95,7 @@ class Strategy(object):
         score, best_move = Strategy.__mini_max_search(tree, state.current_player, depth)
 
         if Strategy.DEBUG:
-            print(f'max score: {score} {best_move}')
+            print(f'[depth={depth}] max score: {score} {best_move}')
         # Return "best" action associated with the best score
         return best_move
 

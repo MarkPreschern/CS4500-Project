@@ -20,14 +20,15 @@ class ManagerTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(ManagerTests, self).__init__(*args, **kwargs)
 
-        self.__far_sight1 = Player(name='Bob', search_depth=3)
-        self.__far_sight2 = Player(name='Bob 2', search_depth=3)
+        self.__far_sight1 = Player(name='Bob', search_depth=2)
+        self.__far_sight2 = Player(name='Bob 2', search_depth=2)
+        self.__far_sight3 = Player(name='Bob 3', search_depth=2)
 
         # Set seed to add some predictability as to what kind of board
         # the referee is gonna setup
         random.seed(900)
 
-        Referee.DIFFICULTY_FACTOR = 2
+        Referee.DIFFICULTY_FACTOR = 1
 
     @staticmethod
     def __make_players(no=0):
@@ -143,6 +144,7 @@ class ManagerTests(unittest.TestCase):
 
     def test_run_round1(self):
         # Tests the running of a 1-game round
+        random.seed(900)
         p1, p2, p3, p4 = ManagerTests.__make_players(4)
 
         manager = Manager([p1, p2, p3, p4])
@@ -157,6 +159,7 @@ class ManagerTests(unittest.TestCase):
     def test_run_round2(self):
         # Tests the running of a 2-game round
         p1, p2, p3, p4, p5, p6, p7, p8 = ManagerTests.__make_players(8)
+        random.seed(900)
 
         manager = Manager([p1, p2, p3, p4, p5,
                            p6, p7, p8])
@@ -164,14 +167,16 @@ class ManagerTests(unittest.TestCase):
         winners, losers = manager._Manager__run_round()
 
         # Make sure we have the right number of games
-        self.assertEqual(len(winners), 4)
+        self.assertEqual(len(winners), 2)
 
-        self.assertCountEqual(winners, [p7, p5, p6, p4])
-        self.assertCountEqual(losers, [p2, p3, p1, p8])
+        self.assertCountEqual(winners, [p1, p7])
+        self.assertCountEqual(losers, [p2, p3, p4, p5, p6, p8])
 
     def test_run_tournament1(self):
-        # Tests a 4-player tournament in which only winner emerges
+        # Tests a 4-player tournament in which only winner emerges after
+        # 2 rounds (one with 4 players and the second with 2 players).
         p1, p2, p3, p4 = ManagerTests.__make_players(4)
+        random.seed(900)
 
         manager = Manager([p1, p2, p3, p4])
 
@@ -180,11 +185,25 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(manager.tournament_winners, [p1])
 
     def test_run_tournament2(self):
-        # Tests a 4-player tournament in which only winner emerges
-        p1, p2, p3, p4, p5, p6, p7 = ManagerTests.__make_players(7)
+        # Tests a 2-player tournament in which only winner emerges (ends because too few players
+        # remain to form another round)
+        p1, = ManagerTests.__make_players(1)
+        random.seed(900)
 
-        manager = Manager([p1, self.__far_sight1])
+        manager = Manager([p1, self.__far_sight1], 4, 4)
 
         manager.run_tournament()
 
         self.assertEqual(manager.tournament_winners, [self.__far_sight1])
+
+    def test_run_tournament3(self):
+        # Tests a 2-player tournament which ends because two consecutive rounds
+        # have produced the same winner
+        p1, p2, p3 = ManagerTests.__make_players(3)
+        random.seed(900)
+
+        manager = Manager([p1, p2, p3], 5, 5)
+
+        manager.run_tournament()
+
+        self.assertCountEqual(manager.tournament_winners, [p1, p2, p3])

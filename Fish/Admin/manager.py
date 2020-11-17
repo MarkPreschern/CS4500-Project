@@ -42,7 +42,9 @@ class Manager(IManager):
                     this point, the manager informs the remaining active players whether they won or lost. Failure on
                     the part of a player to accept this information will result in the player becoming a "loser".
     """
-    def __init__(self, players: [IPlayer], board_row_no:int = 5, board_col_no:int = 5):
+    DEBUG = False
+
+    def __init__(self, players: [IPlayer], board_row_no: int = 5, board_col_no: int = 5):
         """
         Initializes the tournament manager with the list of IPlayer objects.
 
@@ -100,14 +102,12 @@ class Manager(IManager):
         # Trim down player list to winners
         self.__players = winners
 
-        print(f'1st rounds winners: {[winner.name for winner in winners]} losers: {[loser.name for loser in losers]}')
         # Run tournament so long as enough players remain to warrant another round or until two consecutive
         # rounds have produced the same winners.
         while len(winners) > 1:
             # Get this round's winners & losers
             winners, losers = self.__run_round()
 
-            print(f'this rounds winners: {[winner.name for winner in winners]} losers: {[loser.name for loser in losers]}')
             # Initialize list to hold IPlayer objects that fail to acknowledge that they won
             failing_winners = []
 
@@ -134,7 +134,8 @@ class Manager(IManager):
 
             # See if the previous & current round have produced the same winners
             if set(self.__players) == set(winners):
-                print('produced same winners x2')
+                if Manager.DEBUG:
+                    print(f'produced same winners x2: {[winner.name for winner in winners]}')
                 # Tournament is over.
                 # Trim down set of players to winners
                 self.__players = winners
@@ -188,6 +189,9 @@ class Manager(IManager):
                     games.remove(games[k])
 
             games_in_progress = len(games)
+
+        if Manager.DEBUG:
+            print(f'this rounds winners: {[winner.name for winner in winners]}')
 
         return winners, losers
 

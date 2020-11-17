@@ -115,7 +115,7 @@ class Referee(object):
     # Initialize difficulty factor
     DIFFICULTY_FACTOR = 2
     # Initialize player timeout (number of seconds a player is allowd to take to make a move/placement)
-    PLAYER_TIMEOUT = 5
+    PLAYER_TIMEOUT = 1
 
     def __init__(self, rows: int, cols: int, players: [IPlayer], fish_no: int = None) -> None:
         """
@@ -459,6 +459,7 @@ class Referee(object):
         try:
             # Get action from player using a deep copy of state
             action = Referee.__timed_player_call(current_player_obj, 'get_action', args=(self.__state.deepcopy(),))
+
             # If call was not successful or anything but an Action object was returned, the player failed
             if not isinstance(action, Action):
                 self.__kick_player(current_player_obj, PlayerKickReason.FAILING)
