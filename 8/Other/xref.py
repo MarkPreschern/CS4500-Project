@@ -50,6 +50,7 @@ def xref():
 
     # Create Referee
     Referee.DIFFICULTY_FACTOR = 0
+    Referee.PLAYER_TIMEOUT = 60
     referee = Referee(rows, columns, players, fish)
 
     # Run complete game

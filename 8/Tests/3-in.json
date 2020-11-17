@@ -2,10 +2,10 @@
   "row": 5,
   "column": 5,
   "players": [
-    ["John", 1],
-    ["Bob", 1],
+    ["John", 2],
+    ["Bob", 2],
     ["Jim", 2],
     ["benny", 2]
   ],
-  "fish": 1
+  "fish": 5
 }
