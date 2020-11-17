@@ -4,12 +4,10 @@ import sys
 sys.path.append('../Common')
 
 from state import State
-from exceptions.InvalidGameStatus import InvalidGameStatus
 from exceptions.OutOfTilesException import OutOfTilesException
 from action import Action
 from position import Position
 from constants import VERY_LARGE_NUMBER
-from exceptions.GameNotRunningException import GameNotRunningException
 from game_tree import GameTree
 from color import Color
 
@@ -58,6 +56,8 @@ class Strategy(object):
                 pos = Position(row, col)
                 # Pitch avatar if said position is open
                 if state.is_position_open(pos):
+                    if Strategy.DEBUG:
+                        print(f'[{player_color}] placed avatar at {pos}')
                     state.place_avatar(player_color, pos)
                     return pos
 
@@ -95,7 +95,8 @@ class Strategy(object):
         score, best_move = Strategy.__mini_max_search(tree, state.current_player, depth)
 
         if Strategy.DEBUG:
-            print(f'[depth={depth}] max score: {score} {best_move}')
+            print(f'  [depth={depth}] max score: {score} {best_move}')
+            print(f'  Score [before action]: {state.get_player_by_color(state.current_player).score}')
         # Return "best" action associated with the best score
         return best_move
 
