@@ -8,7 +8,7 @@ The protocol for the remote collaboration API can be described via the following
 
 **Note: to see our diagram in more detail, please zoom in or click on the image.*
 
-Below, we will explain the protocol with english prose.
+Below, we will explain the protocol with English prose.
 
 ### Explanation
 
