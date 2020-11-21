@@ -5,7 +5,7 @@ Indicate below where your TAs can find the following elements in your strategy a
 1. did you organize the main function/method for the manager around
 the 3 parts of its specifications --- point to the main function
 
-  - For the most part, yes. Our main method ([run()](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L150-L186)), notifies the players that the tournament is about to start, runs the game via calls to `__run_round` (wherein players get allocated to games), and lastly notifies the winners that they have won the tournament. The notification of the losing players that they have lost the game (and therefore the tournament) is done from the main-loop via [`__notify_players()`](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L164-L176).
+  - For the most part, yes. Our main method ([run()](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L150-L186)), notifies the players that the tournament is about to start, runs the game via calls to `__run_round` (wherein players get allocated to games), and lastly notifies the winners that they have won the tournament. The notification of the losing players that they have lost the game (and therefore the tournament) is done from the [main-loop](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L164-L176) via `__notify_players()`.
 
 2. did you factor out a function/method for informing players about
 the beginning and the end of the tournament? Does this function catch
