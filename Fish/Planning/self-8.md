@@ -11,9 +11,11 @@ the 3 parts of its specifications --- point to the main function
 the beginning and the end of the tournament? Does this function catch
 players that fail to communicate? --- point to the respective pieces
 
-- We have a method for notifying players about the start of the tournament [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L137-L148) that removes any players that fail to acknowledge the start of the tournament.
+Yes, and we give both winning and losing players [`Manager.PLAYER_TIMEOUT`](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L70) seconds to communicate before marking them out as losers.
 
-- We have a method for notifying winners that casts the winners that fail to accept the notification as losers [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L188-L211). Players that lose the final game of the tournament are notified via [`__notify_players`](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L213-L257). However, if a losing player refuses to accept a notification, nothing happens as they've already lost.
+- We have a method for notifying players about the start of the tournament [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L137-L148) that removes any players that fail to acknowledge the start of the tournament (fail to communicate).
+
+- We have a method for notifying tournament winners that casts the winners that fail to accept the notification as losers [here](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L188-L211). Players that lose the final game of the tournament (or any game for that matter) are notified via [`__notify_players`](https://github.ccs.neu.edu/CS4500-F20/quintana/blob/7ac2c59ebe52c8b60dfc54d20b0d3233b7dd6ef6/Fish/Admin/manager.py#L213-L257). However, if a losing player refuses to accept a notification, nothing happens as they've already lost.
 
 3. did you factor out the main loop for running the (possibly 10s of
 thousands of) games until the tournament is over? --- point to this
