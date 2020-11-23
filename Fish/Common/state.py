@@ -201,6 +201,10 @@ class State(object):
 
         :return: list of Action objects
         """
+        # if there are no more players
+        if len(self.__players) == 0:
+            return []
+
         # Initialize collection of possible moves
         possible_moves = []
 

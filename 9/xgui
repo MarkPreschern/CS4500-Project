@@ -1,0 +1,10 @@
+#!/usr/bin/python3
+
+import sys
+
+sys.path.append("Other/")
+
+from xgui import xgui
+
+if __name__ == "__main__":
+    xgui(sys.argv)

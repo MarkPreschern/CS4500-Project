@@ -1,3 +1,5 @@
+from pathlib import Path
+
 MIN_FISH_PER_TILE = 1
 MAX_FISH_PER_TILE = 5
 
@@ -19,7 +21,7 @@ DEFAULT_BOARD_COLS = 3
 
 ROW_TO_COLUMN_PROBABILITY = 20
 
-SPRITE_PATH = 'sprites'
+SPRITE_PATH = Path('Fish/Common/sprites')
 SPRITE_FORMAT = 'png'
 
 MIN_PLAYERS = 2

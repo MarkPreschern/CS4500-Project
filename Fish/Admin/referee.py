@@ -232,6 +232,13 @@ class Referee(object):
         """
         return self.__losers
 
+    @property
+    def state(self) -> State:
+        """
+        Retrieves the current game state in this game.
+        """
+        return self.__state
+
     def start(self) -> None:
         """
         This method starts the game by first running a series of placement rounds and then
@@ -560,7 +567,8 @@ class Referee(object):
         self.__game_over = True
 
         # Determine highest score in the game
-        max_score = max([p['score'] for p in self.__report['leaderboard']])
+        max_score = max([p['score'] for p in self.__report['leaderboard']]) \
+            if len(self.__report['leaderboard']) > 0 else 0
 
         # Determine names of winners
         winner_names = [p['name'] for p in self.__report['leaderboard'] if p['score'] == max_score]
