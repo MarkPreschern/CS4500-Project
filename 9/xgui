@@ -1,10 +1,22 @@
 #!/usr/bin/python3
 
 import sys
+import argparse
 
 sys.path.append("Other/")
 
 from xgui import xgui
 
 if __name__ == "__main__":
-    xgui(sys.argv)
+    # Add optional argument to enable unit testing
+    parser = argparse.ArgumentParser(description="Run xgui (visualize a single game of fish).", usage="Pass a single int [2,4] representing the number of players.")
+    parser.add_argument("num_players", type=int, nargs=1)
+
+    args = vars(parser.parse_args())
+
+    if len(args['num_players']) != 1:
+        print('Please provide a number of players.')
+    elif args['num_players'][0] < 2 or args['num_players'][0] > 4:
+        print('Number of players not in valid range.')
+    else:
+        xgui(args['num_players'][0])

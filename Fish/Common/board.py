@@ -39,7 +39,7 @@ class Board(object):
                     direction for a given Position.
 
     """
-    DISABLE_SPRITE_MANAGER = False
+    DISABLE_SPRITE_MANAGER = True
     RENDER_TILE_COORDINATES = True
 
     def __init__(self, tiles: dict):
@@ -275,6 +275,9 @@ class Board(object):
         total_width = self.__cols * ct.DELTA * 2 + ct.DELTA / 2
         total_height = (self.__rows + 1) * ct.TILE_HEIGHT / 2 + ct.MARGIN_OFFSET
 
+        # Load sprites
+        SpriteManager.load_sprites()
+        
         # Set geometry
         canvas = tk.Canvas(parent_frame, bd=0, highlightthickness=0,
                            height=total_height, width=total_width)

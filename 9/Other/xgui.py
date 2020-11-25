@@ -26,11 +26,8 @@ from player import Player
 from game_visualizer import GameVisualizer
 
 
-def xgui(args):
+def xgui(num_players):
     Board.DISABLE_SPRITE_MANAGER = False
-
-    # get specified player number
-    player_no = int(args[1])
 
     # default player names
     player_names = ["a", "b", "c", "d"]
@@ -39,7 +36,7 @@ def xgui(args):
     Referee.PLAYER_TIMEOUT = 60
 
     # creates players
-    players = [Player(player_names[index]) for index in range(player_no)]
+    players = [Player(player_names[index]) for index in range(num_players)]
 
     # Create game visualizer
     game_visualizer = GameVisualizer(players)

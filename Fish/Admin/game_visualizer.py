@@ -2,13 +2,10 @@ import sys
 from tkinter import Tk, Frame
 import time
 
-sys.path.append('../Common/')
-sys.path.append('../')
-sys.path.append('../Admin/Other/')
-
 from player_interface import IPlayer
 from referee import Referee
 from state import State
+from constants import DEFAULT_BOARD_ROWS, DEFAULT_BOARD_COLS, MIN_PLAYERS, MAX_PLAYERS
 
 
 class GameVisualizer(object):
@@ -35,16 +32,15 @@ class GameVisualizer(object):
                     A frame is a container in which images can be placed and displayed
     """
 
-    # The number of seconds to timeout before re-rendering changes
-    RENDER_TIMEOUT = 1
-
-    def __init__(self, players: [IPlayer], board_row_no: int = 5, board_col_no: int = 5):
+    def __init__(self, players: [IPlayer], board_row_no: int = DEFAULT_BOARD_ROWS, board_col_no: int = DEFAULT_BOARD_COLS, render_timeout: int = 1, num_fish: int = None):
         """
         Initializes the game visualizer with the list of IPlayer objects, board rows, and board columns.
-
+        
         :param players: list of IPlayer
         :param board_row_no: number of rows to game board used in the tournament
         :param board_col_no: number of cols to game board used in the tournament
+        :param render_timeout: the number of seconds to wait before re-rendering game after a change
+        :param num_fish: the number of fish per tile
         :return: None
         """
         # Validate params
@@ -57,10 +53,20 @@ class GameVisualizer(object):
         if not isinstance(board_col_no, int):
             raise TypeError('Expected int for board_col_no')
 
+        if not isinstance(render_timeout, int):
+            raise TypeError('Expected int for render_timeout')
+
+        # Make sure we weren't given too many players
+        if len(players) < MIN_PLAYERS or len(players) > MAX_PLAYERS:
+            raise ValueError(f'Invalid player length; length has to be between {MIN_PLAYERS} and'
+                             f' {MAX_PLAYERS}')
+
         self.__players = players
 
         self.__board_row_no = board_row_no
         self.__board_col_no = board_col_no
+        self.__render_timeout = render_timeout
+        self.__num_fish = num_fish
 
         # Creates frame for visualization
         self.__window, self.__frame = self.__setup_gui()
@@ -95,7 +101,7 @@ class GameVisualizer(object):
         """
 
         # creates referee
-        referee: Referee = Referee(self.__board_row_no, self.__board_col_no, self.__players)
+        referee: Referee = Referee(self.__board_row_no, self.__board_col_no, self.__players, self.__num_fish)
 
         # Displays initial game board
         referee.state.render(self.__frame)
@@ -104,11 +110,17 @@ class GameVisualizer(object):
         # subscribe referee game updates to update the game board in real time
         referee.subscribe_game_updates(self.__update_gameboard)
 
+        # subscribe to game outcome from referee (for testing)
+        referee.subscribe_final_game_report(self.__handle_final_game_report)
+
         # start game
         referee.start()
 
         # Destroys the GUI window effectively removing it
         self.__window.destroy()
+
+        # return final game results
+        return self.final_game_report
 
     def __update_gameboard(self, state: State):
         """
@@ -120,8 +132,13 @@ class GameVisualizer(object):
         """
 
         # wait RENDER_TIMEOUT to display update
-        time.sleep(self.RENDER_TIMEOUT)
+        time.sleep(self.__render_timeout)
 
         # update frame and window with the new state
         state.render(self.__frame)
+        
         self.__window.update()
+
+    
+    def __handle_final_game_report(self, game_report):
+        self.final_game_report = game_report
