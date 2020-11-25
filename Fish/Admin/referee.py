@@ -1,7 +1,6 @@
 import operator
 import sys
 from random import randrange
-import json
 
 sys.path.append('../Common/')
 sys.path.append('../')
