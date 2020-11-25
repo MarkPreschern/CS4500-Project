@@ -1,4 +1,3 @@
-from typing import final
 from Fish.Player.player import Player
 import sys
 import unittest
