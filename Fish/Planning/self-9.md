@@ -13,9 +13,19 @@ and/or player-interface modules:
    - the implementation of the player GUI
 
 2. for game observers, point the TA to
-   - the `game-observer` interface that observers implement 
+   - the `game-observer` interface that observers implement
+   
+   See [Here](https://github.ccs.neu.edu/CS4500-F20/buffalogap/blob/3b7a8e82376790e4b730a32712acb01cdc8247b4/Fish/Admin/game_visualizer.py).
+   
    - the point where the `referee` consumes observers 
+   
+   Observers can subscribe to game state updates [Here](https://github.ccs.neu.edu/CS4500-F20/buffalogap/blob/3b7a8e82376790e4b730a32712acb01cdc8247b4/Fish/Admin/referee.py#L605-L619).
+
    - the callback from `referee` to observers concerning turns
+   
+   See the callback from referee to observers implemented [Here](https://github.ccs.neu.edu/CS4500-F20/buffalogap/blob/3b7a8e82376790e4b730a32712acb01cdc8247b4/Fish/Admin/referee.py#L487-L512)
+   and the observer utilizing the callback [Here](https://github.ccs.neu.edu/CS4500-F20/buffalogap/blob/3b7a8e82376790e4b730a32712acb01cdc8247b4/Fish/Admin/game_visualizer.py#L110-L111).
+
 
 3. for tournament observers, point the TA to
    - the `tournament-observer` interface that observers implement 
