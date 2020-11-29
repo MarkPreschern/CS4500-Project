@@ -106,10 +106,18 @@ class IPlayer(ABC):
 
     @abstractmethod
     def set_color(self, color: Color):
-        """ Set the color of this player for the game they are currently in """
+        """ 
+        Set the color of this player for the game they are currently in 
+        
+        :param color: The color (enum) for this player in the game they are currently playing
+        """
         pass
 
     @abstractmethod
-    def notify_opponent_colors(self, colors):
-        """ Notify this player regarding the colors they are playing against in their current game """
+    def notify_opponent_colors(self, colors: [Color]):
+        """ 
+        Notify this player regarding the colors they are playing against in their current game
+        
+        :param colors: The list of the colors of this players opponents in the game they are currently playing
+        """
         pass

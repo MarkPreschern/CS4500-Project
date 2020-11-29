@@ -179,7 +179,6 @@ class Manager(IManager, threading.Thread):
             self.__round_no += 1
             # Get this round's winners & losers
             winners, losers = self.__run_round()
-            print(winners, losers)
             # Notify players & transfer failing winners to losers if they refuse to accept notification
             winners, losers = self.__notify_players(losers, winners)
 
@@ -263,7 +262,6 @@ class Manager(IManager, threading.Thread):
 
         # Notify this round's losers that they've lost
         for loser in losers:
-            print(f'~~~ LOSER  {loser.name} ~~~')
             try:
                 loser.status_update(PlayerStatus.LOST_GAME)
             except Exception:
