@@ -20,6 +20,8 @@ TODOS:
 [ ] Ensure that allocations to games are happening according to age
 [ ] Ensure that turns are being taken according to age
 [ ] Handle case where client connects but doesn't send their name (drop this connection)
+[ ] Handle case where two players give the same name
+[ ] Handle case where player gives empty string as name
 
 [ ] Sanity check that both remote and logical interactions follow the protocol diagrams
 [ ] Testing (manual and unit testing)
