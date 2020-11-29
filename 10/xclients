@@ -1,0 +1,22 @@
+#!/usr/bin/python3
+
+import sys
+import threading
+
+sys.path.append("../Fish/Remote")
+
+from client import Client
+
+clients = [Client('A'), Client('B'), Client('C'), Client('D'), Client('E')]
+
+def thread_func(client):
+    print(f'Running thread for {client.name}...')
+    client.run('localhost', 3000)
+    print(f'Stopping thread for {client.name}...')
+
+threads = list()
+
+for client in clients:
+    c_thread = threading.Thread(target=thread_func, args=(client,))
+    threads.append(c_thread)
+    c_thread.start()

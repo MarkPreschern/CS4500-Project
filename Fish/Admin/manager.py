@@ -1,9 +1,8 @@
 import sys
 import pickle
 
-sys.path.append('../Common/')
-sys.path.append('../')
-sys.path.append('../Admin/Other/')
+sys.path.append('../Fish/Common')
+sys.path.append('../Fish/Admin/Other/')
 
 from player_interface import IPlayer
 from manager_interface import IManager
@@ -147,6 +146,19 @@ class Manager(IManager, threading.Thread):
         self.__players = [p for p in self.__players
                           if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_started', ())]
 
+    def __broadcast_tournament_end(self) -> None:
+        """
+        This methods calls tournament_has_ended() on each IPlayer partaking in the tournament
+        to let it know that the tournament has ended. Failure on the part of any player to acknowledge
+        this in a timely fashion will result in their disconnection.
+
+        :return: None
+        """
+
+        # Trim down player list to players that have acknowledged that the tournament has started
+        self.__players = [p for p in self.__players
+                          if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_ended', ())]
+
     def run(self):
         """
         Implements IManager.run()
@@ -156,6 +168,8 @@ class Manager(IManager, threading.Thread):
 
         # Run first round & get players qualified to next
         winners, losers = self.__run_round()
+        winners, losers = self.__notify_players(losers, winners)
+
         # Trim down player list to winners
         self.__players = winners
 
@@ -165,6 +179,7 @@ class Manager(IManager, threading.Thread):
             self.__round_no += 1
             # Get this round's winners & losers
             winners, losers = self.__run_round()
+            print(winners, losers)
             # Notify players & transfer failing winners to losers if they refuse to accept notification
             winners, losers = self.__notify_players(losers, winners)
 
@@ -184,6 +199,7 @@ class Manager(IManager, threading.Thread):
 
         # Notified subscribed parties of tournament results
         self.__notify_tournament_end()
+        self.__broadcast_tournament_end()
 
     def __notify_winners(self, winners: [IPlayer]) -> None:
         """
@@ -247,8 +263,9 @@ class Manager(IManager, threading.Thread):
 
         # Notify this round's losers that they've lost
         for loser in losers:
+            print(f'~~~ LOSER  {loser.name} ~~~')
             try:
-                utils.timed_call(Manager.PLAYER_TIMEOUT, loser, 'status_update', PlayerStatus.LOST_GAME)
+                loser.status_update(PlayerStatus.LOST_GAME)
             except Exception:
                 # Nothing to do.
                 pass

@@ -1,7 +1,13 @@
 import socket
 import time
+import sys
+
+sys.path.append('../Fish/Admin')
+sys.path.append('../Fish/Admin/Other')
 
 from remote_player_proxy import RemotePlayerProxy
+from manager import Manager
+from tournament_update_type import TournamentUpdateType
 
 class Server(object):
     """
@@ -12,7 +18,7 @@ class Server(object):
     DEFINITION(S): TODO.
     """
 
-    def __init__(self, signup_timeout: int = 30, min_clients: int = 5, max_clients: int = 10, waiting_periods: int = 1):
+    def __init__(self, signup_timeout: int = 5, min_clients: int = 5, max_clients: int = 10, waiting_periods: int = 1):
         """
         Initializes a server component using various default parameters.
 
@@ -46,7 +52,28 @@ class Server(object):
         self.__signup_players()
 
         for rpp in self.__remote_player_proxies:
-            print(f'Player {rpp.name} has been signed up (age = {rpp.age})')
+            print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
+
+        tm_manager = Manager(self.__remote_player_proxies)
+        tm_manager.subscribe_tournament_updates(self.__handle_tournament_update)
+        tm_manager.run()
+        
+        print([len(tm_manager.tournament_winners), len(tm_manager.tournament_losers)])
+        self.__teardown_tournament()
+
+    def __handle_tournament_update(self, payload):
+        if (payload['type'] == TournamentUpdateType.NEW_ROUND):
+            print(f'\n~~~~~ [NEW ROUND] [ROUND {payload["round_num"]}] Games = {payload["games"]} ~~~~~\n')
+        elif (payload['type'] == TournamentUpdateType.TOURNAMENT_END):
+            print(f'\n~~~~~ [TOURNAMENT END] Winners = {payload["winners"]} ~~~~~\n')
+            self.__teardown_tournament()
+        return True
+    
+
+    def __teardown_tournament(self):
+        for rpp in self.__remote_player_proxies:
+            rpp.socket.close()
+        self.__server_socket.close()
 
     def __init_socket(self, port: int) -> socket:
         """
@@ -64,7 +91,8 @@ class Server(object):
             server_sock.bind(('localhost', port))
             server_sock.listen(self.__max_clients)
             return server_sock
-        except Exception:
+        except Exception as e:
+            print(e)
             return None
 
     def __signup_players(self):

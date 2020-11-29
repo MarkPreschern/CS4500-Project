@@ -4,6 +4,7 @@ from action import Action
 from position import Position
 from state import State
 from player_status import PlayerStatus
+from color import Color
 
 
 class IPlayer(ABC):
@@ -101,4 +102,14 @@ class IPlayer(ABC):
 
         :return: boolean indicating whether player accepts status or not
         """
+        pass
+
+    @abstractmethod
+    def set_color(self, color: Color):
+        """ Set the color of this player for the game they are currently in """
+        pass
+
+    @abstractmethod
+    def notify_opponent_colors(self, colors):
+        """ Notify this player regarding the colors they are playing against in their current game """
         pass

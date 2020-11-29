@@ -8,4 +8,4 @@ from server import Server
 
 fish_server = Server()
 
-fish_server.run(8080)
+fish_server.run(3000)

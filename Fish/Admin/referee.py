@@ -165,8 +165,14 @@ class Referee(object):
             raise ValueError('Expected positive int between 1 and 5 inclusive for fish!')
 
         # Assign each player the color that correspond to their position in the player list
+        game_colors = []
         for k in range(len(players)):
-            players[k].color = Color(k)
+            players[k].set_color(Color(k))
+            game_colors.append(Color(k))
+
+        # Notify each player which colors they will be playing against
+        for player in players:
+            player.notify_opponent_colors([color for color in game_colors if color != player.color])
 
         # Set properties
         self.__players: [IPlayer] = players
@@ -365,8 +371,7 @@ class Referee(object):
                     continue
 
                 # Get placement for player using a deep copy of state
-                placement = utils.timed_call(Referee.PLAYER_TIMEOUT, p, 'get_placement',
-                                                    args=(self.__state.deepcopy(),))
+                placement = p.get_placement(self.__state.deepcopy())
 
                 # Validate placement received
                 if not isinstance(placement, Position):
