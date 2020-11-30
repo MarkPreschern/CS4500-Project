@@ -53,10 +53,12 @@ class Client(object):
         :param host: The hostname of the server to connect to (Fish admin server)
         :param port: The port number of the server to connect to (Fish admin server)
         """
+        # Initialize socket
         self.__client_sock = self.__init_socket(host, port)
         if self.__client_sock:
             self.__client_sock.send(bytes(self.__name, 'utf-8'))
 
+            # Extract this loop into helper
             while not self.__is_tournament_over:
                 msgs = self.__receive_messages()
                 for msg in msgs:
@@ -106,6 +108,7 @@ class Client(object):
         
         :param args: [Boolean] representing True if the tournament has started
         """
+        # Acknowledge?
         return None
 
     def __handle_playing_as(self, args):
@@ -162,6 +165,9 @@ class Client(object):
         """
         print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
         self.__is_tournament_over = True
+
+        # TODO acknowledge?
+        return True
 
     def __teardown(self):
         """

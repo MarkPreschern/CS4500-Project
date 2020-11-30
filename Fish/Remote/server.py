@@ -16,7 +16,6 @@ class Server(object):
     PURPOSE: The Server component allows for remote clients to establish a TCP connection to our Fish admin servers,
     and participate in a tournament (and within it many games) of Fish.  It facilitates the creation of the tournament
     manager, creation of TCP client sockets to be passed to remote player proxies playing in the tournament, and thus
-    allows for the communication between the remote players and our servers.
 
     DEFINITION(S):
     signup timeout -> the number of seconds to wait for client sign ups within one signup period
@@ -100,6 +99,7 @@ class Server(object):
         Accept client connections (sign up players) for the specified number of sign up periods (and time per sign up period).
         A signup round will be conducted if we have not exhausted all waiting periods, or if we have hit the max_clients limit.
         """
+        # Add case for if we hit max (?)
         while self.__signup_periods > 0 or len(self.__remote_player_proxies) < self.__min_clients:
             self.__run_signup_period()
 
@@ -117,6 +117,8 @@ class Server(object):
         while time.time() < time_end:
             try:
                 (client_sock, address) = self.__server_socket.accept()
+
+                # Receive name from client
                 data = client_sock.recv(4096)
 
                 if data:
