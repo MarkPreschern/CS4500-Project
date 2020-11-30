@@ -68,6 +68,9 @@ class Manager(IManager, threading.Thread):
     # or that the tournament has begun).
     PLAYER_TIMEOUT = 1
 
+    # the number of fish on each tile of each game board in the server's tournament. Random by default.
+    FISH_NUMBER = None
+
     def __init__(self, players: [IPlayer], board_row_no: int = 5, board_col_no: int = 5):
         """
         Initializes the tournament manager with the list of IPlayer objects.
@@ -428,7 +431,7 @@ class Manager(IManager, threading.Thread):
 
         # For each list of players (game), make up a referee
         for player_list in divide:
-            referee: Referee = Referee(self.__board_row_no, self.__board_col_no, player_list)
+            referee: Referee = Referee(self.__board_row_no, self.__board_col_no, player_list, Manager.FISH_NUMBER)
             # referee.subscribe_final_game_report(blah)
             games.append(referee)
 

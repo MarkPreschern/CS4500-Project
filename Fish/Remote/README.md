@@ -8,6 +8,7 @@ Also, if you modify other pieces of code, describe these modifications in a sepa
 4. [BUG] tournament manager did not __notify_players after first round is played, resulting in losers not knowing to exit.
 5. Added 'DISCONTINUED' to PlayerStatus enum which represents players that have been discontinued from a tournament due to a business logic, safety, or DoS bug.
 6. Refactored manager.py to include a list a players in the tournament who have been kicked for cheating or failing.
+7. Refactored manager.py to include a fish number, which if modified makes every tile of every game have the modified number of fish.
 
 TODOS:
 - [ ] RPP must handle abnormal conditions from network (i.e. a 1 sec timeout needs to implemented on all of its calls, and
@@ -19,13 +20,13 @@ TODOS:
 - [ ] Fix that server sign up rounds works according to specification, need to deal with not enough players
 - [ ] Ensure that allocations to games are happening according to age
 - [x] Add DEBUG to logs (client and server)
-- [ ] Ensure board type is correct (make fish constant, no holes, 5x5, etc)
-- [ ] Add argument parsing to xserver and xclients according to specification.
+- [x] Ensure board type is correct (make fish constant, no holes, 5x5, etc)
+- [x] Add argument parsing to xserver and xclients according to specification.
 - [ ] Fix player allocation method to prefer games of 3 until must move on to 2
-- [ ] Ensure that turns are being taken according to age
 - [ ] Handle case where client connects but doesn't send their name (drop this connection)
 - [ ] Handle case where two players give the same name
 - [ ] Handle case where player gives empty string as name
+- [x] Add README to Runnables Task
 
 - [ ] Sanity check that both remote and logical interactions follow the protocol diagrams
 - [ ] Testing (manual and unit testing)

@@ -1,11 +1,21 @@
 #!/usr/bin/python3
 
 import sys
+import argparse
 
-sys.path.append("../Fish/Remote")
+sys.path.append("Other/")
 
-from server import Server
+from xserver import xserver
 
-fish_server = Server()
+if __name__ == "__main__":
+    # Add optional argument to enable unit testing
+    parser = argparse.ArgumentParser(description="Run xserver to run a tournament with clients on a specified port.",
+                                     usage="Pass a single int representing the port number.")
+    parser.add_argument("port", type=int, nargs=1)
 
-fish_server.run(3000)
+    args = vars(parser.parse_args())
+
+    if len(args['port']) != 1:
+        print('Please provide a port number.')
+    else:
+        xserver(args['port'][0])

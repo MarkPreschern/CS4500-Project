@@ -1,28 +1,25 @@
 #!/usr/bin/python3
 
 import sys
-import threading
+import argparse
 
-DEBUG = False
+sys.path.append("Other/")
 
-sys.path.append("../Fish/Remote")
+from xclients import xclients
 
-from client import Client
+if __name__ == "__main__":
+    # Add optional argument to enable unit testing
+    parser = argparse.ArgumentParser(description="Run xclients (launch n clients, which all connect to the server on port p at ip address).",
+                                     usage="Pass the number of clients to run, which all connect on the server on a specified port at a specified ip address. If the ip address is ommited, the client connects to \"local host\" (127.0.0.1).")
+    parser.add_argument("num_clients", type=int, nargs=1)
+    parser.add_argument("port", type=int, nargs=1)
+    parser.add_argument("ip_address", nargs='?', default="localhost")
 
-clients = [Client('A'), Client('B'), Client('C'), Client('D'), Client('E')]
+    args = vars(parser.parse_args())
 
-def thread_func(client):
-    if DEBUG:
-        print(f'Running thread for {client.name}...')
-
-    client.run('localhost', 3000)
-
-    if DEBUG:
-        print(f'Stopping thread for {client.name}...')
-
-threads = list()
-
-for client in clients:
-    c_thread = threading.Thread(target=thread_func, args=(client,))
-    threads.append(c_thread)
-    c_thread.start()
+    if len(args['num_clients']) != 1:
+        print('Please provide a number of clients.')
+    elif len(args['port']) != 1:
+        print('Please provide a port number.')
+    else:
+        xclients(args['num_clients'][0], args['port'][0], args['ip_address'])
