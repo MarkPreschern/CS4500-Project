@@ -34,6 +34,7 @@ class RemotePlayerProxy(IPlayer):
     age -> time in seconds (since epoch) noted when this player signed up with our server (we interpret
     this as the players age, and lower aged players are allocated to games first and take turns first)
     """
+    DEBUG = False
 
     def __init__(self, name: str, age: float, socket: socket):
         """
@@ -64,8 +65,9 @@ class RemotePlayerProxy(IPlayer):
                 data = self.__socket.recv(4096)
                 if data:
                     msgs = self.__json_serializer.bytes_to_jsons(data)
-                    for msg in msgs:
-                        print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
+                    if RemotePlayerProxy.DEBUG:
+                        for msg in msgs:
+                            print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
                     return msgs
             except Exception as e:
                 print(e)
@@ -79,7 +81,9 @@ class RemotePlayerProxy(IPlayer):
         :param sock: a socket object connected to a port
         :param data: the data to be sent
         """
-        print(f'[RPP] [SEND] -> [{self.name}]: {data}')
+        if RemotePlayerProxy.DEBUG:
+            print(f'[RPP] [SEND] -> [{self.name}]: {data}')
+
         try:
             self.__socket.sendall(bytes(data, 'utf-8'))
         except Exception as e:
@@ -119,7 +123,9 @@ class RemotePlayerProxy(IPlayer):
         if not isinstance(reason, str):
             raise TypeError('Expected str for state!')
 
-        print(f'[{self.name}] was kicked for {reason}!')
+        if RemotePlayerProxy.DEBUG:
+            print(f'[{self.name}] was kicked for {reason}!')
+
         return None
 
     def sync(self, state: State) -> None:
@@ -157,6 +163,9 @@ class RemotePlayerProxy(IPlayer):
         if status == PlayerStatus.LOST_GAME:
             msg = self.__json_serializer.encode_tournament_end(False)
             self.__send_message(msg)
+        elif status == PlayerStatus.DISCONTINUED:
+            msg = self.__json_serializer.encode_tournament_end(False)
+            self.__send_message(msg)
         elif status == PlayerStatus.WON_TOURNAMENT:
             msg = self.__json_serializer.encode_tournament_end(True)
             self.__send_message(msg)
@@ -167,13 +176,11 @@ class RemotePlayerProxy(IPlayer):
         self.__color = color
         msg = self.__json_serializer.encode_playing_as(color)
         self.__send_message(msg)
-        return True
 
     def notify_opponent_colors(self, colors):
         """ Implements PlayerInterface.notify_opponent_colors() """
         msg = self.__json_serializer.encode_playing_with(colors)
         self.__send_message(msg)
-        return True
 
     def tournament_has_started(self) -> bool:
         """ Implements PlayerInterface.tournament_has_started() """

@@ -179,11 +179,12 @@ class ManagerTests(unittest.TestCase):
 
         manager = Manager([p1])
 
-        winners, losers = manager._Manager__run_round()
+        winners, losers, kicked = manager._Manager__run_round()
 
         # Assert expectations
         self.assertCountEqual(winners, [])
         self.assertCountEqual(losers, [])
+        self.assertCountEqual(kicked, [])
 
     def test_run_round2(self):
         # Tests the running of a 1-game round
@@ -192,12 +193,13 @@ class ManagerTests(unittest.TestCase):
 
         manager = Manager([p1, p2, p3, p4])
 
-        winners, losers = manager._Manager__run_round()
+        winners, losers, kicked = manager._Manager__run_round()
 
         # Assert expectations
         self.assertEqual(len(winners), 2)
         self.assertCountEqual(winners, [p1, p4])
         self.assertCountEqual(losers, [p2, p3])
+        self.assertCountEqual(kicked, [])
 
     def test_run_round3(self):
         # Tests the running of a 2-game round
@@ -207,13 +209,14 @@ class ManagerTests(unittest.TestCase):
         manager = Manager([p1, p2, p3, p4, p5,
                            p6, p7, p8])
 
-        winners, losers = manager._Manager__run_round()
+        winners, losers, kicked = manager._Manager__run_round()
 
         # Assert expectations
         self.assertEqual(len(winners), 2)
 
         self.assertCountEqual(winners, [p1, p7])
         self.assertCountEqual(losers, [p2, p3, p4, p5, p6, p8])
+        self.assertCountEqual(kicked, [])
 
     def test_run1(self):
         # Tests a 4-player tournament in which only winner emerges after 2 rounds (one with 4 players and the

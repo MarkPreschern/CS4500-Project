@@ -24,6 +24,7 @@ class Server(object):
     server socket -> this servers TCP socket at which we are accepting client connections
     remote player proxy -> our player implementation that supports communicating with remote players
     """
+    DEBUG = False
 
     def __init__(self, signup_timeout: int = 5, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 1):
         """
@@ -56,15 +57,19 @@ class Server(object):
         # listen for signups
         self.__signup_players()
 
-        for rpp in self.__remote_player_proxies:
-            print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
+        if Server.DEBUG:
+            for rpp in self.__remote_player_proxies:
+                print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
 
         tm_manager = Manager(self.__remote_player_proxies)
         # For the purposes of logging tournament information as the tournament progresses
-        tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
+
+        if Server.DEBUG:
+            tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
+
         tm_manager.run()
         
-        print([len(tm_manager.tournament_winners), len(tm_manager.tournament_losers)])
+        print([len(tm_manager.tournament_winners), len(tm_manager.tournament_kicked)])
         
         self.__teardown_tournament()
 

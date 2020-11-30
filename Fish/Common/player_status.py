@@ -7,4 +7,5 @@ class PlayerStatus(Enum):
     """
     WON_GAME = 0,
     LOST_GAME = 1,
-    WON_TOURNAMENT = 2
+    WON_TOURNAMENT = 2,
+    DISCONTINUED = 3

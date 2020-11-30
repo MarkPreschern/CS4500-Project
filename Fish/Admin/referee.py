@@ -371,7 +371,8 @@ class Referee(object):
                     continue
 
                 # Get placement for player using a deep copy of state
-                placement = p.get_placement(self.__state.deepcopy())
+                placement = utils.timed_call(Referee.PLAYER_TIMEOUT, p, 'get_placement',
+                                             args=(self.__state.deepcopy(),))
 
                 # Validate placement received
                 if not isinstance(placement, Position):

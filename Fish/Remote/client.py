@@ -27,6 +27,7 @@ class Client(object):
     Remote player proxy (RPP) - The player on the server side that is representing this remote player,
     and deals with the networked communication between this player and the Admins of the Fish server.
     """
+    DEBUG = False
 
     def __init__(self, name: str, lookahead_depth: int = 2):
         """
@@ -62,13 +63,17 @@ class Client(object):
             while not self.__is_tournament_over:
                 msgs = self.__receive_messages()
                 for msg in msgs:
-                    print(f'[{self.name}] [{self.color}] [RECV] <- [RPP]: {msg}')
+                    if Client.DEBUG:
+                        print(f'[{self.name}] [{self.color}] [RECV] <- [RPP]: {msg}')
+
                     if msg:
                         res = self.__handle_message(msg)
                         if res:
                             self.__send_message(res)
             self.__teardown()
-            print('** EXIT THREAD **')
+
+            if Client.DEBUG:
+                print('** EXIT THREAD **')
 
 
     def __handle_message(self, json) -> str:
@@ -118,7 +123,10 @@ class Client(object):
         :param args: [Color] representing the color that the player is represented as in the game that is starting
         """
         color = self.__json_serializer.decode_playing_as_args(args)
-        print(f'[{self.name}] is playing as {color}')
+
+        if Client.DEBUG:
+            print(f'[{self.name}] is playing as {color}')
+
         self.set_color(color)
         return None
 
@@ -139,9 +147,15 @@ class Client(object):
         :return: the JSON-encoded Position message to send back to the RPP
         """
         state = self.__json_serializer.decode_setup(args)
-        print(f'[{self.name}] [{self.color}] is calculating placement...')
+
+        if Client.DEBUG:
+            print(f'[{self.name}] [{self.color}] is calculating placement...')
+
         position = Strategy.place_penguin(self.color, state)
-        print(f'[{self.name} ({self.color})]  [SEND -> RPP] placement ~ {position}')
+
+        if Client.DEBUG:
+            print(f'[{self.name} ({self.color})]  [SEND -> RPP] placement ~ {position}')
+
         return self.__json_serializer.encode_position(position)
 
     def __handle_take_turn(self, args):
@@ -152,9 +166,15 @@ class Client(object):
         :return: the JSON-encoded Action message to send back to the RPP
         """
         state = self.__json_serializer.decode_take_turn(args)
-        print(f'[{self.name}] is calculating turn...')
+
+        if Client.DEBUG:
+            print(f'[{self.name}] is calculating turn...')
+
         action = Strategy.get_best_action(state, self.__lookahead_depth)
-        print(f'[{self.name}] [{self.color}] [SEND -> RPP] take-turn ~ {action[0]} -> {action[1]}')
+
+        if Client.DEBUG:
+            print(f'[{self.name}] [{self.color}] [SEND -> RPP] take-turn ~ {action[0]} -> {action[1]}')
+
         return self.__json_serializer.encode_action(action)
 
     def __handle_tournament_end(self, args):
@@ -163,7 +183,8 @@ class Client(object):
 
         :param args: [Boolean] representing whether this player won (true) or lost (false) the tournament
         """
-        print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
+        if Client.DEBUG:
+            print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
         self.__is_tournament_over = True
 
         # TODO acknowledge?

@@ -2,21 +2,23 @@ This file should explain the file organization of the folder. At this point you 
 
 Also, if you modify other pieces of code, describe these modifications in a separate section in this README file.
 
-1. Added set_color to player_interface, as it is needed for any player to know what color they are in a given game
-2. Added notify_opponent_colors to player interface, as we need to be able to inform players who they are playing against
-(according to the protocol given to us)
-3. [BUG] tournament manager did not __notify_players after first round is played, resulting in losers not knowing to exit.
+1. Added set_color to player_interface, as it is needed for any player to know what color they are in a given game.
+2. Added notify_opponent_colors to player interface, as we need to be able to inform players who they are playing against (according to the protocol given to us)
+3. Implemented set_color and notify_opponent_colors in player.py to conform to the player_interface changes
+4. [BUG] tournament manager did not __notify_players after first round is played, resulting in losers not knowing to exit.
+5. Added 'DISCONTINUED' to PlayerStatus enum which represents players that have been discontinued from a tournament due to a business logic, safety, or DoS bug.
+6. Refactored manager.py to include a list a players in the tournament who have been kicked for cheating or failing.
 
 TODOS:
 - [ ] RPP must handle abnormal conditions from network (i.e. a 1 sec timeout needs to implemented on all of its calls, and
     must be declared a failed player)
 - [ ] Ensure that we can deal with both ill-formed and invalid JSON (on client and RPP side, receive_messages)
 - [ ] Fix take-turn JSON message to include [Action, ..., Action] as per spec (not sure what we would use these for)
-- [ ] Refactor tournament manager to have seperated cheaters and failed players (and losers)
+- [x] Refactor tournament manager to have seperated cheaters and failed players (and losers)
 
 - [ ] Fix that server sign up rounds works according to specification, need to deal with not enough players
 - [ ] Ensure that allocations to games are happening according to age
-- [ ] Add DEBUG to logs (client and server)
+- [x] Add DEBUG to logs (client and server)
 - [ ] Ensure board type is correct (make fish constant, no holes, 5x5, etc)
 - [ ] Add argument parsing to xserver and xclients according to specification.
 - [ ] Fix player allocation method to prefer games of 3 until must move on to 2

@@ -58,6 +58,8 @@ class Player(IPlayer):
         self.__kicked_reason = ''
         # Initialize state to a place holder
         self.__state = None
+        # Initialize opponent colors to empty list
+        self.__opponent_colors = []
 
     @property
     def kicked_reason(self) -> str:
@@ -183,6 +185,14 @@ class Player(IPlayer):
         # A real player may decide what to do with this information, but an A.I. could
         # care less.
         return True
+
+    def set_color(self, color: Color):
+        """ Implements PlayerInterface.set_color() """
+        self.__color = color
+
+    def notify_opponent_colors(self, colors):
+        """ Implements PlayerInterface.notify_opponent_colors() """
+        self.__opponent_colors = colors
 
     def tournament_has_started(self) -> bool:
         """

@@ -94,8 +94,10 @@ class Manager(IManager, threading.Thread):
 
         # Initialize list to hold tournament winners
         self.__tournament_winners = []
-        # Initialize list to hold tournament losers
+        # Initialize list to hold tournament losers, which includes kicked players
         self.__tournament_losers = []
+        # Initialize list to hold tournament players who were kicked for cheating or failing
+        self.__tournament_kicked = []
         # Initialize list to hold the callback methods of subscribed observers
         self.__update_callbacks = []
         # Initialize counter to keep track of round no.
@@ -116,6 +118,13 @@ class Manager(IManager, threading.Thread):
         Returns a list of IPlayer objects representing the tournament losers.
         """
         return self.__tournament_losers
+
+    @property
+    def tournament_kicked(self):
+        """
+        Returns a list of IPlayer objects representing the tournament players who were kicked for cheating or failing.
+        """
+        return self.__tournament_kicked
 
     def subscribe_tournament_updates(self, callback: Callable) -> None:
         """
@@ -167,8 +176,8 @@ class Manager(IManager, threading.Thread):
         self.__broadcast_tournament_start()
 
         # Run first round & get players qualified to next
-        winners, losers = self.__run_round()
-        winners, losers = self.__notify_players(losers, winners)
+        winners, losers, kicked = self.__run_round()
+        winners, losers, kicked = self.__notify_players(losers, winners, kicked)
 
         # Trim down player list to winners
         self.__players = winners
@@ -178,9 +187,9 @@ class Manager(IManager, threading.Thread):
         while len(winners) > 1:
             self.__round_no += 1
             # Get this round's winners & losers
-            winners, losers = self.__run_round()
+            winners, losers, kicked = self.__run_round()
             # Notify players & transfer failing winners to losers if they refuse to accept notification
-            winners, losers = self.__notify_players(losers, winners)
+            winners, losers, kicked = self.__notify_players(losers, winners, kicked)
 
             # See if the previous & current round have produced the same winners
             if set(self.__players) == set(winners):
@@ -222,10 +231,11 @@ class Manager(IManager, threading.Thread):
                 # If a winning player throws an exception, they become a loser
                 utils.timed_call(Manager.PLAYER_TIMEOUT, player, 'status_update', (PlayerStatus.LOST_GAME,))
                 self.__tournament_losers.append(player)
+                self.__tournament_kicked.append(player)
             else:
                 self.__tournament_winners.append(player)
 
-    def __notify_players(self, losers: [IPlayer], winners: [IPlayer]) -> [[IPlayer], [IPlayer]]:
+    def __notify_players(self, losers: [IPlayer], winners: [IPlayer], kicked: [IPlayer]) -> [[IPlayer], [IPlayer], [IPlayer]]:
         """
         Notifies the given collection of winning and losing players that they have either
         won the game (a game, not necessarily the tournament) or that they lost the tournament
@@ -234,7 +244,8 @@ class Manager(IManager, threading.Thread):
 
         :param losers: list of IPlayer representing losing players
         :param winners: list of IPlayer representing winning players
-        :return: resulting losers: [IPlayer] and winners: [IPlayer]
+        :param kicked: list of IPlayer representing kicked players
+        :return: resulting losers: [IPlayer], winners: [IPlayer], kicked: [IPlayer]
         """
         # Initialize list to hold IPlayer objects that fail to acknowledge that they won
         failing_winners = []
@@ -257,19 +268,34 @@ class Manager(IManager, threading.Thread):
             winners.remove(failing_winner)
             # A failing winner is a game loser
             losers.append(failing_winner)
+            # A failing winner is a kicked players
+            kicked.append(failing_winner)
             # A failing winner is a tournament loser
             self.__tournament_losers.append(failing_winner)
 
-        # Notify this round's losers that they've lost
-        for loser in losers:
+        # Notify this rounds kicked players that they've been kicked
+        for kick in kicked:
+            # append tournament kicked players
+            self.__tournament_kicked.append(kick)
             try:
-                loser.status_update(PlayerStatus.LOST_GAME)
+                kick.status_update(PlayerStatus.DISCONTINUED)
             except Exception:
                 # Nothing to do.
                 pass
 
+        # Notify this round's losers that they've lost, only if they haven't already been kicked
+        for loser in losers:
+            # append tournament losers
+            self.__tournament_losers.append(loser)
+            if loser not in kicked:
+                try:
+                    loser.status_update(PlayerStatus.LOST_GAME)
+                except Exception:
+                    # Nothing to do.
+                    pass
+
         # Return updated winners & losers
-        return winners, losers
+        return winners, losers, kicked
 
     def __notify_tournament_end(self) -> None:
         """
@@ -358,6 +384,8 @@ class Manager(IManager, threading.Thread):
         winners = []
         # Initialize list to contain IPlayer objects that lost
         losers = []
+        # Initialize list to contain IPlayer objects that were kicked
+        kicked = []
 
         games_in_progress = len(games)
 
@@ -374,6 +402,10 @@ class Manager(IManager, threading.Thread):
                     winners.extend(games[k].winners)
                     # Extend list of losers to include this game's losers
                     losers.extend(games[k].losers)
+                    # Extend list of kicked players to include cheating players
+                    kicked.extend(games[k].cheating_players)
+                    # Extend list of kicked players to include failing players
+                    kicked.extend(games[k].failing_players)
                     # Remove game from list
                     games.remove(games[k])
 
@@ -382,7 +414,7 @@ class Manager(IManager, threading.Thread):
         if Manager.DEBUG:
             print(f'this rounds winners: {[winner.name for winner in winners]}')
 
-        return winners, losers
+        return winners, losers, kicked
 
     def __make_round_games(self):
         """
