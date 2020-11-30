@@ -26,7 +26,10 @@ class Server(object):
     """
     DEBUG = False
 
-    def __init__(self, signup_timeout: int = 5, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 1):
+    # How long to wait for client to respond to messages
+    CLIENT_TIMEOUT = 1
+
+    def __init__(self, signup_timeout: int = 30, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 2):
         """
         Initializes a server component using various default parameters.
 
@@ -61,15 +64,20 @@ class Server(object):
             for rpp in self.__remote_player_proxies:
                 print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
 
-        tm_manager = Manager(self.__remote_player_proxies)
-        # For the purposes of logging tournament information as the tournament progresses
+        has_enough_players = self.__can_tournament_run()
 
-        if Server.DEBUG:
-            tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
+        if has_enough_players:
+            tm_manager = Manager(self.__remote_player_proxies)
+            # For the purposes of logging tournament information as the tournament progresses
 
-        tm_manager.run()
+            if Server.DEBUG:
+                tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
+
+            tm_manager.run()
         
-        print([len(tm_manager.tournament_winners), len(tm_manager.tournament_kicked)])
+            print([len(tm_manager.tournament_winners), len(tm_manager.tournament_kicked)])
+        else:
+            print(f'Not enough or too many players signed up to run tournament... ({len(self.__remote_player_proxies)} / {self.__min_clients})')
         
         self.__teardown_tournament()
 
@@ -93,7 +101,7 @@ class Server(object):
 
         try:
             server_sock.bind(('localhost', port))
-            server_sock.listen(self.__max_clients)
+            server_sock.listen()
             return server_sock
         except Exception as e:
             print(e)
@@ -104,9 +112,16 @@ class Server(object):
         Accept client connections (sign up players) for the specified number of sign up periods (and time per sign up period).
         A signup round will be conducted if we have not exhausted all waiting periods, or if we have hit the max_clients limit.
         """
-        # Add case for if we hit max (?)
-        while self.__signup_periods > 0 or len(self.__remote_player_proxies) < self.__min_clients:
+        while self.__signup_periods > 0 and len(self.__remote_player_proxies) < self.__min_clients and len(self.__remote_player_proxies) != self.__max_clients:
             self.__run_signup_period()
+
+    def __can_tournament_run(self) -> bool:
+        """ 
+        Check that the # of currently signed up players is between min and max (inclusive) 
+
+        :return: whether a tournament can be run with the currently signed up players (True if yes)
+        """
+        return self.__min_clients <= len(self.__remote_player_proxies) <= self.__max_clients
 
     def __run_signup_period(self):
         """
@@ -120,24 +135,45 @@ class Server(object):
 
         # loop until we reach that time (i.e. this loop will run for signup_timeout seconds)
         while time.time() < time_end:
+            client_sock = None
             try:
                 (client_sock, address) = self.__server_socket.accept()
+                client_sock.settimeout(self.CLIENT_TIMEOUT)
 
                 # Receive name from client
                 data = client_sock.recv(4096)
 
-                if data:
+                name = data.decode('utf-8')
+
+                if name and self.__is_name_available(name):
                     curr_time = time.time()
-                    rpp = RemotePlayerProxy(data.decode('utf-8'), curr_time, client_sock)
+                    rpp = RemotePlayerProxy(name, curr_time, client_sock)
                     self.__remote_player_proxies.append(rpp)
+                else:
+                    # Either did not provide name, or provided a taken name, so we disconnect them
+                    client_sock.close()
 
                 # If we have reached the max number of clients, stop listening
                 if len(self.__remote_player_proxies) == self.__max_clients:
                     break
             except socket.timeout:
-                break
+                if client_sock:
+                    client_sock.close()
 
         self.__signup_periods -= 1
+
+    def __is_name_available(self, name: str) -> bool:
+        """
+        A helper to check if our server has already signed up a client with the given name.  This
+        will be used to ensure that all players who sign up have unique names.
+
+        :param name: the name to check for availability
+        :return: true if the name is available for use (unused), else false
+        """
+        for rpp in self.__remote_player_proxies:
+            if rpp.name == name:
+                return False
+        return True
 
     def __log_tournament_update(self, payload):
         """ For debugging, log NEW_ROUND and TOURNAMENT_END updates to stdout """

@@ -6,6 +6,7 @@ sys.path.append('../C')
 
 from json_serializer import JsonSerializer
 from strategy import Strategy
+import random
 
 class Client(object):
     """
@@ -28,6 +29,9 @@ class Client(object):
     and deals with the networked communication between this player and the Admins of the Fish server.
     """
     DEBUG = False
+
+    # large timeout because we want to client to be able to wait for tournament start after signing up
+    NO_MESSAGE_TIMEOUT = 30
 
     def __init__(self, name: str, lookahead_depth: int = 2):
         """
@@ -57,11 +61,15 @@ class Client(object):
         # Initialize socket
         self.__client_sock = self.__init_socket(host, port)
         if self.__client_sock:
+
             self.__client_sock.send(bytes(self.__name, 'utf-8'))
 
             # Extract this loop into helper
             while not self.__is_tournament_over:
                 msgs = self.__receive_messages()
+                if msgs == None or len(msgs) == 0:
+                    # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
+                    break
                 for msg in msgs:
                     if Client.DEBUG:
                         print(f'[{self.name}] [{self.color}] [RECV] <- [RPP]: {msg}')
@@ -83,44 +91,41 @@ class Client(object):
         required it will return that string response, else will return None.
 
         :param json: the JSON message received through the connection to the Fish admin server
-        :return: If a response is required, return the string response, else None
+        :return: If a response is required, return the JSON string response, else "void"
         """
         type = json[0]
 
         if type == 'start':
-            self.__handle_tournament_start(json[1])
-            return None
+            return self.__handle_tournament_start(json[1])
         elif type == 'playing-as':
-            self.__handle_playing_as(json[1])
-            return None
+            return self.__handle_playing_as(json[1])
         elif type == 'playing-with':
-            self.__handle_playing_with(json[1])
-            return None
+            return self.__handle_playing_with(json[1])
         elif type == 'setup':
             return self.__handle_setup(json[1])
         elif type == 'take-turn':
             return self.__handle_take_turn(json[1]) 
         elif type == 'end':
-            self.__handle_tournament_end(json[1])
-            return None
+            return self.__handle_tournament_end(json[1])
         else:
             return None
 
-    def __handle_tournament_start(self, args):
+    def __handle_tournament_start(self, args) -> str:
         """ 
         Handle the tournament start message from the remote player proxy.  Our current implementation
         does not benefit from handling this message.
         
         :param args: [Boolean] representing True if the tournament has started
+        :return: a void string to acknowledge we received this message
         """
-        # Acknowledge?
-        return None
+        return "void"
 
-    def __handle_playing_as(self, args):
+    def __handle_playing_as(self, args) -> str:
         """ 
         Handle the playing-as message from the remote player proxy
         
         :param args: [Color] representing the color that the player is represented as in the game that is starting
+        :return: a void string to acknowledge we received this message
         """
         color = self.__json_serializer.decode_playing_as_args(args)
 
@@ -128,7 +133,7 @@ class Client(object):
             print(f'[{self.name}] is playing as {color}')
 
         self.set_color(color)
-        return None
+        return "void"
 
     def __handle_playing_with(self, args):
         """ 
@@ -136,8 +141,9 @@ class Client(object):
         benefit from handling this message.
         
         :param args: [Color, Color, ...] the array of colors representing the opponents in this player's current game
+        :return: a void string to acknowledge we received this message
         """
-        return None
+        return "void"
 
     def __handle_setup(self, args):
         """
@@ -182,13 +188,12 @@ class Client(object):
         Handle the tournament end message from the remote player proxy.
 
         :param args: [Boolean] representing whether this player won (true) or lost (false) the tournament
+        :return: a void string to acknowledge we received this message
         """
         if Client.DEBUG:
             print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
         self.__is_tournament_over = True
-
-        # TODO acknowledge?
-        return True
+        return "void"
 
     def __teardown(self):
         """
@@ -225,7 +230,7 @@ class Client(object):
         try:
             client_sock.connect((host, port))
             client_sock.setblocking(0)
-            client_sock.settimeout(10)
+            client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
             return client_sock
         except Exception:
             return None

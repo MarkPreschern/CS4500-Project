@@ -6,9 +6,12 @@ sys.path.append("../Fish/Admin")
 from server import Server
 from referee import Referee
 from manager import Manager
+from remote_player_proxy import RemotePlayerProxy
 
 
 def xserver(port):
+    RemotePlayerProxy.DEBUG = True
+
     # guarantees that there are no holes
     Referee.DIFFICULTY_FACTOR = 0
 

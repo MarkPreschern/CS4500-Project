@@ -9,6 +9,8 @@ DEBUG = False
 
 
 def xclients(num_clients, port, ip_address):
+    Client.DEBUG = True
+
     clients = [Client(str(index)) for index in range(num_clients)]
 
     threads = list()
@@ -17,6 +19,9 @@ def xclients(num_clients, port, ip_address):
         c_thread = threading.Thread(target=thread_func, args=(client, port, ip_address,))
         threads.append(c_thread)
         c_thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
 def thread_func(client, port, ip_address):

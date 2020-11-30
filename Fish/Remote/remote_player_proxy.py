@@ -72,6 +72,8 @@ class RemotePlayerProxy(IPlayer):
             except Exception as e:
                 print(e)
                 return None
+            except socket.timeout:
+                print(f'Lost client {self.name}')
 
     def __send_message(self, data):
         """
