@@ -6,7 +6,6 @@ sys.path.append('../C')
 
 from json_serializer import JsonSerializer
 from strategy import Strategy
-import random
 
 class Client(object):
     """
@@ -46,6 +45,7 @@ class Client(object):
         self.__json_serializer = JsonSerializer()
         self.__color = None
         self.__is_tournament_over = False
+        self.__is_player_kicked = False
 
     def run(self, host: str, port: int):
         """
@@ -65,9 +65,9 @@ class Client(object):
             self.__client_sock.send(bytes(self.__name, 'utf-8'))
 
             # Extract this loop into helper
-            while not self.__is_tournament_over:
+            while not (self.__is_tournament_over or self.__is_player_kicked):
                 msgs = self.__receive_messages()
-                if msgs == None or len(msgs) == 0:
+                if msgs is None or len(msgs) == 0:
                     # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
                     break
                 for msg in msgs:
@@ -78,11 +78,11 @@ class Client(object):
                         res = self.__handle_message(msg)
                         if res:
                             self.__send_message(res)
+
             self.__teardown()
 
             if Client.DEBUG:
                 print('** EXIT THREAD **')
-
 
     def __handle_message(self, json) -> str:
         """ 
@@ -91,7 +91,7 @@ class Client(object):
         required it will return that string response, else will return None.
 
         :param json: the JSON message received through the connection to the Fish admin server
-        :return: If a response is required, return the JSON string response, else "void"
+        :return: If a response is required, return the JSON string response, else 'void'
         """
         type = json[0]
 
@@ -104,7 +104,7 @@ class Client(object):
         elif type == 'setup':
             return self.__handle_setup(json[1])
         elif type == 'take-turn':
-            return self.__handle_take_turn(json[1]) 
+            return self.__handle_take_turn(json[1])
         elif type == 'end':
             return self.__handle_tournament_end(json[1])
         else:
@@ -118,7 +118,7 @@ class Client(object):
         :param args: [Boolean] representing True if the tournament has started
         :return: a void string to acknowledge we received this message
         """
-        return "void"
+        return 'void'
 
     def __handle_playing_as(self, args) -> str:
         """ 
@@ -133,7 +133,7 @@ class Client(object):
             print(f'[{self.name}] is playing as {color}')
 
         self.set_color(color)
-        return "void"
+        return 'void'
 
     def __handle_playing_with(self, args):
         """ 
@@ -143,7 +143,7 @@ class Client(object):
         :param args: [Color, Color, ...] the array of colors representing the opponents in this player's current game
         :return: a void string to acknowledge we received this message
         """
-        return "void"
+        return 'void'
 
     def __handle_setup(self, args):
         """
@@ -193,7 +193,8 @@ class Client(object):
         if Client.DEBUG:
             print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
         self.__is_tournament_over = True
-        return "void"
+
+        return 'void'
 
     def __teardown(self):
         """

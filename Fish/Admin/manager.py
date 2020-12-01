@@ -7,6 +7,7 @@ sys.path.append('../Fish/Admin/Other/')
 from player_interface import IPlayer
 from manager_interface import IManager
 from player_status import PlayerStatus
+from player_kick_reason import PlayerKickReason
 from tournament_update_type import TournamentUpdateType
 from referee import Referee
 import constants as ct
@@ -155,8 +156,15 @@ class Manager(IManager, threading.Thread):
         """
 
         # Trim down player list to players that have acknowledged that the tournament has started
-        self.__players = [p for p in self.__players
-                          if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_started', ())]
+        present_players = []
+        for p in self.__players:
+            if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_started', ()):
+                present_players.append(p)
+            else:
+                self.__tournament_kicked.append(p)
+                p.kick(PlayerKickReason.FAILING.name)
+        self.__players = present_players
+        print("PLAYERS: ", self.__players)
 
     def __broadcast_tournament_end(self) -> None:
         """
@@ -168,8 +176,14 @@ class Manager(IManager, threading.Thread):
         """
 
         # Trim down player list to players that have acknowledged that the tournament has started
-        self.__players = [p for p in self.__players
-                          if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_ended', ())]
+        present_players = []
+        for p in self.__players:
+            if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_ended', tuple([p in self.tournament_winners])):
+                present_players.append(p)
+            else:
+                self.__tournament_kicked.append(p)
+                p.kick(PlayerKickReason.FAILING.name)
+        self.__players = present_players
 
     def run(self):
         """
@@ -235,6 +249,7 @@ class Manager(IManager, threading.Thread):
                 utils.timed_call(Manager.PLAYER_TIMEOUT, player, 'status_update', (PlayerStatus.LOST_GAME,))
                 self.__tournament_losers.append(player)
                 self.__tournament_kicked.append(player)
+                player.kick(PlayerKickReason.FAILING.name)
             else:
                 self.__tournament_winners.append(player)
 

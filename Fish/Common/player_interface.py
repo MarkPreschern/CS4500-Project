@@ -99,25 +99,36 @@ class IPlayer(ABC):
         """
         This method is meant to inform the player that the tournament it is partaking in has started. Player must
         respond with True in a timely manner or else it is removed.
-
-        :return: boolean indicating whether player accepts status or not
+        :return: boolean indicating whether the player accepts the notification or not
         """
         pass
 
     @abstractmethod
-    def set_color(self, color: Color):
+    def tournament_has_ended(self, winner: bool) -> bool:
+        """
+        This method is meant to inform the player that the tournament it is partaking in has ended. Player must
+        respond with True in a timely manner or else it is removed.
+        :param winner: if the player won the tournament
+        :return: boolean indicating whether the player accepts the notification or not
+        """
+        pass
+
+    @abstractmethod
+    def set_color(self, color: Color) -> bool:
         """ 
         Set the color of this player for the game they are currently in 
         
         :param color: The color (enum) for this player in the game they are currently playing
+        :return: boolean indicating whether the player accepts the notification or not
         """
         pass
 
     @abstractmethod
-    def notify_opponent_colors(self, colors: [Color]):
+    def notify_opponent_colors(self, colors: [Color]) -> bool:
         """ 
         Notify this player regarding the colors they are playing against in their current game
         
         :param colors: The list of the colors of this players opponents in the game they are currently playing
+        :return: boolean indicating whether the player accepts the notification or not
         """
         pass

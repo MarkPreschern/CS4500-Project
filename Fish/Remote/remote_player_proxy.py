@@ -11,6 +11,7 @@ from player_status import PlayerStatus
 from player_interface import IPlayer
 from json_serializer import JsonSerializer
 
+
 class RemotePlayerProxy(IPlayer):
     """
     TODO Add description of how we fail players in this component (and deal with abnormal conditions), once we do that
@@ -51,6 +52,7 @@ class RemotePlayerProxy(IPlayer):
         self.__age = age
         self.__socket = socket
         self.__color = None
+        self.__state = None
         self.__json_serializer = JsonSerializer()
 
     def __receive_messages(self) -> str:
@@ -66,14 +68,19 @@ class RemotePlayerProxy(IPlayer):
                 if data:
                     msgs = self.__json_serializer.bytes_to_jsons(data)
                     if RemotePlayerProxy.DEBUG:
-                        for msg in msgs:
-                            print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
+                        if msgs == 'void':
+                            print(f'[RPP] [RECV] <- [{self.name}]: {msgs}')
+                        else:
+                            for msg in msgs:
+                                print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
                     return msgs
             except Exception as e:
                 print(e)
                 return None
             except socket.timeout:
-                print(f'Lost client {self.name}')
+                if RemotePlayerProxy.DEBUG:
+                    print(f'Lost client {self.name}')
+                return None
 
     def __send_message(self, data):
         """
@@ -90,6 +97,16 @@ class RemotePlayerProxy(IPlayer):
             self.__socket.sendall(bytes(data, 'utf-8'))
         except Exception as e:
             print(e)
+
+    def __is_ack(self, ack) -> bool:
+        """
+        Returns True if the ack is properly formed, implying that the message received by the client was acknowledged,
+        and returns False otherwise.
+
+        :param ack: The supposed acknowledgement of a message, should be [['void']]
+        :return: True if the message is acknowledged or False otherwise
+        """
+        return ack == 'void'
 
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
@@ -128,6 +145,9 @@ class RemotePlayerProxy(IPlayer):
         if RemotePlayerProxy.DEBUG:
             print(f'[{self.name}] was kicked for {reason}!')
 
+        # close socket when a player is kicked, terminating the interaction between the server and client
+        self.__socket.close()
+
         return None
 
     def sync(self, state: State) -> None:
@@ -155,40 +175,46 @@ class RemotePlayerProxy(IPlayer):
             raise TypeError('Expected list for failing_players!')
 
         return None
-        
 
     def status_update(self, status: PlayerStatus) -> bool:
         """ Implements PlayerInterface.status_update(PlayerStatus) """
         if not isinstance(status, PlayerStatus):
             raise TypeError('Expected PlayerStatus for status!')
         
-        if status == PlayerStatus.LOST_GAME:
-            msg = self.__json_serializer.encode_tournament_end(False)
-            self.__send_message(msg)
-        elif status == PlayerStatus.DISCONTINUED:
-            msg = self.__json_serializer.encode_tournament_end(False)
-            self.__send_message(msg)
-        elif status == PlayerStatus.WON_TOURNAMENT:
-            msg = self.__json_serializer.encode_tournament_end(True)
-            self.__send_message(msg)
         return True
 
-    def set_color(self, color: Color):
+    def set_color(self, color: Color) -> bool:
         """ Implements PlayerInterface.set_color() """
         self.__color = color
         msg = self.__json_serializer.encode_playing_as(color)
         self.__send_message(msg)
 
-    def notify_opponent_colors(self, colors):
+        ack = self.__receive_messages()
+        return self.__is_ack(ack)
+
+    def notify_opponent_colors(self, colors) -> bool:
         """ Implements PlayerInterface.notify_opponent_colors() """
         msg = self.__json_serializer.encode_playing_with(colors)
         self.__send_message(msg)
+
+        ack = self.__receive_messages()
+        return self.__is_ack(ack)
 
     def tournament_has_started(self) -> bool:
         """ Implements PlayerInterface.tournament_has_started() """
         msg = self.__json_serializer.encode_tournament_start(True)
         self.__send_message(msg)
-        return True
+
+        ack = self.__receive_messages()
+        return self.__is_ack(ack)
+
+    def tournament_has_ended(self, is_winner) -> bool:
+        """ Implements PlayerInterface.tournament_has_started() """
+        msg = self.__json_serializer.encode_tournament_end(is_winner)
+        self.__send_message(msg)
+
+        ack = self.__receive_messages()
+        return self.__is_ack(ack)
 
     @property
     def name(self):

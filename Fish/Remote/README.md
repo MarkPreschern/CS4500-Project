@@ -9,17 +9,17 @@ Also, if you modify other pieces of code, describe these modifications in a sepa
 5. Added 'DISCONTINUED' to PlayerStatus enum which represents players that have been discontinued from a tournament due to a business logic, safety, or DoS bug.
 6. Refactored manager.py to include a list a players in the tournament who have been kicked for cheating or failing.
 7. Refactored manager.py to include a fish number, which if modified makes every tile of every game have the modified number of fish.
+8. Refactored manager.py to kick player's who did not respond to a tournament start or end notification
+9. Refactored referee.py to have players set their color and acknowledge other player's colors
 
 TODOS:
 Main
-- [ ] RPP must handle abnormal conditions from network (i.e. a 1 sec timeout needs to implemented on all of its calls, and
-    must be declared a failed player)
-- [ ] Ensure we are failing players that don't return string "void" when no response is expected
 - [ ] Ensure that we can deal with both ill-formed and invalid JSON (on client and RPP side, receive_messages)
 - [ ] Fix take-turn JSON message to include [Action, ..., Action] as per spec (not sure what we would use these for)
 - [ ] Fix player allocation method to prefer games of 3 until must move on to 2
 - [ ] Ensure that allocations to games are happening according to age
-- [ ] Check on RPP for "void" message
+- [ ] Use 'ascii' encoding instead of 'utf-8'
+- [ ] Timeout of 1 second isn't enough for some players, look into this
 
 Cleanup
 - [ ] Sanity check specification vs. implementation
@@ -27,6 +27,9 @@ Cleanup
 - [ ] Finish filling out this README
 
 Done
+- [x] RPP must handle abnormal conditions from network (i.e. a 1 sec timeout needs to implemented on all of its calls, and must be declared a failed player)
+- [x] Ensure we are failing players that don't return string "void" when no response is expected
+- [x] Check on RPP for "void" message
 - [x] Handle case where client connects but doesn't send their name (drop this connection)
 - [x] Refactor tournament manager to have seperated cheaters and failed players (and losers)
 - [x] Add DEBUG to logs (client and server)

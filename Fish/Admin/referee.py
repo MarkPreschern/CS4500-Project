@@ -164,16 +164,6 @@ class Referee(object):
                 (not isinstance(fish_no, int) or fish_no < ct.MIN_FISH_PER_TILE or fish_no > ct.MAX_FISH_PER_TILE):
             raise ValueError('Expected positive int between 1 and 5 inclusive for fish!')
 
-        # Assign each player the color that correspond to their position in the player list
-        game_colors = []
-        for k in range(len(players)):
-            players[k].set_color(Color(k))
-            game_colors.append(Color(k))
-
-        # Notify each player which colors they will be playing against
-        for player in players:
-            player.notify_opponent_colors([color for color in game_colors if color != player.color])
-
         # Set properties
         self.__players: [IPlayer] = players
         self.__avatars_per_player = 6 - len(players)
@@ -193,6 +183,9 @@ class Referee(object):
 
         # Make up a board
         self.__board = self.__make_board(cols, rows, fish_no)
+
+        # Send player's color information
+        self.__notify_player_colors()
 
         # Make up state from board & list of PlayerEntity objects
         self.__state = State(self.__board, [PlayerEntity(p.name, p.color) for p in players])
@@ -307,6 +300,30 @@ class Referee(object):
         :return: boolean flag indicating the above
         """
         return self.__started
+
+    def __notify_player_colors(self):
+        """
+        Assign each player the color that correspond to their position in the player list and notify
+        each player which colors they will be playing against. If player's fail to acknowledge the color
+        messages, their are marked as failing players.
+        :return: None
+        """
+        # Assign each player the color that correspond to their position in the player list
+        game_colors = []
+        for index, p in enumerate(self.__players):
+            ack = utils.timed_call(Referee.PLAYER_TIMEOUT, p, 'set_color', args=(Color(index),))
+            game_colors.append(Color(index))
+            # if the player doesn't ack, they are a failing player
+            if ack is None or not ack:
+                self.__failing_players.append(p)
+
+        # Notify each player which colors they will be playing against
+        for player in self.__players:
+            colors = [color for color in game_colors if color != player.color]
+            ack = utils.timed_call(Referee.PLAYER_TIMEOUT, player, 'notify_opponent_colors', args=tuple([colors]))
+            # if the player doesn't ack, they are a failing player
+            if ack is None or not ack:
+                self.__failing_players.append(player)
 
     def __make_board(self, cols: int, rows: int, fish_no: int) -> Board:
         """

@@ -9,7 +9,8 @@ DEBUG = False
 
 
 def xclients(num_clients, port, ip_address):
-    Client.DEBUG = True
+    if DEBUG:
+        Client.DEBUG = True
 
     clients = [Client(str(index)) for index in range(num_clients)]
 

@@ -101,7 +101,7 @@ class Server(object):
 
         try:
             server_sock.bind(('localhost', port))
-            server_sock.listen()
+            server_sock.listen(self.__max_clients)
             return server_sock
         except Exception as e:
             print(e)
@@ -177,9 +177,9 @@ class Server(object):
 
     def __log_tournament_update(self, payload):
         """ For debugging, log NEW_ROUND and TOURNAMENT_END updates to stdout """
-        if (payload['type'] == TournamentUpdateType.NEW_ROUND):
+        if payload['type'] == TournamentUpdateType.NEW_ROUND:
             print(f'\n~~~~~ [NEW ROUND] [ROUND {payload["round_num"]}] Games = {payload["games"]} ~~~~~\n')
-        elif (payload['type'] == TournamentUpdateType.TOURNAMENT_END):
+        elif payload['type'] == TournamentUpdateType.TOURNAMENT_END:
             print(f'\n~~~~~ [TOURNAMENT END] Winners = {payload["winners"]} ~~~~~\n')
         return True
     

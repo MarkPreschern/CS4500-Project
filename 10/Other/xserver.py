@@ -8,9 +8,13 @@ from referee import Referee
 from manager import Manager
 from remote_player_proxy import RemotePlayerProxy
 
+DEBUG = False
+
 
 def xserver(port):
-    RemotePlayerProxy.DEBUG = True
+    if DEBUG:
+        Server.DEBUG = True
+        RemotePlayerProxy.DEBUG = True
 
     # guarantees that there are no holes
     Referee.DIFFICULTY_FACTOR = 0

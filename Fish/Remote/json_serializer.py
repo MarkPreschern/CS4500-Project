@@ -10,6 +10,7 @@ from state import State
 from position import Position
 from action import Action
 
+
 class JsonSerializer(object):
     """
     TODO Add description of how we deal with ill-formed or invalid JSON messages, once we do that
@@ -17,14 +18,14 @@ class JsonSerializer(object):
     INTERPRETATION: A utility class specialized in encoding our game-related information into a JSON
     message protocol, and subsequently decoding these JSON messages back into their Python representations.
     Specifically, this component can be used by either a remote player proxy (server side) or
-    by a client for understanding and creating JSON messages to be sent over TCP sockets (messages are 
+    by a client for understanding and creating JSON messages to be sent over TCP sockets (messages are
     described below in definitions).
 
     PURPOSE: The JSON serializer is a component that encompasses all of the functionality needed to go from
     our game representations to JSON representations (and back).  An example of this could be a remote player
     proxy encoding our current game state (as given by the Referee) into JSON before sending it over its
     TCP socket to the remote player it represents (and asking for a penguin placement position).  Our client
-    could then also use this class to decode the JSON game state back to a Python game state that is 
+    could then also use this class to decode the JSON game state back to a Python game state that is
     compatible to be used with our strategy component.  The same process will need to be followed when it decides
     on a Position, and sends it back to the RPP.
 
@@ -71,7 +72,7 @@ class JsonSerializer(object):
 
     def decode_position(self, pos_arr) -> Position:
         return Position(pos_arr[0], pos_arr[1])
-        
+
     def encode_position(self, position: Position) -> str:
         return json.dumps([position.x, position.y])
 
@@ -86,16 +87,27 @@ class JsonSerializer(object):
         src = args[0]
         dest = args[1]
         return Action(Position(src[0], src[1]), Position(dest[0], dest[1]))
-        
+
     def encode_action(self, action: Action) -> str:
         return json.dumps([action[0], action[1]])
 
     def bytes_to_jsons(self, data: bytes):
+        """
+        Converts bytes to json data, or if the decoded value 'void' is passed, simply returns it
+        :param data:
+        :return:
+        """
         jsons = []
         decoder = json.JSONDecoder()
         while(True):
             try:
-                (json_val, cursor) = decoder.raw_decode(data.decode('utf-8'))
+                decoded = data.decode('utf-8')
+
+                # return 'void' even if not json
+                if decoded == 'void':
+                    return decoded
+
+                (json_val, cursor) = decoder.raw_decode(decoded)
             except Exception as e:
                 print(e)
                 print('Could not convert from bytes to JSON messages.')
@@ -113,7 +125,7 @@ class JsonSerializer(object):
         except ValueError:
             return None
 
-    def json_to_str(self, json_obj: dict) -> str:
+    def json_to_str(self, json_obj: json) -> str:
         try:
             return json.dumps(json_obj)
         except ValueError:

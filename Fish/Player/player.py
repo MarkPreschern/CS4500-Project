@@ -190,12 +190,30 @@ class Player(IPlayer):
         """ Implements PlayerInterface.set_color() """
         self.__color = color
 
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.
+        return True
+
     def notify_opponent_colors(self, colors):
         """ Implements PlayerInterface.notify_opponent_colors() """
         self.__opponent_colors = colors
 
-    def tournament_has_started(self) -> bool:
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.
+        return True
+
+    def tournament_has_started(self):
         """
         Implements PlayerInterface.tournament_has_started()
         """
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.
+        return True
+
+    def tournament_has_ended(self):
+        """
+        Implements PlayerInterface.tournament_has_started()
+        """
+        # A real player may decide what to do with this information, but an A.I. could
+        # care less.
         return True
