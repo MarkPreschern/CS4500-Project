@@ -218,7 +218,8 @@ class RemotePlayerProxy(IPlayer):
                                 print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
                     return msgs
             except Exception as e:
-                print(e)
+                if RemotePlayerProxy.DEBUG:
+                    print(f'Lost client {self.name} because: ', e)
                 return None
             except socket.timeout:
                 if RemotePlayerProxy.DEBUG:
