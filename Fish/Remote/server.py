@@ -109,6 +109,7 @@ class Server(object):
         :return: None
         """
         if self.__can_tournament_run():
+            # create tournament manager with the player proxies
             tm_manager = Manager(self.__remote_player_proxies)
             # For the purposes of logging tournament information as the tournament progresses
             if Server.DEBUG:
@@ -150,6 +151,9 @@ class Server(object):
                 name = data.decode('ascii')
 
                 if name and self.__is_name_available(name):
+                    # client timeout is now handled by the referee
+                    client_sock.settimeout(None)
+                    # Initialize the remote proxy player with the client socket
                     curr_time = time.time()
                     rpp = RemotePlayerProxy(name, curr_time, client_sock)
                     self.__remote_player_proxies.append(rpp)

@@ -174,15 +174,21 @@ class Manager(IManager, threading.Thread):
         :return: None
         """
 
-        # Trim down player list to players that have acknowledged that the tournament has started
+        # Trim down player list of winning players to those that ack the notification
         present_players = []
         for p in self.__players:
-            if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_ended', tuple([p in self.tournament_winners])):
+            if utils.timed_call(Manager.PLAYER_TIMEOUT, p, 'tournament_has_ended', tuple([True])):
                 present_players.append(p)
             else:
+                self.__tournament_losers.append(p)
                 self.__tournament_kicked.append(p)
                 p.kick(PlayerKickReason.FAILING.name)
         self.__players = present_players
+        self.__tournament_winners = present_players
+
+        # Notify loser players that they lost
+        for loser in self.__tournament_losers:
+            loser.tournament_has_ended(False)
 
     def run(self):
         """
@@ -217,40 +223,12 @@ class Manager(IManager, threading.Thread):
             # Trim down set of players to winners
             self.__players = winners
 
-        # Notify tournament winners that they have won (and remove those winners that refuse to accept
-        # the notification)
-        self.__notify_winners(winners)
+        # set tournament winners
+        self.__tournament_winners = winners
 
         # Notified subscribed parties of tournament results
         self.__notify_tournament_end()
         self.__broadcast_tournament_end()
-
-    def __notify_winners(self, winners: [IPlayer]) -> None:
-        """
-        Notifies the given list of IPlayer objects (representing the winners of the tournament)
-        that they have won. A refusal to accept the notification on the part of a player will result
-        in the player being cast off as a loser.
-
-        :param winners: list of IPlayer to notify
-        :return: None
-        """
-        # Outstanding players have won the tournament
-        for player in winners:
-            try:
-                result = utils.timed_call(Manager.PLAYER_TIMEOUT, player, 'status_update',
-                                          (PlayerStatus.WON_TOURNAMENT,))
-
-                # Make sure we get back True
-                if not isinstance(result, bool) or not result:
-                    raise TypeError()
-            except:
-                # If a winning player throws an exception, they become a loser
-                utils.timed_call(Manager.PLAYER_TIMEOUT, player, 'status_update', (PlayerStatus.LOST_GAME,))
-                self.__tournament_losers.append(player)
-                self.__tournament_kicked.append(player)
-                player.kick(PlayerKickReason.FAILING.name)
-            else:
-                self.__tournament_winners.append(player)
 
     def __notify_players(self, losers: [IPlayer], winners: [IPlayer], kicked: [IPlayer]) -> [[IPlayer], [IPlayer], [IPlayer]]:
         """

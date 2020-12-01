@@ -19,7 +19,7 @@ Main
 - [ ] 1/2 done: Fix take-turn JSON message to include [Action, ..., Action] as per spec (not sure what we would use these for)
 - [ ] Fix player allocation method to prefer games of 3 until must move on to 2
 - [ ] Ensure that allocations to games are happening according to age
-- [ ] Timeout of 1 second isn't enough for some players, look into this
+- [ ] Timeout of 1 second isn't enough for some players because minimax takes too long, look into this. Remove time print statements in Client when done.
 - [ ] Create unit tests for server
 - [ ] Create unit tests for client
 - [ ] Create unit tests for remote_player_proxy
@@ -46,3 +46,4 @@ Done
 - [x] abstract out code in run method of client
 - [x] Use 'ascii' encoding instead of 'utf-8'
 - [x] Find out where 'timed out' message is coming from and add it to debug
+- [x] clients don't close connection when kicked, fix this

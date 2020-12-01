@@ -1,5 +1,6 @@
 import socket
 import sys
+import time
 
 sys.path.append('../Fish/Player')
 sys.path.append('../C')
@@ -47,9 +48,12 @@ class Client(object):
         self.__name = name
         self.__lookahead_depth = lookahead_depth
         self.__json_serializer = JsonSerializer()
+
         self.__client_socket = None
         self.__color = None
         self.__opponent_colors = None
+
+        self.__lost_connection = False
         self.__is_tournament_over = False
 
     @property
@@ -93,6 +97,7 @@ class Client(object):
             # while the tournament is ongoing, listen for messages and respond to them accordingly
             self.__listen_for_messages()
             # tears down the socket
+            print(self.__name, " Lost Connection")
             self.__teardown()
 
     def __init_socket(self, host: str, port: int):
@@ -115,7 +120,7 @@ class Client(object):
         messages, handle them and send a response accordingly.
         :return: None
         """
-        while not self.__is_tournament_over:
+        while not (self.__is_tournament_over or self.__lost_connection):
             msgs = self.__receive_messages()
             if msgs is None or len(msgs) == 0:
                 # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
@@ -128,6 +133,7 @@ class Client(object):
                     res = self.__handle_message(msg)
                     if res:
                         self.__send_message(res)
+
 
     def __handle_message(self, json) -> str:
         """ 
@@ -226,7 +232,11 @@ class Client(object):
         if Client.DEBUG:
             print(f'[{self.name}] is calculating turn...')
 
+        # TODO: Remove time print statements
+        time1 = time.time()
         action = Strategy.get_best_action(state, self.__lookahead_depth)
+        time2 = time.time()
+        print(time2 - time1)
 
         if Client.DEBUG:
             print(f'[{self.name}] [{self.color}] [SEND -> RPP] take-turn ~ {action[0]} -> {action[1]}')
@@ -253,17 +263,29 @@ class Client(object):
                 data = self.__client_socket.recv(4096)
                 if data:
                     return self.__json_serializer.bytes_to_jsons(data)
+            except socket.error as se:
+                if Client.DEBUG:
+                    print(f'Lost server because: ', se)
+                self.__lost_connection = True
+                return None
             except Exception as e:
-                print(e)
+                if Client.DEBUG:
+                    print(f'Receive message error: ', e)
                 return None
 
     def __send_message(self, msg: str):
         """ Send the given JSON message to the remote player proxy """
         try:
             self.__client_socket.sendall(bytes(msg, 'ascii'))
+        except socket.error as se:
+            if Client.DEBUG:
+                print(f'Lost server because: ', se)
+            self.__lost_connection = True
+            return None
         except Exception as e:
-            print(e)
-            return
+            if Client.DEBUG:
+                print(f'Send message error: ', e)
+            return None
 
     def __teardown(self):
         """
