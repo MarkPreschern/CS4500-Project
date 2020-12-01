@@ -9,20 +9,24 @@ from action import Action
 from color import Color
 from player_status import PlayerStatus
 from player_interface import IPlayer
-from json_serializer import JsonSerializer
+from Other.json_serializer import JsonSerializer
 
 
 class RemotePlayerProxy(IPlayer):
     """
-    TODO Add description of how we fail players in this component (and deal with abnormal conditions), once we do that
-
     INTERPRETATION: The remote player proxy is an implementation of our IPlayer interface that allows
     for a remote player to participate in games and tournaments of Fish.  When the referee our tournament manager
     makes a call to this players functions (i.e. requesting a placement), the remote player proxy will encode
-    this request into a JSON protocol (see JsonSerializer documentation), and send it along to the remote client (player)
-    it represents.  The client, also knowing this protocol, is able to decode the JSON message, calculate its placement,
-    and send it back over the socket to this RPP.  This RPP then informs the referee (or tournament manager) of the remote
-    player's request.
+    this request into a JSON protocol (see JsonSerializer documentation), and send it along to the remote client
+    (player) it represents.  The client, also knowing this protocol, is able to decode the JSON message, calculate its
+    placement, and send it back over the socket to this RPP.  This RPP then informs the referee (or tournament manager)
+    of the remote player's request
+
+    A player fails under several circumstances. These include breaking the rules (cheating), raising an exception, and
+    taking too long to communicate (timeout). In the event of any of these failure conditions, the player is kicked from
+    the tournament and additionally communication between the server and client is disconnected. The timeout period is
+    dictated by the server's 'CLIENT_TIMEOUT'. The player can timeout if they take too long to acknowledge a message,
+    send a placement point, or a move action.
 
     PURPOSE: The purpose of the Remote Player Proxy is to allow for remote clients to connect to our servers and participate
     in games and tournaments of Fish, while our admin server can view them as simply any other player.  Therefore,
@@ -30,10 +34,11 @@ class RemotePlayerProxy(IPlayer):
     remote client.
 
     DEFINITION(S):
-    RPP -> remote player proxy
-    socket -> the TCP socket that allows this RPP to communicate with the remote player it represents
-    age -> time in seconds (since epoch) noted when this player signed up with our server (we interpret
-    this as the players age, and lower aged players are allocated to games first and take turns first)
+    RPP          -> remote player proxy
+    socket       -> the TCP socket that allows this RPP to communicate with the remote player it represents
+    age          -> time in seconds (since epoch) noted when this player signed up with our server (we interpret
+                    this as the players age, and lower aged players are allocated to games first and take turns first)
+    move_actions -> all actions made by the remote player proxy
     """
     DEBUG = False
 
@@ -55,58 +60,33 @@ class RemotePlayerProxy(IPlayer):
         self.__state = None
         self.__json_serializer = JsonSerializer()
 
-    def __receive_messages(self) -> str:
-        """ 
-        Receive JSON string message(s) from the remote player proxy and decode into a JSON-like Python object
-        See JsonSerializer for details about this protocol, and communication process. 
-
-        :return: a list of JSON string messages
+    @property
+    def name(self):
         """
-        while True:
-            try:
-                data = self.__socket.recv(4096)
-                if data:
-                    msgs = self.__json_serializer.bytes_to_jsons(data)
-                    if RemotePlayerProxy.DEBUG:
-                        if msgs == 'void':
-                            print(f'[RPP] [RECV] <- [{self.name}]: {msgs}')
-                        else:
-                            for msg in msgs:
-                                print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
-                    return msgs
-            except Exception as e:
-                print(e)
-                return None
-            except socket.timeout:
-                if RemotePlayerProxy.DEBUG:
-                    print(f'Lost client {self.name}')
-                return None
-
-    def __send_message(self, data):
+        Retrieves player proxy name
         """
-        Send a JSON protocol message (string) through the socket connection. See JsonSerializer for details
-        about this protocol, and communication process.
-        
-        :param sock: a socket object connected to a port
-        :param data: the data to be sent
-        """
-        if RemotePlayerProxy.DEBUG:
-            print(f'[RPP] [SEND] -> [{self.name}]: {data}')
+        return self.__name
 
-        try:
-            self.__socket.sendall(bytes(data, 'utf-8'))
-        except Exception as e:
-            print(e)
-
-    def __is_ack(self, ack) -> bool:
+    @property
+    def age(self):
         """
-        Returns True if the ack is properly formed, implying that the message received by the client was acknowledged,
-        and returns False otherwise.
-
-        :param ack: The supposed acknowledgement of a message, should be [['void']]
-        :return: True if the message is acknowledged or False otherwise
+        Retrieves player proxy age
         """
-        return ack == 'void'
+        return self.__age
+
+    @property
+    def socket(self):
+        """
+        Retrieves player proxy socket
+        """
+        return self.__socket
+
+    @property
+    def color(self):
+        """
+        Retrieves player proxy color
+        """
+        return self.__color
 
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
@@ -129,7 +109,9 @@ class RemotePlayerProxy(IPlayer):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
-        msg = self.__json_serializer.encode_take_turn(state)
+        last_actions: [Action] = state.move_log # TODO: make last actions conform to assignment description
+
+        msg = self.__json_serializer.encode_take_turn(state, last_actions)
         self.__send_message(msg)
 
         take_turn_msgs = self.__receive_messages()
@@ -216,18 +198,55 @@ class RemotePlayerProxy(IPlayer):
         ack = self.__receive_messages()
         return self.__is_ack(ack)
 
-    @property
-    def name(self):
-        return self.__name
+    def __receive_messages(self) -> str:
+        """
+        Receive JSON string message(s) from the remote player proxy and decode into a JSON-like Python object
+        See JsonSerializer for details about this protocol, and communication process.
 
-    @property
-    def age(self):
-        return self.__age
+        :return: a list of JSON string messages
+        """
+        while True:
+            try:
+                data = self.__socket.recv(4096)
+                if data:
+                    msgs = self.__json_serializer.bytes_to_jsons(data)
+                    if RemotePlayerProxy.DEBUG:
+                        if msgs == 'void':
+                            print(f'[RPP] [RECV] <- [{self.name}]: {msgs}')
+                        else:
+                            for msg in msgs:
+                                print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
+                    return msgs
+            except Exception as e:
+                print(e)
+                return None
+            except socket.timeout:
+                if RemotePlayerProxy.DEBUG:
+                    print(f'Lost client {self.name}')
+                return None
 
-    @property
-    def socket(self):
-        return self.__socket
+    def __send_message(self, data):
+        """
+        Send a JSON protocol message (string) through the socket connection. See JsonSerializer for details
+        about this protocol, and communication process.
 
-    @property
-    def color(self):
-        return self.__color
+        :param sock: a socket object connected to a port
+        :param data: the data to be sent
+        """
+        if RemotePlayerProxy.DEBUG:
+            print(f'[RPP] [SEND] -> [{self.name}]: {data}')
+
+        try:
+            self.__socket.sendall(bytes(data, 'ascii'))
+        except Exception as e:
+            print(e)
+
+    def __is_ack(self, ack) -> bool:
+        """
+        Returns True if the ack is properly formed, implying that the message received by the client was acknowledged,
+        and returns False otherwise.
+
+        :param ack: The supposed acknowledgement of a message, should be [['void']]
+        :return: True if the message is acknowledged or False otherwise
+        """
+        return ack == 'void'

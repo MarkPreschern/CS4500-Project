@@ -59,11 +59,14 @@ class JsonSerializer(object):
         """ Interpret list of one color (string) as Color enum """
         return _str_to_color(args[0])
 
-    def encode_playing_with(self, colors) -> str:
+    def encode_playing_with(self, colors: [Color]) -> str:
         msg = ['playing-with', [color.name.lower() for color in colors]]
         return self.json_to_str(msg)
 
-    def encode_setup(self, state) -> str:
+    def decode_playing_with(self, colors) -> [Color]:
+        return [_str_to_color(color) for color in colors]
+
+    def encode_setup(self, state: State) -> str:
         msg = ['setup', [_state_to_json(state)]]
         return self.json_to_str(msg)
 
@@ -76,12 +79,12 @@ class JsonSerializer(object):
     def encode_position(self, position: Position) -> str:
         return json.dumps([position.x, position.y])
 
-    def encode_take_turn(self, state) -> str:
-        msg = ['take-turn', [_state_to_json(state)]]
+    def encode_take_turn(self, state: State, actions: [Action]) -> str:
+        msg = ['take-turn', [_state_to_json(state)], self.json_to_str(actions)]
         return self.json_to_str(msg)
 
-    def decode_take_turn(self, args) -> State:
-        return initialize_state(args[0])
+    def decode_take_turn(self, state, actions) -> State:
+        return initialize_state(state[0]), self.str_to_json(actions)
 
     def decode_take_turn_response(self, args) -> Position:
         src = args[0]
@@ -101,7 +104,7 @@ class JsonSerializer(object):
         decoder = json.JSONDecoder()
         while(True):
             try:
-                decoded = data.decode('utf-8')
+                decoded = data.decode('ascii')
 
                 # return 'void' even if not json
                 if decoded == 'void':

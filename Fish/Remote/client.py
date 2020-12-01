@@ -4,8 +4,9 @@ import sys
 sys.path.append('../Fish/Player')
 sys.path.append('../C')
 
-from json_serializer import JsonSerializer
+from Other.json_serializer import JsonSerializer
 from strategy import Strategy
+
 
 class Client(object):
     """
@@ -19,13 +20,16 @@ class Client(object):
     a tournament of Fish.
 
     DEFINITION(S):
-    Name - unique identifier for this player
-    JSON Serializer - our component that is used in order to both encode and decode messages into the desired
-    protocol format (i.e. JSON state -> Game State) (before being sent over the TCP socket)
-    Color - the client's color for the game of Fish they are currently in (this will change throughout the 
-    duration of the tournament)
-    Remote player proxy (RPP) - The player on the server side that is representing this remote player,
-    and deals with the networked communication between this player and the Admins of the Fish server.
+    Name                      -> unique identifier for this player
+    JSON Serializer           -> our component that is used in order to both encode and decode messages into the desired
+                                 protocol format (i.e. JSON state -> Game State) (before being sent over the TCP socket)
+    Color                     -> the client's color for the game of Fish they are currently in (this will change
+                                 throughout the duration of the tournament)
+    Remote player proxy (RPP) -> The player on the server side that is representing this remote player, and deals with
+                                 the networked communication between this player and the Admins of the Fish server.
+    actions                   -> An array of Actions represents the penguin moves since the last time this player called
+                                 get_action It is empty if this is the first call or a player was eliminated since the
+                                 last call.
     """
     DEBUG = False
 
@@ -43,9 +47,31 @@ class Client(object):
         self.__name = name
         self.__lookahead_depth = lookahead_depth
         self.__json_serializer = JsonSerializer()
+        self.__client_socket = None
         self.__color = None
+        self.__opponent_colors = None
         self.__is_tournament_over = False
-        self.__is_player_kicked = False
+
+    @property
+    def name(self):
+        """
+        Retrieves client's age
+        """
+        return self.__name
+
+    @property
+    def color(self):
+        """
+        Retrieves client's color
+        """
+        return self.__color
+
+    @property
+    def opponent_colors(self):
+        """
+        Retrieves client's opponent's colors
+        """
+        return self.__opponent_colors
 
     def run(self, host: str, port: int):
         """
@@ -59,30 +85,49 @@ class Client(object):
         :param port: The port number of the server to connect to (Fish admin server)
         """
         # Initialize socket
-        self.__client_sock = self.__init_socket(host, port)
-        if self.__client_sock:
-
-            self.__client_sock.send(bytes(self.__name, 'utf-8'))
-
-            # Extract this loop into helper
-            while not (self.__is_tournament_over or self.__is_player_kicked):
-                msgs = self.__receive_messages()
-                if msgs is None or len(msgs) == 0:
-                    # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
-                    break
-                for msg in msgs:
-                    if Client.DEBUG:
-                        print(f'[{self.name}] [{self.color}] [RECV] <- [RPP]: {msg}')
-
-                    if msg:
-                        res = self.__handle_message(msg)
-                        if res:
-                            self.__send_message(res)
-
+        self.__init_socket(host, port)
+        # if the socket is created successfully, continue
+        if self.__client_socket:
+            # sends client's name
+            self.__client_socket.send(bytes(self.__name, 'ascii'))
+            # while the tournament is ongoing, listen for messages and respond to them accordingly
+            self.__listen_for_messages()
+            # tears down the socket
             self.__teardown()
 
-            if Client.DEBUG:
-                print('** EXIT THREAD **')
+    def __init_socket(self, host: str, port: int):
+        """
+        Creates a client TCP socket connected to the given host and port, and return it.
+        If this fails, it returns None.
+        """
+        client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            client_sock.connect((host, port))
+            client_sock.setblocking(0)
+            client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
+            self.__client_socket = client_sock
+        except Exception as e:
+            print(e)
+
+    def __listen_for_messages(self):
+        """
+        While the tournament is ongoing, listen for messages being sent from the server (player proxy). Upon receiving
+        messages, handle them and send a response accordingly.
+        :return: None
+        """
+        while not self.__is_tournament_over:
+            msgs = self.__receive_messages()
+            if msgs is None or len(msgs) == 0:
+                # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
+                break
+            for msg in msgs:
+                if Client.DEBUG:
+                    print(f'[{self.name}] [{self.color}] [RECV] <- [RPP]: {msg}')
+
+                if msg:
+                    res = self.__handle_message(msg)
+                    if res:
+                        self.__send_message(res)
 
     def __handle_message(self, json) -> str:
         """ 
@@ -104,7 +149,7 @@ class Client(object):
         elif type == 'setup':
             return self.__handle_setup(json[1])
         elif type == 'take-turn':
-            return self.__handle_take_turn(json[1])
+            return self.__handle_take_turn(json[1], json[2])
         elif type == 'end':
             return self.__handle_tournament_end(json[1])
         else:
@@ -132,7 +177,7 @@ class Client(object):
         if Client.DEBUG:
             print(f'[{self.name}] is playing as {color}')
 
-        self.set_color(color)
+        self.__color = color
         return 'void'
 
     def __handle_playing_with(self, args):
@@ -143,6 +188,8 @@ class Client(object):
         :param args: [Color, Color, ...] the array of colors representing the opponents in this player's current game
         :return: a void string to acknowledge we received this message
         """
+        colors = self.__json_serializer.decode_playing_with(args)
+        self.__opponent_colors = colors
         return 'void'
 
     def __handle_setup(self, args):
@@ -164,14 +211,17 @@ class Client(object):
 
         return self.__json_serializer.encode_position(position)
 
-    def __handle_take_turn(self, args):
+    def __handle_take_turn(self, args1, args2):
         """
         Handle the take-turn message (request for turn movement) from the remote player proxy.
         
-        :param args: [State] representing the current state of the game
+        :param args1: [State] representing the current state of the game
+        :param args2: [Action, ... , Action] representing an array of Actions represents the penguin moves since the
+                      last time the take-turn method was called. It is empty if this is the first call or a player was
+                      eliminated since the last call.
         :return: the JSON-encoded Action message to send back to the RPP
         """
-        state = self.__json_serializer.decode_take_turn(args)
+        state, actions = self.__json_serializer.decode_take_turn(args1, args2)
 
         if Client.DEBUG:
             print(f'[{self.name}] is calculating turn...')
@@ -184,7 +234,7 @@ class Client(object):
         return self.__json_serializer.encode_action(action)
 
     def __handle_tournament_end(self, args):
-        """ 
+        """
         Handle the tournament end message from the remote player proxy.
 
         :param args: [Boolean] representing whether this player won (true) or lost (false) the tournament
@@ -196,18 +246,11 @@ class Client(object):
 
         return 'void'
 
-    def __teardown(self):
-        """
-        This method deals with closing the client TCP socket connection, and is called when we receive a
-        message that the tournament is over (and break out of the main loop).
-        """
-        self.__client_sock.close()
-
     def __receive_messages(self):
         """ Receive message(s) from the remote player proxy and decode into a message JSON object(s) """
         while True:
             try:
-                data = self.__client_sock.recv(4096)
+                data = self.__client_socket.recv(4096)
                 if data:
                     return self.__json_serializer.bytes_to_jsons(data)
             except Exception as e:
@@ -217,33 +260,17 @@ class Client(object):
     def __send_message(self, msg: str):
         """ Send the given JSON message to the remote player proxy """
         try:
-            self.__client_sock.sendall(bytes(msg, 'utf-8'))
+            self.__client_socket.sendall(bytes(msg, 'ascii'))
         except Exception as e:
             print(e)
             return
 
-    def __init_socket(self, host: str, port: int):
-        """ 
-        Creates a client TCP socket connected to the given host and port, and return it. 
-        If this fails, it returns None.
+    def __teardown(self):
         """
-        client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            client_sock.connect((host, port))
-            client_sock.setblocking(0)
-            client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
-            return client_sock
-        except Exception:
-            return None
+        This method deals with closing the client TCP socket connection, and is called when we receive a
+        message that the tournament is over (and break out of the main loop).
+        """
+        self.__client_socket.close()
 
-    """ GETTERS AND SETTERS """
-    @property
-    def name(self):
-        return self.__name
-
-    @property
-    def color(self):
-        return self.__color
-
-    def set_color(self, color):
-        self.__color = color
+        if Client.DEBUG:
+            print('** EXIT THREAD **')

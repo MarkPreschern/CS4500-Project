@@ -9,19 +9,21 @@ from manager import Manager
 from remote_player_proxy import RemotePlayerProxy
 from tournament_update_type import TournamentUpdateType
 
+
 class Server(object):
     """
-    INTERPRETATION: TODO.
+    INTERPRETATION: TODO
 
     PURPOSE: The Server component allows for remote clients to establish a TCP connection to our Fish admin servers,
     and participate in a tournament (and within it many games) of Fish.  It facilitates the creation of the tournament
     manager, creation of TCP client sockets to be passed to remote player proxies playing in the tournament, and thus
 
     DEFINITION(S):
-    signup timeout -> the number of seconds to wait for client sign ups within one signup period
-    signup period -> the action of waiting "signup timeout" seconds for players to establish a connection and give name
-    client -> the remote player software that we are communicated with over the network
-    server socket -> this servers TCP socket at which we are accepting client connections
+    signup timeout      -> the number of seconds to wait for client sign ups within one signup period
+    signup period       -> the action of waiting "signup timeout" seconds for players to establish a connection
+                           and give name
+    client              -> the remote player software that we are communicated with over the network
+    server socket       -> this servers TCP socket at which we are accepting client connections
     remote player proxy -> our player implementation that supports communicating with remote players
     """
     DEBUG = False
@@ -42,6 +44,8 @@ class Server(object):
         self.__min_clients = min_clients
         self.__max_clients = max_clients
         self.__signup_periods = signup_periods
+
+        self.__server_socket = None
         self.__remote_player_proxies = []
 
     def run(self, port: int):
@@ -55,39 +59,17 @@ class Server(object):
         :param port: the port to open the server socket on (to accept client sign ups)
         """
         # create server socket on given port
-        self.__server_socket = self.__init_socket(port)
+        self.__init_socket(port)
+        # if the socket is created successfully, continue
+        if self.__server_socket:
+            # listen for sign-ups
+            self.__signup_players()
+            # runs a tournament
+            self.__run_tournament()
+            # tears down the tournament
+            self.__teardown_tournament()
 
-        # listen for signups
-        self.__signup_players()
-
-        if Server.DEBUG:
-            for rpp in self.__remote_player_proxies:
-                print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
-
-        has_enough_players = self.__can_tournament_run()
-
-        if has_enough_players:
-            tm_manager = Manager(self.__remote_player_proxies)
-            # For the purposes of logging tournament information as the tournament progresses
-
-            if Server.DEBUG:
-                tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
-
-            tm_manager.run()
-        
-            print([len(tm_manager.tournament_winners), len(tm_manager.tournament_kicked)])
-        else:
-            print(f'Not enough or too many players signed up to run tournament... ({len(self.__remote_player_proxies)} / {self.__min_clients})')
-        
-        self.__teardown_tournament()
-
-    def __teardown_tournament(self):
-        """ Fired once the tournament is over, closes all open TCP socket connections """
-        for rpp in self.__remote_player_proxies:
-            rpp.socket.close()
-        self.__server_socket.close()
-
-    def __init_socket(self, port: int) -> socket:
+    def __init_socket(self, port: int):
         """
         Helper function to initialize a TCP server socket on the given port.  This socket will be used to accept client
         connections (player signups) until we have either determined that not enough players have signed up to play, or 
@@ -102,10 +84,9 @@ class Server(object):
         try:
             server_sock.bind(('localhost', port))
             server_sock.listen(self.__max_clients)
-            return server_sock
+            self.__server_socket = server_sock
         except Exception as e:
             print(e)
-            return None
 
     def __signup_players(self):
         """
@@ -114,6 +95,29 @@ class Server(object):
         """
         while self.__signup_periods > 0 and len(self.__remote_player_proxies) < self.__min_clients and len(self.__remote_player_proxies) != self.__max_clients:
             self.__run_signup_period()
+
+        if Server.DEBUG:
+            for rpp in self.__remote_player_proxies:
+                print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
+
+    def __run_tournament(self):
+        """
+        Runs an entire tournament with the remote player proxies created during the signup phase. If the tournament is
+        unable to be ran, a message will be printed explaining why. If the tournament completes successfully, then the
+        number of winners and number of players kicked from the tournament is printed to the console.
+
+        :return: None
+        """
+        if self.__can_tournament_run():
+            tm_manager = Manager(self.__remote_player_proxies)
+            # For the purposes of logging tournament information as the tournament progresses
+            if Server.DEBUG:
+                tm_manager.subscribe_tournament_updates(self.__log_tournament_update)
+            tm_manager.run()
+            print([len(tm_manager.tournament_winners), len(tm_manager.tournament_kicked)])
+        else:
+            print(f'Not enough or too many players signed up to run tournament...'
+                  f' ({len(self.__remote_player_proxies)} / {self.__min_clients})')
 
     def __can_tournament_run(self) -> bool:
         """ 
@@ -143,7 +147,7 @@ class Server(object):
                 # Receive name from client
                 data = client_sock.recv(4096)
 
-                name = data.decode('utf-8')
+                name = data.decode('ascii')
 
                 if name and self.__is_name_available(name):
                     curr_time = time.time()
@@ -175,6 +179,12 @@ class Server(object):
                 return False
         return True
 
+    def __teardown_tournament(self):
+        """ Fired once the tournament is over, closes all open TCP socket connections """
+        for rpp in self.__remote_player_proxies:
+            rpp.socket.close()
+        self.__server_socket.close()
+
     def __log_tournament_update(self, payload):
         """ For debugging, log NEW_ROUND and TOURNAMENT_END updates to stdout """
         if payload['type'] == TournamentUpdateType.NEW_ROUND:
@@ -182,4 +192,3 @@ class Server(object):
         elif payload['type'] == TournamentUpdateType.TOURNAMENT_END:
             print(f'\n~~~~~ [TOURNAMENT END] Winners = {payload["winners"]} ~~~~~\n')
         return True
-    

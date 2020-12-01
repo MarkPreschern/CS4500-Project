@@ -164,7 +164,6 @@ class Manager(IManager, threading.Thread):
                 self.__tournament_kicked.append(p)
                 p.kick(PlayerKickReason.FAILING.name)
         self.__players = present_players
-        print("PLAYERS: ", self.__players)
 
     def __broadcast_tournament_end(self) -> None:
         """

@@ -15,11 +15,17 @@ Also, if you modify other pieces of code, describe these modifications in a sepa
 TODOS:
 Main
 - [ ] Ensure that we can deal with both ill-formed and invalid JSON (on client and RPP side, receive_messages)
-- [ ] Fix take-turn JSON message to include [Action, ..., Action] as per spec (not sure what we would use these for)
+- [ ] 1/2 done: Fix take-turn JSON message to include [Action, ..., Action] as per spec (not sure what we would use these for)
 - [ ] Fix player allocation method to prefer games of 3 until must move on to 2
 - [ ] Ensure that allocations to games are happening according to age
 - [ ] Use 'ascii' encoding instead of 'utf-8'
 - [ ] Timeout of 1 second isn't enough for some players, look into this
+- [ ] Create unit tests for server
+- [ ] Create unit tests for client
+- [ ] Create unit tests for remote_player_proxy
+- [ ] Add documenation to json_serialization
+- [ ] Find out where 'timed out' message is coming from and add it to debug
+- [ ] Write the server's interpretation
 
 Cleanup
 - [ ] Sanity check specification vs. implementation
@@ -38,3 +44,5 @@ Done
 - [x] Handle case where two players give the same name
 - [x] Add README to Runnables Task
 - [x] Fix that server sign up rounds works according to specification, need to deal with not enough players
+- [x] abstract out code in run method of server
+- [x] abstract out code in run method of client
