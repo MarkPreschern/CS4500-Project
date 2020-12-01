@@ -362,5 +362,5 @@ class ManagerTests(unittest.TestCase):
         m.run()
 
         # Make sure both collections exclude sleepy player :)
-        self.assertEqual(m.tournament_winners, [p1, p2])
+        self.assertEqual(m.tournament_winners, [p2, p1])
         self.assertEqual(m.tournament_losers, [])

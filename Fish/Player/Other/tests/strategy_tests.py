@@ -1,10 +1,13 @@
 import sys
 import unittest
+import time
 
 
 sys.path.append('Player/')
 sys.path.append('../../../Common')
+sys.path.append('../4/Other')
 
+from xstate import initialize_state, _str_to_color, _state_to_json
 from strategy import Strategy
 from board import Board
 from color import Color
@@ -62,6 +65,8 @@ class StrategyTests(unittest.TestCase):
             Position(4, 2): Tile(4)
         })
 
+        self.__board5 = Board.homogeneous(2, 5, 5)
+
         # Initialize some players for testing
         self.__p1 = PlayerEntity("John", Color.RED)
         self.__p2 = PlayerEntity("George", Color.WHITE)
@@ -81,6 +86,10 @@ class StrategyTests(unittest.TestCase):
         self.__p16 = PlayerEntity("Bot Y", Color.BROWN)
         self.__p17 = PlayerEntity("Bot Z", Color.BLACK)
         self.__p18 = PlayerEntity("Bot W", Color.WHITE)
+        self.__p19 = PlayerEntity("a", Color.RED)
+        self.__p20 = PlayerEntity("b", Color.BROWN)
+        self.__p21 = PlayerEntity("c", Color.WHITE)
+        self.__p22 = PlayerEntity("d", Color.BLACK)
 
         # ========================== STATE 1 ==========================
 
@@ -193,6 +202,34 @@ class StrategyTests(unittest.TestCase):
             self.__p13,
             self.__p14])
 
+        # ========================== STATE 7 ==========================
+        # Setup state that includes heterogeneous board and players in specified positions
+
+        self.__state7 = State(self.__board5, players=[
+            self.__p19,
+            self.__p20,
+            self.__p21,
+            self.__p22])
+
+        # Player 1
+        self.__state7.place_avatar(Color.RED, Position(0, 0))
+        # Player 2
+        self.__state7.place_avatar(Color.BROWN, Position(0, 1))
+        # Player 3
+        self.__state7.place_avatar(Color.WHITE, Position(0, 2))
+        # Player 4
+        self.__state7.place_avatar(Color.BLACK, Position(0, 3))
+        # Player 1
+        self.__state7.place_avatar(Color.RED, Position(0, 4))
+        # Player 2
+        self.__state7.place_avatar(Color.BROWN, Position(1, 0))
+        # Player 3
+        self.__state7.place_avatar(Color.WHITE, Position(1, 1))
+        # Player 4
+        self.__state7.place_avatar(Color.BLACK, Position(1, 2))
+
+        self.__tree7 = GameTree(self.__state7)
+
     def test_get_best_action_fail1(self):
         # Fails due to invalid state (type-wise)
         with self.assertRaises(TypeError):
@@ -283,6 +320,13 @@ class StrategyTests(unittest.TestCase):
     def test_mini_max_search_success6(self):
         # Tests minimax search with a depth of 4 on a game at least 2 levels deep (heterogeneous board)
         self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree5, Color.RED, 2), (5, ((1, 0), (3, 0))))
+
+    def test_mini_max_search_success7(self):
+        # Tests minimax search with a depth of 4 on a game at least 2 levels deep (heterogeneous board)
+        # Shows that applying a strategy on such a board always takes more than 1 second
+        time1 = time.time()
+        self.assertEqual(Strategy._Strategy__mini_max_search(self.__tree7, Color.RED, 2), (4, ((0, 0), (2, 0))))
+        self.assertTrue(time.time() - time1 > 1)
 
     def test_place_penguin_fail1(self):
         # Tests failing place_penguin due to invalid player_id (type_wise)

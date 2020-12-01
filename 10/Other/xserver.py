@@ -16,6 +16,9 @@ def xserver(port):
         Server.DEBUG = True
         RemotePlayerProxy.DEBUG = True
 
+    # player timeout needs to be at least 3 for some move actions
+    Referee.PLAYER_TIMEOUT = 3
+
     # guarantees that there are no holes
     Referee.DIFFICULTY_FACTOR = 0
 

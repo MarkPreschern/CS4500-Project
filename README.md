@@ -22,3 +22,4 @@ coordinates lis picked (in order of priority: source.x, source.y, destination.x,
 - 7: contains a series of markdown files documenting outstanding issues, bug fixes and reworked items.
 - 8: contains the test harness for milestone 8 (xref), which checks the integrity of a referee running a full game and producing as output the winning player(s). See the README in 8 for more information.
 - 9: contains the test harness for milestone 9 (xgui), which visually displays an entire game of 2-4 player inclusive on a graphical user interface. See the README in 9 for more information.
+- 10: contains the test harness for milestone 10 (xserver & xclients). xserver creates a server on a specified port to host a tournament of clients. xclients spawns n clients on a specified port which connect to xserver and participate in the tournament. See the README in 10 for more information.

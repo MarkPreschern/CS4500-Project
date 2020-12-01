@@ -38,7 +38,6 @@ class RemotePlayerProxy(IPlayer):
     socket       -> the TCP socket that allows this RPP to communicate with the remote player it represents
     age          -> time in seconds (since epoch) noted when this player signed up with our server (we interpret
                     this as the players age, and lower aged players are allocated to games first and take turns first)
-    move_actions -> all actions made by the remote player proxy
     """
     DEBUG = False
 
@@ -59,6 +58,9 @@ class RemotePlayerProxy(IPlayer):
         self.__color = None
         self.__state = None
         self.__json_serializer = JsonSerializer()
+
+        # Number of players in the current game, used to determine last move actions of 'take-turn'
+        self.__player_number = None
 
     @property
     def name(self):
@@ -109,9 +111,10 @@ class RemotePlayerProxy(IPlayer):
         if not isinstance(state, State):
             raise TypeError('Expected State for state!')
 
-        last_actions: [Action] = state.move_log # TODO: make last actions conform to assignment description
+        # get last actions since player's previous move
+        actions = self.__last_actions(state.move_log, state.players_no)
 
-        msg = self.__json_serializer.encode_take_turn(state, last_actions)
+        msg = self.__json_serializer.encode_take_turn(state, actions)
         self.__send_message(msg)
 
         take_turn_msgs = self.__receive_messages()
@@ -236,7 +239,8 @@ class RemotePlayerProxy(IPlayer):
         try:
             self.__socket.sendall(bytes(data, 'ascii'))
         except Exception as e:
-            print(e)
+            if RemotePlayerProxy.DEBUG:
+                print(e)
 
     def __is_ack(self, ack) -> bool:
         """
@@ -247,3 +251,26 @@ class RemotePlayerProxy(IPlayer):
         :return: True if the message is acknowledged or False otherwise
         """
         return ack == 'void'
+
+    def __last_actions(self, move_log: [Action], player_number: int) -> [Action]:
+        """
+        Determines the last moves of the the player based on the move_log and number of players in the current game
+        state. Returns empty if this is the first call or a player was eliminated since the last call.
+        :param move_log:
+        :param player_number: Number of players in the current game
+        :return: A list of actions representing the last move actions since take-turn was last called
+        """
+        # update player number when a new game begins if necessary
+        if self.__player_number is None or player_number > self.__player_number:
+            self.__player_number = player_number
+
+        # if a player has been removed since the last 'take-turn' or no moves have been made yet
+        if player_number < self.__player_number or len(move_log) == 0:
+            self.__player_number = player_number
+            return []
+
+        # Return the last 'player_number' moves of the move log, or less if not enough moves have been made yet
+        return move_log if len(move_log) < player_number else move_log[-(player_number - 1):]
+
+
+

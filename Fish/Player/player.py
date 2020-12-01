@@ -186,7 +186,7 @@ class Player(IPlayer):
         # care less.
         return True
 
-    def set_color(self, color: Color):
+    def set_color(self, color: Color) -> bool:
         """ Implements PlayerInterface.set_color() """
         self.__color = color
 
@@ -194,7 +194,7 @@ class Player(IPlayer):
         # care less.
         return True
 
-    def notify_opponent_colors(self, colors):
+    def notify_opponent_colors(self, colors) -> bool:
         """ Implements PlayerInterface.notify_opponent_colors() """
         self.__opponent_colors = colors
 
@@ -202,7 +202,7 @@ class Player(IPlayer):
         # care less.
         return True
 
-    def tournament_has_started(self):
+    def tournament_has_started(self) -> bool:
         """
         Implements PlayerInterface.tournament_has_started()
         """
@@ -210,7 +210,7 @@ class Player(IPlayer):
         # care less.
         return True
 
-    def tournament_has_ended(self):
+    def tournament_has_ended(self, winner: bool) -> bool:
         """
         Implements PlayerInterface.tournament_has_started()
         """

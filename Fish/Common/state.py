@@ -44,12 +44,13 @@ class State(object):
                     referee to properly run a game and end it when needed.
     """
 
-    def __init__(self, board: Board, players: [PlayerEntity]):
+    def __init__(self, board: Board, players: [PlayerEntity], move_log: [Action] = []):
         """
         Initializes a State object with the given board and player list.
 
         :param board: Board object
         :param players: list of Player objects
+        :param move_log: log of moves that have occurred in the game
         :return: new State object designed to spec
         """
         # Validate params
@@ -85,7 +86,7 @@ class State(object):
 
         # Make up log of moves that have been made since the beginning
         # of the game
-        self.__move_log = []
+        self.__move_log = move_log
 
         # Make up cache of stuck player colors
         self.__player_stuck_cache = []
@@ -101,9 +102,11 @@ class State(object):
         board: Board = pickle.loads(pickle.dumps(self.__board))
         # Copy players
         players: [PlayerEntity] = pickle.loads(pickle.dumps(self.__players))
+        # Copy of move log
+        move_log: [Action] = self.move_log
 
         # Return new copy of state
-        return State(board, players)
+        return State(board, players, move_log)
 
     @property
     def stuck_players(self) -> [int]:

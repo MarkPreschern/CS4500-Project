@@ -97,7 +97,6 @@ class Client(object):
             # while the tournament is ongoing, listen for messages and respond to them accordingly
             self.__listen_for_messages()
             # tears down the socket
-            print(self.__name, " Lost Connection")
             self.__teardown()
 
     def __init_socket(self, host: str, port: int):
@@ -133,7 +132,6 @@ class Client(object):
                     res = self.__handle_message(msg)
                     if res:
                         self.__send_message(res)
-
 
     def __handle_message(self, json) -> str:
         """ 
@@ -232,11 +230,7 @@ class Client(object):
         if Client.DEBUG:
             print(f'[{self.name}] is calculating turn...')
 
-        # TODO: Remove time print statements
-        time1 = time.time()
         action = Strategy.get_best_action(state, self.__lookahead_depth)
-        time2 = time.time()
-        print(time2 - time1)
 
         if Client.DEBUG:
             print(f'[{self.name}] [{self.color}] [SEND -> RPP] take-turn ~ {action[0]} -> {action[1]}')
