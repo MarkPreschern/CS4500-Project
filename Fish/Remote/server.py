@@ -12,11 +12,22 @@ from tournament_update_type import TournamentUpdateType
 
 class Server(object):
     """
-    INTERPRETATION: TODO
-
     PURPOSE: The Server component allows for remote clients to establish a TCP connection to our Fish admin servers,
     and participate in a tournament (and within it many games) of Fish.  It facilitates the creation of the tournament
     manager, creation of TCP client sockets to be passed to remote player proxies playing in the tournament, and thus
+
+    INTERPRETATION: A server initializes a socket on a given port and proceeds to signup remote players bu accepting
+    client connections. A client can connect to the server during a signup-round which lasts for 30 seconds, where there
+    is at most 2 signup-periods. If an amount of min_clients clients have joined the server by the end of the first or
+    second sign-up period or if an amount of max_clients clients have joined at any time, the server begins a
+    tournament with the signed up players. If there aren't enough clients who joined to begin a tournament, the server
+    shuts down.
+
+    The server proceeds to create a tournament with all of the clients who have connected. The tournament runs until
+    completion (when there is a single winner or 2 rounds in the tournament produce the same result) and then tournament
+    is over. Upon completion of the tournament, all clients will be notified as to whether they won or lost the
+    tournament. The server then tears down by closing all of it's clients socket connections as well as it's own
+    socket connection.
 
     DEFINITION(S):
     signup timeout      -> the number of seconds to wait for client sign ups within one signup period

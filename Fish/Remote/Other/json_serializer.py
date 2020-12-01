@@ -13,14 +13,6 @@ from action import Action
 
 class JsonSerializer(object):
     """
-    TODO Add description of how we deal with ill-formed or invalid JSON messages, once we do that
-
-    INTERPRETATION: A utility class specialized in encoding our game-related information into a JSON
-    message protocol, and subsequently decoding these JSON messages back into their Python representations.
-    Specifically, this component can be used by either a remote player proxy (server side) or
-    by a client for understanding and creating JSON messages to be sent over TCP sockets (messages are
-    described below in definitions).
-
     PURPOSE: The JSON serializer is a component that encompasses all of the functionality needed to go from
     our game representations to JSON representations (and back).  An example of this could be a remote player
     proxy encoding our current game state (as given by the Referee) into JSON before sending it over its
@@ -28,6 +20,14 @@ class JsonSerializer(object):
     could then also use this class to decode the JSON game state back to a Python game state that is
     compatible to be used with our strategy component.  The same process will need to be followed when it decides
     on a Position, and sends it back to the RPP.
+
+    INTERPRETATION: A utility class specialized in encoding our game-related information into a JSON
+    message protocol, and subsequently decoding these JSON messages back into their Python representations.
+    Specifically, this component can be used by either a remote player proxy (server side) or
+    by a client for understanding and creating JSON messages to be sent over TCP sockets (messages are
+    described below in definitions).
+
+    TODO Add description of how we deal with ill-formed or invalid JSON messages, once we do that
 
     DEFINITION(S):
     encode -> go from Python representation to JSON string representation
