@@ -5,7 +5,7 @@ sys.path.append("../Fish/Remote")
 
 from client import Client
 
-DEBUG = True
+DEBUG = False
 
 
 def xclients(num_clients, port, ip_address):

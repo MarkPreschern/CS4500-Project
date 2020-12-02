@@ -11,14 +11,6 @@ from tournament_update_type import TournamentUpdateType
 
 class Server(object):
     """
-    INTERPRETATION: The Server component is the the backend server that allows for remote players to connect
-    to our machines in order to participate in tournaments and games of Fish.  Once run, the server will
-    allow players to connect to our TCP server socket for a certain period of time.  Players who sign-up earlier will
-    take their turns first in games.  We then instantiate a RemotePlayerProxy component for each player, for which 
-    we will use to connect our TournamentManager / Referee to the remote players.  This is described in more detail
-    in the RPP documentation.  We then run a full tournament with the set of players who have signed up, and output
-    the results.
-
     PURPOSE: The Server component allows for remote clients to establish a TCP connection to our Fish admin servers,
     and participate in a tournament (and within it many games) of Fish.  It facilitates the creation of the tournament
     manager, creation of TCP client sockets to be passed to remote player proxies playing in the tournament, and thus
