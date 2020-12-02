@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # Make up collection of test cases
     # tests = [BoardTests, TileTests, HoleTests, AbstractTileTests, StateTests,
     #          PlayerTests, GameTreeTests, StrategyTests, PlayerEntityTests, RefereeTests, ManagerTests, VisualizerTests]
-    tests = [JsonSerializerTests]
+    tests = [ServerTests]
 
     # Make up runner to run suite
     runner = unittest.TextTestRunner()

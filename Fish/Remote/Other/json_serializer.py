@@ -114,7 +114,7 @@ class JsonSerializer(object):
         msg = ['playing-as', [color.name.lower()]]
         return json.dumps(msg)
 
-    def encode_playing_with(self, colors: list[Color]) -> str:
+    def encode_playing_with(self, colors: [Color]) -> str:
         msg = ['playing-with', [color.name.lower() for color in colors]]
         return json.dumps(msg)
 

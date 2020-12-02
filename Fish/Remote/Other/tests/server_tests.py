@@ -7,6 +7,7 @@ sys.path.append('Remote/')
 from unittest.mock import patch
 
 from server import Server
+from client import Client
 from remote_player_proxy import RemotePlayerProxy
 
 class ServerTests(unittest.TestCase):
@@ -17,11 +18,9 @@ class ServerTests(unittest.TestCase):
         self.rp3 = RemotePlayerProxy('c', 3, None)
         self.rp4 = RemotePlayerProxy('d', 4, None)
         self.rp5 = RemotePlayerProxy('e', 5, None)
-        self.server = Server()
+        self.server = Server(signup_timeout=5, min_clients=2)
 
     # Test server does not start with < min players
-    def test_too_little_players():
-        return
 
     # Test server does not start with > max players
 
