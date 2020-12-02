@@ -30,6 +30,14 @@ class JsonSerializer(object):
     compatible to be used with our strategy component.  The same process will need to be followed when it decides
     on a Position, and sends it back to the RPP.
 
+    INTERPRETATION: A utility class specialized in encoding our game-related information into a JSON
+    message protocol, and subsequently decoding these JSON messages back into their Python representations.
+    Specifically, this component can be used by either a remote player proxy (server side) or
+    by a client for understanding and creating JSON messages to be sent over TCP sockets (messages are
+    described below in definitions).
+
+    TODO Add description of how we deal with ill-formed or invalid JSON messages, once we do that
+
     DEFINITION(S):
     encode -> go from Python representation to JSON string representation
     decode -> go from JSON string representation to Python representation

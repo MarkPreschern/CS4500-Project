@@ -12,14 +12,25 @@ from strategy import Strategy
 
 class Client(object):
     """
-    INTERPRETATION: The client is a remote player whose logic can exist on a seperate machine than our Fish
-    admin servers, and still participate in a tournament of Fish.  It uses a TCP client socket (with a given
-    hostname and port) to initiate a connection with the Fish admin servers, and then immediately send its name
-    as an identifier.  It is able to handle various JSON messages from the server (i.e. tournament start / end,
-    being given its color, responding to game states with its movement, etc.).
-
     PURPOSE: To connect to the Fish admin server at a specific hostname and port in order to play (remotely) in
     a tournament of Fish.
+
+    INTERPRETATION: The client is a remote player whose logic can exist on a separate machine than our Fish
+    admin servers, and still participate in a tournament of Fish.  It uses a TCP client socket (with a given
+    hostname and port) to initiate a connection with the Fish admin servers, and then immediately send its name
+    as an identifier.
+
+    A client is able to handle various JSON messages from the server (i.e. tournament start / end,
+    being given its color, responding to game states with its movement, etc.). Upon receiving a JSON message from the
+    server, the client handles the message appropriately and sends back a response. In the event of a 'setup' or
+    'take-turn' message being received, the client will send back the corresponding penguin placement or move action.
+    For all other message types received, the client will return the string 'void' which serves as an acknowledgement
+    of the message for the server.
+
+    The client continues to listen for messages from the server until it receives a 'end' type message from the server
+    indicating that the tournament has ended. Additionally, if the client loses connection to the server for whatever
+    reason (including if the client is kicked from the tournament, in which the server closes its connection to the
+    client) then it will no longer listen for messages. Once the client stops listening for messages, it is closed.
 
     DEFINITION(S):
     Name                      -> unique identifier for this player

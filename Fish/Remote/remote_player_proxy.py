@@ -14,6 +14,11 @@ from Other.json_serializer import JsonSerializer
 
 class RemotePlayerProxy(IPlayer):
     """
+    PURPOSE: The purpose of the Remote Player Proxy is to allow for remote clients to connect to our servers and participate
+    in games and tournaments of Fish, while our admin server can view them as simply any other player.  Therefore,
+    this remote player proxy handles any abnormal conditions that may arise in the networked communications with the
+    remote client.
+
     INTERPRETATION: The remote player proxy is an implementation of our IPlayer interface that allows
     for a remote player to participate in games and tournaments of Fish.  When the referee our tournament manager
     makes a call to this players functions (i.e. requesting a placement), the remote player proxy will encode
@@ -27,11 +32,6 @@ class RemotePlayerProxy(IPlayer):
     the tournament and additionally communication between the server and client is disconnected. The timeout period is
     dictated by the server's 'CLIENT_TIMEOUT'. The player can timeout if they take too long to acknowledge a message,
     send a placement point, or a move action.
-
-    PURPOSE: The purpose of the Remote Player Proxy is to allow for remote clients to connect to our servers and participate
-    in games and tournaments of Fish, while our admin server can view them as simply any other player.  Therefore,
-    this remote player proxy handles any abnormal conditions that may arise in the networked communications with the
-    remote client.
 
     DEFINITION(S):
     RPP          -> remote player proxy
