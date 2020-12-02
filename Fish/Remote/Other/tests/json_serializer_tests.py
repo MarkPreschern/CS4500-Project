@@ -3,12 +3,14 @@ import unittest
 
 sys.path.append('Common/')
 sys.path.append('Remote/Other')
+sys.path.append('Common/exceptions')
 
 from unittest.mock import patch
 from json_serializer import JsonSerializer
 from color import Color
 from state import State
 from action import Action
+from JsonDecodeException import JsonDecodeException
 
 class JsonSerializerTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -17,26 +19,26 @@ class JsonSerializerTests(unittest.TestCase):
 
     ### PARSING JSON TESTS
     def test_ill_formed_jsons(self):
-        invalid1 = '[\naaaaaaa'.encode('ascii')
-        result1 = self.serializer.bytes_to_jsons(invalid1)
-        self.assertEquals([], result1)
+        with self.assertRaises(JsonDecodeException):
+            invalid1 = '[\naaaaaaa'.encode('ascii')
+            result1 = self.serializer.bytes_to_jsons(invalid1)
         
-        invalid2 = '{ test }'.encode('ascii')
-        result2 = self.serializer.bytes_to_jsons(invalid2)
-        self.assertEquals([], result2)
+        with self.assertRaises(JsonDecodeException):
+            invalid2 = '{ test }'.encode('ascii')
+            result2 = self.serializer.bytes_to_jsons(invalid2)
 
-        invalid3 = '[1a]'.encode('ascii')
-        result3 = self.serializer.bytes_to_jsons(invalid3)
-        self.assertEquals([], result3)
+        with self.assertRaises(JsonDecodeException):
+            invalid3 = '[1a]'.encode('ascii')
+            result3 = self.serializer.bytes_to_jsons(invalid3)
 
-        invalid4 = 'void'.encode('ascii')
-        result4 = self.serializer.bytes_to_jsons(invalid4)
-        self.assertEquals([], result4)
+        with self.assertRaises(JsonDecodeException):
+            invalid4 = 'void'.encode('ascii')
+            result4 = self.serializer.bytes_to_jsons(invalid4)
 
     def test_some_ill_formed_jsons(self):
-        invalid1 = '["test"]{a}}'.encode('ascii')
-        result1 = self.serializer.bytes_to_jsons(invalid1)
-        self.assertEquals([['test']], result1)
+        with self.assertRaises(JsonDecodeException):
+            invalid1 = '["test"]{a}}'.encode('ascii')
+            result1 = self.serializer.bytes_to_jsons(invalid1)
 
     def test_handle_void(self):
         void1 = '"void"'.encode('ascii')
@@ -118,15 +120,15 @@ class JsonSerializerTests(unittest.TestCase):
 
     ### VALIDATION ERRORS
     def test_invalid_messages(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message(['start', []])
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message(['end', [1]])
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message('error')
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message(['take-turn', [{"board": [[2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]], "players": [{"score": 0, "places": [], "color": "red"}, {"score": 0, "places": [], "color": "white"}, {"score": 0, "places": [], "color": "brown"}, {"score": 0, "places": [], "color": "black"}]}]])
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message(['invalid-key', [True]])
-        with self.assertRaises(TypeError):
+        with self.assertRaises(JsonDecodeException):
             self.serializer.decode_message(['playing-as', ['red', 'white']])

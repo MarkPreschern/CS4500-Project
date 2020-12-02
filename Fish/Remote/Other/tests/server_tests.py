@@ -19,6 +19,16 @@ class ServerTests(unittest.TestCase):
         self.rp5 = RemotePlayerProxy('e', 5, None)
         self.server = Server()
 
+    # Test server does not start with < min players
+    def test_too_little_players():
+        return
+
+    # Test server does not start with > max players
+
+    # Test server does another signup round if < min players
+
+    # Test server does not sign up two players with the same name
+    
     def test_is_name_available(self):
         self.server._remote_player_proxies = [self.rp1, self.rp2]
         self.assertTrue(self.server._is_name_available('c'))
@@ -29,3 +39,4 @@ class ServerTests(unittest.TestCase):
         self.assertFalse(self.server._can_tournament_run())
         self.server._remote_player_proxies.append(self.rp5)
         self.assertTrue(self.server._can_tournament_run())
+
