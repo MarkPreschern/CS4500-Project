@@ -8,7 +8,7 @@ from referee import Referee
 from manager import Manager
 from remote_player_proxy import RemotePlayerProxy
 
-DEBUG = False
+DEBUG = True
 
 
 def xserver(port):

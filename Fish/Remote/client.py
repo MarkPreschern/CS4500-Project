@@ -1,3 +1,4 @@
+import json
 import socket
 import sys
 import time
@@ -35,7 +36,7 @@ class Client(object):
     DEBUG = False
 
     # large timeout because we want to client to be able to wait for tournament start after signing up
-    NO_MESSAGE_TIMEOUT = 30
+    NO_MESSAGE_TIMEOUT = 75
 
     def __init__(self, name: str, lookahead_depth: int = 2):
         """
@@ -55,27 +56,6 @@ class Client(object):
 
         self.__lost_connection = False
         self.__is_tournament_over = False
-
-    @property
-    def name(self):
-        """
-        Retrieves client's age
-        """
-        return self.__name
-
-    @property
-    def color(self):
-        """
-        Retrieves client's color
-        """
-        return self.__color
-
-    @property
-    def opponent_colors(self):
-        """
-        Retrieves client's opponent's colors
-        """
-        return self.__opponent_colors
 
     def run(self, host: str, port: int):
         """
@@ -142,22 +122,27 @@ class Client(object):
         :param json: the JSON message received through the connection to the Fish admin server
         :return: If a response is required, return the JSON string response, else 'void'
         """
-        type = json[0]
 
-        if type == 'start':
-            return self.__handle_tournament_start(json[1])
-        elif type == 'playing-as':
-            return self.__handle_playing_as(json[1])
-        elif type == 'playing-with':
-            return self.__handle_playing_with(json[1])
-        elif type == 'setup':
-            return self.__handle_setup(json[1])
-        elif type == 'take-turn':
-            return self.__handle_take_turn(json[1], json[2])
-        elif type == 'end':
-            return self.__handle_tournament_end(json[1])
-        else:
-            return None
+        # Validate message format
+        try:
+            (type, decoded_args) = self.__json_serializer.decode_message(json)
+
+            if type == 'start':
+                return self.__handle_tournament_start(decoded_args)
+            elif type == 'playing-as':
+                return self.__handle_playing_as(decoded_args)
+            elif type == 'playing-with':
+                return self.__handle_playing_with(decoded_args)
+            elif type == 'setup':
+                return self.__handle_setup(decoded_args)
+            elif type == 'take-turn':
+                return self.__handle_take_turn(decoded_args)
+            elif type == 'end':
+                return self.__handle_tournament_end(decoded_args)
+            else:
+                return None
+        except TypeError as e:
+            print('Client received invalid JSON message.')
 
     def __handle_tournament_start(self, args) -> str:
         """ 
@@ -167,7 +152,11 @@ class Client(object):
         :param args: [Boolean] representing True if the tournament has started
         :return: a void string to acknowledge we received this message
         """
-        return 'void'
+        is_starting = args[0]
+
+        if not is_starting:
+            self.__teardown()
+        return json.dumps('void')
 
     def __handle_playing_as(self, args) -> str:
         """ 
@@ -176,13 +165,12 @@ class Client(object):
         :param args: [Color] representing the color that the player is represented as in the game that is starting
         :return: a void string to acknowledge we received this message
         """
-        color = self.__json_serializer.decode_playing_as_args(args)
+        self.__color = args[0]
 
         if Client.DEBUG:
-            print(f'[{self.name}] is playing as {color}')
+            print(f'[{self.name}] is playing as {self.__color}')
 
-        self.__color = color
-        return 'void'
+        return json.dumps('void')
 
     def __handle_playing_with(self, args):
         """ 
@@ -192,9 +180,8 @@ class Client(object):
         :param args: [Color, Color, ...] the array of colors representing the opponents in this player's current game
         :return: a void string to acknowledge we received this message
         """
-        colors = self.__json_serializer.decode_playing_with(args)
-        self.__opponent_colors = colors
-        return 'void'
+        self.__opponent_colors = args
+        return json.dumps('void')
 
     def __handle_setup(self, args):
         """
@@ -203,7 +190,7 @@ class Client(object):
         :param args: [State] representing the current state of the game
         :return: the JSON-encoded Position message to send back to the RPP
         """
-        state = self.__json_serializer.decode_setup(args)
+        state = args[0]
 
         if Client.DEBUG:
             print(f'[{self.name}] [{self.color}] is calculating placement...')
@@ -215,7 +202,7 @@ class Client(object):
 
         return self.__json_serializer.encode_position(position)
 
-    def __handle_take_turn(self, args1, args2):
+    def __handle_take_turn(self, args):
         """
         Handle the take-turn message (request for turn movement) from the remote player proxy.
         
@@ -225,7 +212,8 @@ class Client(object):
                       eliminated since the last call.
         :return: the JSON-encoded Action message to send back to the RPP
         """
-        state, actions = self.__json_serializer.decode_take_turn(args1, args2)
+        state = args[0]
+        actions = args[1]
 
         if Client.DEBUG:
             print(f'[{self.name}] is calculating turn...')
@@ -246,9 +234,9 @@ class Client(object):
         """
         if Client.DEBUG:
             print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
+        
         self.__is_tournament_over = True
-
-        return 'void'
+        return json.dumps('void')
 
     def __receive_messages(self):
         """ Receive message(s) from the remote player proxy and decode into a message JSON object(s) """
@@ -290,3 +278,25 @@ class Client(object):
 
         if Client.DEBUG:
             print('** EXIT THREAD **')
+
+    ### GETTERS AND SETTERS
+    @property
+    def name(self):
+        """
+        Retrieves client's age
+        """
+        return self.__name
+
+    @property
+    def color(self):
+        """
+        Retrieves client's color
+        """
+        return self.__color
+
+    @property
+    def opponent_colors(self):
+        """
+        Retrieves client's opponent's colors
+        """
+        return self.__opponent_colors

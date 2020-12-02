@@ -1,7 +1,9 @@
 import json
 import sys
+from typing import Type
 
 sys.path.append('../Fish/Common')
+sys.path.append('../Fish/Common/exceptions')
 sys.path.append('../4/Other')
 
 from xstate import initialize_state, _str_to_color, _state_to_json
@@ -9,12 +11,11 @@ from color import Color
 from state import State
 from position import Position
 from action import Action
+from JsonDecodeException import JsonDecodeException
 
 
 class JsonSerializer(object):
     """
-    TODO Add description of how we deal with ill-formed or invalid JSON messages, once we do that
-
     INTERPRETATION: A utility class specialized in encoding our game-related information into a JSON
     message protocol, and subsequently decoding these JSON messages back into their Python representations.
     Specifically, this component can be used by either a remote player proxy (server side) or
@@ -43,6 +44,61 @@ class JsonSerializer(object):
     - end: ["end", [Boolean]] -> void (tells the player that the tournament is over, True = won, False = lost)
     """
 
+    ### DECODING HELPERS (JSON -> INTERNAL REPR.) ###
+    def decode_message(self, msg: json):
+        """ 
+        Validate this JSON message, return the type (string) if valid
+
+        :return: tuple(type, args) containing string type and converted (decoded) arguments for this message
+        """
+        if not len(msg) == 2:
+            raise JsonDecodeException('Expected JSON message array to have length 2 [type, args]')
+        if not isinstance(msg[0], str):
+            raise JsonDecodeException('Expected str for JSON message type!')
+        if not isinstance(msg[1], list):
+            raise JsonDecodeException('Expected list for args in JSON message.')
+
+        type = msg[0]
+        args = msg[1]
+
+        if type == 'start' or type == 'end':
+            if not len(args) == 1 or not isinstance(args[0], bool):
+                raise JsonDecodeException('Invalid format for tournament start / end message.')
+            return (type, args)
+
+        elif type == 'playing-as':
+            if not len(args) == 1 or not isinstance(args[0], str):
+                raise JsonDecodeException('Invalid format for playing-as message.')
+            return (type, [_str_to_color(color) for color in args])
+
+        elif type == 'playing-with':
+            if not len(args) > 0 or not all(isinstance(color, str) for color in args):
+                raise JsonDecodeException('Invalid format for playing-with message.')
+            return (type, [_str_to_color(color) for color in args])
+
+        elif type == 'setup':
+            if not len(args) == 1:
+                raise JsonDecodeException('Invalid format for setup message.')
+            return (type, [initialize_state(args[0])])
+
+        elif type == 'take-turn':
+            if not len(args) == 2:
+                raise JsonDecodeException('Invalid format for setup message.')
+            return (type, [initialize_state(args[0]), [self.decode_action(action) for action in args[1]]])
+        else:
+            raise JsonDecodeException('Unknown type of JSON message.')
+
+    def decode_action(self, action: json) -> Action:
+        if not len(action) == 2:
+            raise JsonDecodeException('Tried to decode invalid action.')
+        return Action(self.decode_position(action[0]), self.decode_position(action[1]))
+
+    def decode_position(self, position: json) -> Position:
+        if not len(position) == 2:
+            raise JsonDecodeException('Tried to decode invalid position.')
+        return Position(position[0], position[1])
+    
+    ### ENCODING HELPERS (INTERNAL REPR. -> JSON) ###
     def encode_tournament_start(self, is_starting: bool) -> str:
         msg = ['start', [is_starting]]
         return self.json_to_str(msg)
@@ -55,65 +111,41 @@ class JsonSerializer(object):
         msg = ['playing-as', [color.name.lower()]]
         return self.json_to_str(msg)
 
-    def decode_playing_as_args(self, args) -> Color:
-        """ Interpret list of one color (string) as Color enum """
-        return _str_to_color(args[0])
-
-    def encode_playing_with(self, colors: [Color]) -> str:
+    def encode_playing_with(self, colors: list[Color]) -> str:
         msg = ['playing-with', [color.name.lower() for color in colors]]
         return self.json_to_str(msg)
-
-    def decode_playing_with(self, colors) -> [Color]:
-        return [_str_to_color(color) for color in colors]
 
     def encode_setup(self, state: State) -> str:
         msg = ['setup', [_state_to_json(state)]]
         return self.json_to_str(msg)
 
-    def decode_setup(self, args) -> State:
-        return initialize_state(args[0])
-
-    def decode_position(self, pos_arr) -> Position:
-        return Position(pos_arr[0], pos_arr[1])
-
     def encode_position(self, position: Position) -> str:
-        return json.dumps([position.x, position.y])
-
-    def encode_take_turn(self, state: State, actions: [Action]) -> str:
-        msg = ['take-turn', [_state_to_json(state)], self.json_to_str(actions)]
-        return self.json_to_str(msg)
-
-    def decode_take_turn(self, state, actions) -> State:
-        return initialize_state(state[0]), self.str_to_json(actions)
-
-    def decode_take_turn_response(self, args) -> Position:
-        src = args[0]
-        dest = args[1]
-        return Action(Position(src[0], src[1]), Position(dest[0], dest[1]))
+        return self.json_to_str([position.x, position.y])
 
     def encode_action(self, action: Action) -> str:
-        return json.dumps([action[0], action[1]])
+        return self.json_to_str(self.action_to_json(action))
 
+    def encode_take_turn(self, state: State, actions: [Action]) -> str:
+        json_actions = [self.action_to_json(action) for action in actions]
+        msg = ['take-turn', [_state_to_json(state), json_actions]]
+        return self.json_to_str(msg)
+        
+    ### UTILS ###
     def bytes_to_jsons(self, data: bytes):
         """
-        Converts bytes to json data, or if the decoded value 'void' is passed, simply returns it
-        :param data:
-        :return:
+        Takes in data in bytes form, and attempts to decode adjacent JSON values (from string) into an
+        array of JSON values.  It will return this array of messages it decodes.  In the case
+        of ill-formed JSON, it simply returns an empty array [].
+        :param data: adjacent JSON values in bytes form
+        :return: a list of JSON values (messages)
         """
         jsons = []
         decoder = json.JSONDecoder()
         while(True):
             try:
                 decoded = data.decode('ascii')
-
-                # return 'void' even if not json
-                if decoded == 'void':
-                    return decoded
-
                 (json_val, cursor) = decoder.raw_decode(decoded)
             except Exception as e:
-                print(e)
-                print('Could not convert from bytes to JSON messages.')
                 break
 
             jsons.append(json_val)
@@ -133,3 +165,9 @@ class JsonSerializer(object):
             return json.dumps(json_obj)
         except ValueError:
             return None
+
+    def position_to_json(self, position: Position) -> json:
+        return [position.x, position.y]
+
+    def action_to_json(self, action: Action) -> json:
+        return [self.position_to_json(action[0]), self.position_to_json(action[1])]

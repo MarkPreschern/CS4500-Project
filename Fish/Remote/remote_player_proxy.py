@@ -62,34 +62,6 @@ class RemotePlayerProxy(IPlayer):
         # Number of players in the current game, used to determine last move actions of 'take-turn'
         self.__player_number = None
 
-    @property
-    def name(self):
-        """
-        Retrieves player proxy name
-        """
-        return self.__name
-
-    @property
-    def age(self):
-        """
-        Retrieves player proxy age
-        """
-        return self.__age
-
-    @property
-    def socket(self):
-        """
-        Retrieves player proxy socket
-        """
-        return self.__socket
-
-    @property
-    def color(self):
-        """
-        Retrieves player proxy color
-        """
-        return self.__color
-
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
         # Validate params
@@ -101,7 +73,8 @@ class RemotePlayerProxy(IPlayer):
 
         position_msgs = self.__receive_messages()
         if len(position_msgs) > 0:
-            return self.__json_serializer.decode_position(position_msgs[0])
+            position = self.__json_serializer.decode_position(position_msgs[0])
+            return position
         else:
             return None
 
@@ -113,13 +86,17 @@ class RemotePlayerProxy(IPlayer):
 
         # get last actions since player's previous move
         actions = self.__last_actions(state.move_log, state.players_no)
-
+        
         msg = self.__json_serializer.encode_take_turn(state, actions)
         self.__send_message(msg)
 
         take_turn_msgs = self.__receive_messages()
-        action = self.__json_serializer.decode_take_turn_response(take_turn_msgs[0])
-        return action
+        
+        if len(take_turn_msgs) > 0:
+            action = self.__json_serializer.decode_action(take_turn_msgs[0])
+            return action
+        else:
+            return None
 
     def kick(self, reason: str) -> None:
         """ Implements PlayerInterface.kick_player(str) """
@@ -214,11 +191,8 @@ class RemotePlayerProxy(IPlayer):
                 if data:
                     msgs = self.__json_serializer.bytes_to_jsons(data)
                     if RemotePlayerProxy.DEBUG:
-                        if msgs == 'void':
-                            print(f'[RPP] [RECV] <- [{self.name}]: {msgs}')
-                        else:
-                            for msg in msgs:
-                                print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
+                        for msg in msgs:
+                            print(f'[RPP] [RECV] <- [{self.name}]: {msg}')
                     return msgs
             except Exception as e:
                 if RemotePlayerProxy.DEBUG:
@@ -250,7 +224,7 @@ class RemotePlayerProxy(IPlayer):
         :param ack: The supposed acknowledgement of a message, should be [['void']]
         :return: True if the message is acknowledged or False otherwise
         """
-        return ack == 'void'
+        return ack == ['void']
 
     def __last_actions(self, move_log: [Action], player_number: int) -> [Action]:
         """
@@ -272,5 +246,25 @@ class RemotePlayerProxy(IPlayer):
         # Return the last 'player_number' moves of the move log, or less if not enough moves have been made yet
         return move_log if len(move_log) < player_number else move_log[-(player_number - 1):]
 
+    ### GETTERS AND SETTERS ###
+    @property
+    def name(self):
+        """ Retrieves player proxy name """
+        return self.__name
+
+    @property
+    def age(self):
+        """ Retrieves player proxy age """
+        return self.__age
+
+    @property
+    def socket(self):
+        """ Retrieves player proxy socket """
+        return self.__socket
+
+    @property
+    def color(self):
+        """ Retrieves player proxy color """
+        return self.__color
 
 
