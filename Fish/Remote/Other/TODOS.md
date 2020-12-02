@@ -1,3 +1,5 @@
+# TODO List
+
 TODOS:
 Main
 - [ ] Create unit tests for server
@@ -6,6 +8,7 @@ Main
 
 Cleanup
 - [ ] Sanity check specification vs. implementation
+- [ ] Test xclients and xserver on the Khoury Machines
 - [ ] Finish filling out this README
 
 Done
@@ -33,3 +36,5 @@ Done
 - [x] Find out where 'timed out' message is coming from and add it to debug
 - [x] clients don't close connection when kicked, fix this
 - [x] update repo level readme with 10/ info
+
+
