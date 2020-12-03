@@ -3,6 +3,7 @@ import unittest
 import socket
 import threading
 import time
+import random
 from unittest.mock import patch
 
 sys.path.append('Common/')
@@ -19,15 +20,7 @@ class ServerTests(unittest.TestCase):
         super(ServerTests, self).__init__(*args, **kwargs)
 
         self.host = 'localhost'
-        self.port = 3010
-
-        self.dummy_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.rp1 = RemotePlayerProxy('a', 1.0, self.dummy_sock)
-        self.rp2 = RemotePlayerProxy('b', 2.0, self.dummy_sock)
-        self.rp3 = RemotePlayerProxy('c', 3.0, self.dummy_sock)
-        self.rp4 = RemotePlayerProxy('d', 4.0, self.dummy_sock)
-        self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
+        self.port = 3000
 
     def server_thread_func(self, server, port):
         server.run(port)
@@ -63,7 +56,7 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Server(5, 10, 5, 5)
 
-    # # Server can successfully sign up one player
+    # Server can successfully sign up one player
     def test_signs_up_client(self):
         server = Server(signup_timeout=3)
         client = Client('test')
@@ -75,11 +68,12 @@ class ServerTests(unittest.TestCase):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
         client.sendall('my name'.encode('ascii'))
+        client.close()
 
         s_thread.join()
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # # Server does not accept non-ascii characters, empty name, or name length > 12 characters
+    # Server does not accept non-ascii characters, empty name, or name length > 12 characters
     def test_invalid_names(self):
         server = Server(signup_timeout=3)
 
@@ -103,7 +97,7 @@ class ServerTests(unittest.TestCase):
 
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # # Test server does not sign up two players with the same name
+    # Test server does not sign up two players with the same name
     def test_duplicate_names(self):
         server = Server(signup_timeout=3)
 
@@ -183,8 +177,17 @@ class ServerTests(unittest.TestCase):
             self.assertEquals(server._signup_periods, 0)
 
     def test_can_tournament_run(self):
+        # Dummy socket can be used because we aren't running the tournament
+        self.dummy_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.rp1 = RemotePlayerProxy('a', 1.0, self.dummy_sock)
+        self.rp2 = RemotePlayerProxy('b', 2.0, self.dummy_sock)
+        self.rp3 = RemotePlayerProxy('c', 3.0, self.dummy_sock)
+        self.rp4 = RemotePlayerProxy('d', 4.0, self.dummy_sock)
+
         server = Server()
         server._remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
         self.assertFalse(server._can_tournament_run())
+
+        self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
         server._remote_player_proxies.append(self.rp5)
         self.assertTrue(server._can_tournament_run())

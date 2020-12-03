@@ -122,7 +122,6 @@ class Server(object):
         server_sock.settimeout(self._signup_timeout)
 
         try:
-            server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server_sock.bind(('localhost', port))
             server_sock.listen(self._max_clients)
             self._server_socket = server_sock
