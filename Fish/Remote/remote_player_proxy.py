@@ -62,6 +62,9 @@ class RemotePlayerProxy(IPlayer):
         if not isinstance(sock, socket.SocketType):
             raise TypeError('Expected socket for sock')
 
+        if len(name) == 0 or len(name) > 12:
+            raise ValueError('name must be between 1 and 12 characters inclusive')
+
         self.__name = name
         self.__age = age
         self.__socket = sock

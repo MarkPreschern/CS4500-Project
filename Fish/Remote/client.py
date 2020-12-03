@@ -67,6 +67,9 @@ class Client(object):
         if lookahead_depth < 0:
             raise ValueError('lookahead_depth must be greater than zero')
 
+        if len(name) == 0 or len(name) > 12:
+            raise ValueError('name must be between 1 and 12 characters inclusive')
+
         self.__name = name
         self.__lookahead_depth = lookahead_depth
         self.__json_serializer = JsonSerializer()
@@ -77,6 +80,8 @@ class Client(object):
 
         self.__lost_connection = False
         self.__is_tournament_over = False
+
+        self.__won_tournament = False
 
     @property
     def name(self):
@@ -98,6 +103,27 @@ class Client(object):
         Retrieves client's opponent's colors
         """
         return self.__opponent_colors
+
+    @property
+    def is_tournament_over(self):
+        """
+        Retrieves if the tournament is over
+        """
+        return self.__is_tournament_over
+
+    @property
+    def lost_connection(self):
+        """
+        Retrieves if the client lost connection
+        """
+        return self.__lost_connection
+
+    @property
+    def won_tournament(self):
+        """
+        Retrieves if the client won the tournament
+        """
+        return self.__won_tournament
 
     def run(self, host: str, port: int):
         """
@@ -133,7 +159,9 @@ class Client(object):
             client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
             self.__client_socket = client_sock
         except Exception as e:
-            print(e)
+            if Client.DEBUG:
+                print(e)
+            self.__lost_connection = True
 
     def __listen_for_messages(self):
         """
@@ -276,8 +304,9 @@ class Client(object):
         """
         if Client.DEBUG:
             print(f'[{self.name}] [RECV <- RPP] Winner = {args[0]}')
-        
+
         self.__is_tournament_over = True
+        self.__won_tournament = args[0]
         return json.dumps('void')
 
     def __receive_messages(self):
