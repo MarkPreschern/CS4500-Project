@@ -72,8 +72,7 @@ class RemotePlayerProxy(IPlayer):
         self.__state = None
         self.__json_serializer = JsonSerializer()
 
-        # Number of players in the current game, used to determine last move actions of 'take-turn'
-        self.__player_number = None
+        self.__player_kicked = False
 
     @property
     def name(self):
@@ -94,6 +93,11 @@ class RemotePlayerProxy(IPlayer):
     def color(self):
         """ Retrieves player proxy color """
         return self.__color
+
+    @property
+    def player_kicked(self):
+        """ Retrieves whether the player was kicked or not """
+        return self.__player_kicked
 
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
@@ -118,7 +122,8 @@ class RemotePlayerProxy(IPlayer):
             raise TypeError('Expected State for state!')
 
         # get last actions since player's previous move
-        actions = self.__last_actions(state.move_log, state.players_no)
+        # always sends [] as our server isn't required to implement the actions[] part of take-turn
+        actions = []
         
         msg = self.__json_serializer.encode_take_turn(state, actions)
         self.__send_message(msg)
@@ -142,6 +147,8 @@ class RemotePlayerProxy(IPlayer):
 
         # close socket when a player is kicked, terminating the interaction between the server and client
         self.__socket.close()
+
+        self.__player_kicked = True
 
         return None
 
@@ -258,23 +265,3 @@ class RemotePlayerProxy(IPlayer):
         :return: True if the message is acknowledged or False otherwise
         """
         return ack == ['void']
-
-    def __last_actions(self, move_log: [Action], player_number: int) -> [Action]:
-        """
-        Determines the last moves of the the player based on the move_log and number of players in the current game
-        state. Returns empty if this is the first call or a player was eliminated since the last call.
-        :param move_log:
-        :param player_number: Number of players in the current game
-        :return: A list of actions representing the last move actions since take-turn was last called
-        """
-        # update player number when a new game begins if necessary
-        if self.__player_number is None or player_number > self.__player_number:
-            self.__player_number = player_number
-
-        # if a player has been removed since the last 'take-turn' or no moves have been made yet
-        if player_number < self.__player_number or len(move_log) == 0:
-            self.__player_number = player_number
-            return []
-
-        # Return the last 'player_number' moves of the move log, or less if not enough moves have been made yet
-        return move_log if len(move_log) < player_number else move_log[-(player_number - 1):]

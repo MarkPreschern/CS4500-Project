@@ -188,7 +188,8 @@ class Manager(IManager, threading.Thread):
 
         # Notify loser players that they lost
         for loser in self.__tournament_losers:
-            loser.tournament_has_ended(False)
+            if loser not in self.__tournament_kicked:
+                loser.tournament_has_ended(False)
 
     def run(self):
         """
