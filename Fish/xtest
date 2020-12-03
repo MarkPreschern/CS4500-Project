@@ -64,7 +64,7 @@ if __name__ == '__main__':
         RemotePlayerProxyTests,
         JsonSerializerTests
     ]'''
-    tests = [ServerTests, ClientTests, RemotePlayerProxyTests, JsonSerializerTests]
+    tests = [ServerTests]
 
     # Make up runner to run suite
     runner = unittest.TextTestRunner()

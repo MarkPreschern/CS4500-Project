@@ -345,7 +345,7 @@ class Client(object):
         This method deals with closing the client TCP socket connection, and is called when we receive a
         message that the tournament is over (and break out of the main loop).
         """
+        self.__client_socket.shutdown(socket.SHUT_RDWR)
         self.__client_socket.close()
-
         if Client.DEBUG:
             print('** EXIT THREAD **')

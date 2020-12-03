@@ -38,6 +38,8 @@ class Server(object):
     """
     DEBUG = False
 
+    # How long to wait for new client to provide name
+    NAME_TIMEOUT = 10
     # How long to wait for client to respond to messages
     CLIENT_TIMEOUT = 1
 
@@ -97,14 +99,15 @@ class Server(object):
         self._init_socket(port)
         # if the socket is created successfully, continue
         if self._server_socket:
-            # listen for sign-ups
-            self._signup_players()
+            # listen for sign-ups, return whether we have enough players to run a tournament
+            has_enough_players = self._signup_players()
             # runs a tournament
-            w_cf = self._run_tournament()
+            if has_enough_players:
+                w_cf = self._run_tournament()
+                # [# winners, # cheaters + # failed]
+                print(w_cf)
             # tears down the tournament
             self._teardown_tournament()
-            # [# winners, # cheaters + # failed]
-            print(w_cf)
 
     def _init_socket(self, port: int):
         """
@@ -136,6 +139,8 @@ class Server(object):
         if Server.DEBUG:
             for rpp in self._remote_player_proxies:
                 print(f'[SERV] Player {rpp.name} has been signed up (age = {rpp.age})')
+
+        return self._can_tournament_run()
 
     def _run_tournament(self):
         """
@@ -180,14 +185,14 @@ class Server(object):
             client_sock = None
             try:
                 (client_sock, address) = self._server_socket.accept()
-                client_sock.settimeout(self.CLIENT_TIMEOUT)
+                client_sock.settimeout(self.NAME_TIMEOUT)
 
                 # Receive name from client
                 data = client_sock.recv(4096)
 
                 name = data.decode('ascii')
 
-                if name and self._is_name_available(name):
+                if name:
                     # client timeout is now handled by the referee
                     client_sock.settimeout(None)
                     # Initialize the remote proxy player with the client socket
@@ -206,19 +211,6 @@ class Server(object):
                     client_sock.close()
 
         self._signup_periods -= 1
-
-    def _is_name_available(self, name: str) -> bool:
-        """
-        A helper to check if our server has already signed up a client with the given name.  This
-        will be used to ensure that all players who sign up have unique names.
-
-        :param name: the name to check for availability
-        :return: true if the name is available for use (unused), else false
-        """
-        for rpp in self._remote_player_proxies:
-            if rpp.name == name:
-                return False
-        return True
 
     def _teardown_tournament(self):
         """ Fired once the tournament is over, closes all open TCP socket connections """
