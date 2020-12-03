@@ -12,10 +12,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run xserver to run a tournament with clients on a specified port.",
                                      usage="Pass a single int representing the port number.")
     parser.add_argument("port", type=int, nargs=1)
+    parser.add_argument("-d", "--debug", action='store_true')
 
     args = vars(parser.parse_args())
 
     if len(args['port']) != 1:
         print('Please provide a port number.')
     else:
-        xserver(args['port'][0])
+        xserver(args['port'][0], args['debug'])

@@ -11,8 +11,8 @@ from remote_player_proxy import RemotePlayerProxy
 DEBUG = False
 
 
-def xserver(port):
-    if DEBUG:
+def xserver(port, debug):
+    if DEBUG or debug:
         Server.DEBUG = True
         RemotePlayerProxy.DEBUG = True
 

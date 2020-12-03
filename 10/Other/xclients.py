@@ -8,8 +8,8 @@ from client import Client
 DEBUG = False
 
 
-def xclients(num_clients, port, ip_address):
-    if DEBUG:
+def xclients(num_clients, port, ip_address, debug):
+    if DEBUG or debug:
         Client.DEBUG = True
 
     clients = [Client(str(index)) for index in range(num_clients)]
