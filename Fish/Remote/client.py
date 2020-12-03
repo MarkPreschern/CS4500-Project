@@ -57,6 +57,16 @@ class Client(object):
         :param name: name is a string that will act as a unique identifier of this player on the Fish servers
         :param lookahead_depth: the number of turns to look ahead when employing our Maximin strategy for this player
         """
+        # Validate params
+        if not isinstance(name, str):
+            raise TypeError('Expected str for name')
+
+        if not isinstance(lookahead_depth, int):
+            raise TypeError('Expected int for lookahead_depth')
+
+        if lookahead_depth < 0:
+            raise ValueError('lookahead_depth must be greater than zero')
+
         self.__name = name
         self.__lookahead_depth = lookahead_depth
         self.__json_serializer = JsonSerializer()

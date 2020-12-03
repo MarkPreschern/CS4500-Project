@@ -50,6 +50,31 @@ class Server(object):
         :param max_clients: the max number of client signups needed to immediately exit the waiting phase and hand them off to the tournament manager
         :param signup_periods: the number of times to restart our signup_timeout length timer and wait for players (before shutting down if there are not enough players)
         """
+        # Validate params
+        if not isinstance(signup_timeout, int):
+            raise TypeError('Expected int for signup_timeout')
+
+        if not isinstance(min_clients, int):
+            raise TypeError('Expected int for min_clients')
+
+        if not isinstance(max_clients, int):
+            raise TypeError('Expected int for max_clients')
+
+        if not isinstance(signup_periods, int):
+            raise TypeError('Expected int for signup_periods')
+
+        if signup_timeout <= 0:
+            raise ValueError('signup_timeout must be greater than zero')
+
+        if min_clients <= 0 or max_clients <= 0:
+            raise ValueError('min_clients and max_clients must be greater than zero')
+
+        if min_clients > max_clients:
+            raise ValueError('min_clients must be less than or equal to max_clients')
+
+        if signup_periods <= 0:
+            raise ValueError('signup_periods must be greater than zero')
+
         self._signup_timeout = signup_timeout
         self._min_clients = min_clients
         self._max_clients = max_clients

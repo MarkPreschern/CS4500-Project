@@ -41,7 +41,7 @@ class RemotePlayerProxy(IPlayer):
     """
     DEBUG = False
 
-    def __init__(self, name: str, age: float, socket: socket):
+    def __init__(self, name: str, age: float, sock: socket.SocketType):
         """
         Initializes a remote player proxy with a name, age, and TCP client socket. Also
         initializes this players color to None (will be set when they enter their first game),
@@ -50,11 +50,21 @@ class RemotePlayerProxy(IPlayer):
 
         :param name: name is a string that will act as a unique identifier of this player on the Fish servers
         :param age: see definitions above
-        :param socket: the client TCP socket that will allow our server to communicate with this player
+        :param sock: the client TCP socket that will allow our server to communicate with this player
         """
+        # Validate params
+        if not isinstance(name, str):
+            raise TypeError('Expected str for name')
+
+        if not isinstance(age, float):
+            raise TypeError('Expected float for age')
+
+        if not isinstance(sock, socket.SocketType):
+            raise TypeError('Expected socket for sock')
+
         self.__name = name
         self.__age = age
-        self.__socket = socket
+        self.__socket = sock
         self.__color = None
         self.__state = None
         self.__json_serializer = JsonSerializer()
