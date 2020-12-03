@@ -19,7 +19,7 @@ class ServerTests(unittest.TestCase):
         super(ServerTests, self).__init__(*args, **kwargs)
 
         self.host = 'localhost'
-        self.port = 4200
+        self.port = 3010
 
         self.dummy_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -28,17 +28,15 @@ class ServerTests(unittest.TestCase):
         self.rp3 = RemotePlayerProxy('c', 3.0, self.dummy_sock)
         self.rp4 = RemotePlayerProxy('d', 4.0, self.dummy_sock)
         self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
-        self.server = Server(signup_timeout=5, min_clients=5)
 
     def server_thread_func(self, server, port):
         server.run(port)
-        # server._teardown_tournament()
-        time.sleep(1)
 
     def client_thread_func(self, to_send):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
         client.sendall(to_send)
+        client.close()
 
     def test_init_fail1(self):
         # Tests failing init due to invalid signup_timeout
@@ -65,12 +63,14 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Server(5, 10, 5, 5)
 
-    # Server can successfully sign up one player
+    # # Server can successfully sign up one player
     def test_signs_up_client(self):
         server = Server(signup_timeout=3)
         client = Client('test')
         s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
         s_thread.start()
+
+        time.sleep(1)
         
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
@@ -79,12 +79,14 @@ class ServerTests(unittest.TestCase):
         s_thread.join()
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # Server does not accept non-ascii characters, empty name, or name length > 12 characters
+    # # Server does not accept non-ascii characters, empty name, or name length > 12 characters
     def test_invalid_names(self):
         server = Server(signup_timeout=3)
 
         s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
         s_thread.start()
+
+        time.sleep(1)
 
         threads = []
         threads.append(threading.Thread(target=self.client_thread_func, args=('valid'.encode('ascii'),)))
@@ -101,12 +103,14 @@ class ServerTests(unittest.TestCase):
 
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # Test server does not sign up two players with the same name
+    # # Test server does not sign up two players with the same name
     def test_duplicate_names(self):
         server = Server(signup_timeout=3)
 
         s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
         s_thread.start()
+
+        time.sleep(1)
 
         threads = []
         threads.append(threading.Thread(target=self.client_thread_func, args=('A'.encode('ascii'),)))
@@ -120,7 +124,6 @@ class ServerTests(unittest.TestCase):
 
         s_thread.join()
 
-        time.sleep(.5)
         self.assertEquals(len(server._remote_player_proxies), 3)
 
     # Test tournament will start with enough players
@@ -129,29 +132,30 @@ class ServerTests(unittest.TestCase):
 
         s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
         s_thread.start()
+
+        time.sleep(1)
         
-        #with patch.object(server, '_run_tournament', return_value=[]) as mock:
+        with patch.object(server, '_run_tournament', return_value=[]) as mock:
 
-        client_names = ['A', 'B', 'C', 'D', 'E']
-        threads = []
+            client_names = ['A', 'B', 'C', 'D', 'E']
+            threads = []
 
-        for name in client_names:
-            threads.append(threading.Thread(target=self.client_thread_func, args=(name.encode('ascii'),)))
+            for name in client_names:
+                threads.append(threading.Thread(target=self.client_thread_func, args=(name.encode('ascii'),)))
 
-        for thread in threads:
-            thread.start()
+            for thread in threads:
+                thread.start()
 
-        for thread in threads:
-            thread.join()
+            for thread in threads:
+                thread.join()
 
-        s_thread.join()
+            s_thread.join()
 
-        time.sleep(.1)
-        mock.assert_called_once
-        self.assertEquals(len(server._remote_player_proxies), 5)
-        self.assertEquals(server._signup_periods, 1)
+            time.sleep(1)
+            mock.assert_called_once
+            self.assertEquals(len(server._remote_player_proxies), 5)
+            self.assertEquals(server._signup_periods, 1)
     
-    '''
     # Tournament does not start with < min players
     def test_not_enough_players(self):
         server = Server(signup_timeout=3)
@@ -160,6 +164,8 @@ class ServerTests(unittest.TestCase):
         
         with patch.object(server, '_run_tournament', return_value = []) as mock:
             s_thread.start()
+
+            time.sleep(1)
 
             threads = []
             threads.append(threading.Thread(target=self.client_thread_func, args=('A'.encode('ascii'),)))
@@ -172,14 +178,13 @@ class ServerTests(unittest.TestCase):
 
             s_thread.join()
 
-            time.sleep(.1)
             mock.assert_not_called
             self.assertEquals(len(server._remote_player_proxies), 2)
             self.assertEquals(server._signup_periods, 0)
 
     def test_can_tournament_run(self):
-        self.server._remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
-        self.assertFalse(self.server._can_tournament_run())
-        self.server._remote_player_proxies.append(self.rp5)
-        self.assertTrue(self.server._can_tournament_run())
-    '''
+        server = Server()
+        server._remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
+        self.assertFalse(server._can_tournament_run())
+        server._remote_player_proxies.append(self.rp5)
+        self.assertTrue(server._can_tournament_run())
