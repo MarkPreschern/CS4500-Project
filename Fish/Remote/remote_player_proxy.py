@@ -72,6 +72,26 @@ class RemotePlayerProxy(IPlayer):
         # Number of players in the current game, used to determine last move actions of 'take-turn'
         self.__player_number = None
 
+    @property
+    def name(self):
+        """ Retrieves player proxy name """
+        return self.__name
+
+    @property
+    def age(self):
+        """ Retrieves player proxy age """
+        return self.__age
+
+    @property
+    def socket(self):
+        """ Retrieves player proxy socket """
+        return self.__socket
+
+    @property
+    def color(self):
+        """ Retrieves player proxy color """
+        return self.__color
+
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
         # Validate params
@@ -255,26 +275,3 @@ class RemotePlayerProxy(IPlayer):
 
         # Return the last 'player_number' moves of the move log, or less if not enough moves have been made yet
         return move_log if len(move_log) < player_number else move_log[-(player_number - 1):]
-
-    ### GETTERS AND SETTERS ###
-    @property
-    def name(self):
-        """ Retrieves player proxy name """
-        return self.__name
-
-    @property
-    def age(self):
-        """ Retrieves player proxy age """
-        return self.__age
-
-    @property
-    def socket(self):
-        """ Retrieves player proxy socket """
-        return self.__socket
-
-    @property
-    def color(self):
-        """ Retrieves player proxy color """
-        return self.__color
-
-

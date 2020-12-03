@@ -78,6 +78,27 @@ class Client(object):
         self.__lost_connection = False
         self.__is_tournament_over = False
 
+    @property
+    def name(self):
+        """
+        Retrieves client's age
+        """
+        return self.__name
+
+    @property
+    def color(self):
+        """
+        Retrieves client's color
+        """
+        return self.__color
+
+    @property
+    def opponent_colors(self):
+        """
+        Retrieves client's opponent's colors
+        """
+        return self.__opponent_colors
+
     def run(self, host: str, port: int):
         """
         Connect to Fish servers and participate in a tournament of Fish.  This involves establishing an initial
@@ -299,25 +320,3 @@ class Client(object):
 
         if Client.DEBUG:
             print('** EXIT THREAD **')
-
-    ### GETTERS AND SETTERS
-    @property
-    def name(self):
-        """
-        Retrieves client's age
-        """
-        return self.__name
-
-    @property
-    def color(self):
-        """
-        Retrieves client's color
-        """
-        return self.__color
-
-    @property
-    def opponent_colors(self):
-        """
-        Retrieves client's opponent's colors
-        """
-        return self.__opponent_colors
