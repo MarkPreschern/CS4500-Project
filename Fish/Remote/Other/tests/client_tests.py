@@ -211,7 +211,7 @@ class ClientTests(unittest.TestCase):
             client1._Client__init_socket(host, port)
             output[0] = client1._Client__receive_messages()
 
-        output = [None] * 1
+        output = [None]
 
         c_thread = threading.Thread(target=thread_func, args=(self.c1, self.host, self.port, output,))
         c_thread.start()
@@ -238,7 +238,7 @@ class ClientTests(unittest.TestCase):
             client1._Client__init_socket(host, port)
             output[0] = client1._Client__receive_messages()
 
-        output = [None] * 1
+        output = [None]
 
         c_thread = threading.Thread(target=thread_func, args=(self.c1, self.host, self.port, output,))
         c_thread.start()
@@ -292,7 +292,7 @@ class ClientTests(unittest.TestCase):
         self.assertEqual(data, "hi")
 
     def test_send_message_lost_connection(self):
-        # tests a client listening for messages
+        # tests a client sending a message but losing connection
 
         # run client on separate thread
         def thread_func(client1, host, port,):
@@ -304,3 +304,161 @@ class ClientTests(unittest.TestCase):
 
         time.sleep(.1)
         self.assertTrue(self.c1.lost_connection)
+
+    def test_handle_message_invalid_json(self):
+        # tests a client handling a message that is invalid json
+        msg = "[invalid json"
+        output = self.c1._Client__handle_message(msg)
+        self.assertEqual(output, None)
+
+    def test_handle_message_invalid_msg_type(self):
+        # tests a client handling a message that is an invalid msg type
+        msg = ['bad type', []]
+        output = self.c1._Client__handle_message(msg)
+        self.assertEqual(output, None)
+
+    def test_handle_message_valid(self):
+        # tests a client handling a valid message
+        msg = ['start', [True]]
+        output = self.c1._Client__handle_message(msg)
+        self.assertEqual(output, '"void"')
+
+    def test_handle_tournament_start_true(self):
+        # tests a client handling a true tournament start message
+        msg = [True]
+        output = self.c1._Client__handle_tournament_start(msg)
+        self.assertEqual(output, '"void"')
+
+    def test_handle_tournament_start_false(self):
+        # tests a client handling a false tournament start message
+        Client.NO_MESSAGE_TIMEOUT = 1
+        self.__start_server()
+        
+        output = [None]
+
+        # run client on separate thread
+        def thread_func(client1, host, port, output):
+            client1._Client__init_socket(host, port)
+            output[0] = client1._Client__handle_tournament_start([False])
+
+        c_thread = threading.Thread(target=thread_func, args=(self.c1, self.host, self.port, output,))
+        c_thread.start()
+
+        self.server.accept()
+        self.__close_server()
+
+        time.sleep(0.1)
+        self.assertEqual(output[0], '"void"')
+
+    def test_handle_playing_as(self):
+        # tests a client handling a playing_as message
+        msg_type, msg = self.json_serializer.decode_message(['playing-as', ['brown']])
+        output = self.c1._Client__handle_playing_as(msg)
+        self.assertEqual(output, '"void"')
+
+    def test_handle_playing_with(self):
+        # tests a client handling a playing_with message
+        msg_type, msg = self.json_serializer.decode_message(['playing-with', ['brown', 'red']])
+        output = self.c1._Client__handle_playing_with(msg)
+        self.assertEqual(output, '"void"')
+
+    def test_handle_setup1(self):
+        # tests a client handling a setup (penguin placement) message
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['brown']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type2, msg2 = self.json_serializer.decode_message([
+            "setup",
+            [{"board": [[2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 0, "places": [], "color": "red"},
+                          {"score": 0, "places": [], "color": "white"},
+                          {"score": 0, "places": [], "color": "brown"}]}]
+        ])
+        output = self.c1._Client__handle_setup(msg2)
+        self.assertEqual(output, '[0, 0]')
+
+    def test_handle_setup2(self):
+        # tests a client handling a setup (penguin placement) message, different color and a hole on the board
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['red']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type2, msg2 = self.json_serializer.decode_message([
+            "setup",
+            [{"board": [[0, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 0, "places": [], "color": "red"},
+                          {"score": 0, "places": [], "color": "white"},
+                          {"score": 0, "places": [], "color": "brown"}]}]
+        ])
+        output = self.c1._Client__handle_setup(msg2)
+        self.assertEqual(output, '[0, 1]')
+
+    def test_handle_setup3(self):
+        # tests a client handling a setup (penguin placement) message, different color and 3 holes on the board
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['white']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type2, msg2 = self.json_serializer.decode_message([
+            "setup",
+            [{"board": [[0, 0, 0, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 0, "places": [], "color": "red"},
+                          {"score": 0, "places": [], "color": "white"},
+                          {"score": 0, "places": [], "color": "brown"}]}]
+        ])
+        output = self.c1._Client__handle_setup(msg2)
+        self.assertEqual(output, '[0, 3]')
+
+    def test_handle_take_turn1(self):
+        # tests a client handling a take turn (penguin move) message, beginning of game
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['red']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type, msg = self.json_serializer.decode_message([
+            "take-turn",
+            [{"board": [[2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 0, "places": [[0, 0], [0, 3], [1, 1]], "color": "red"},
+                          {"score": 0, "places": [[0, 1], [0, 4], [1, 2]], "color": "white"},
+                          {"score": 0, "places": [[0, 2], [1, 0], [1, 3]], "color": "brown"}]},
+             []]
+        ])
+        output = self.c1._Client__handle_setup(msg)
+        self.assertEqual(output, '[1, 4]')
+
+    def test_handle_take_turn2(self):
+        # tests a client handling a take turn (penguin move) message, middle of game
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['brown']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type, msg = self.json_serializer.decode_message([
+            "take-turn",
+            [{"board": [[0, 0, 0, 0, 0], [0, 0, 0, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 4, "places": [[2, 2], [3, 0], [1, 3]], "color": "brown"},
+                          {"score": 6, "places": [[2, 0], [2, 3], [3, 1]], "color": "red"},
+                          {"score": 6, "places": [[2, 1], [1, 4], [3, 2]], "color": "white"}]},
+             []]
+        ])
+        output = self.c1._Client__handle_setup(msg)
+        self.assertEqual(output, '[2, 4]')
+
+    def test_handle_take_turn3(self):
+        # tests a client handling a take turn (penguin move) message, almost end of game
+        msg_type1, msg1 = self.json_serializer.decode_message(['playing-as', ['white']])
+        self.c1._Client__handle_playing_as(msg1)
+        msg_type, msg = self.json_serializer.decode_message([
+            "take-turn",
+            [{"board": [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 2, 0, 0, 2], [2, 2, 2, 2, 2], [2, 2, 2, 2, 2]],
+              "players": [{"score": 8, "places": [[2, 1], [3, 4], [3, 2]], "color": "white"},
+                          {"score": 8, "places": [[4, 2], [3, 0], [2, 4]], "color": "brown"},
+                          {"score": 10, "places": [[4, 0], [3, 3], [3, 1]], "color": "red"}]},
+             []]
+        ])
+        output = self.c1._Client__handle_setup(msg)
+        self.assertEqual(output, '[4, 1]')
+
+    def test_handle_tournament_end_won(self):
+        # tests a client handling a tournament end message where the client won
+        output = self.c1._Client__handle_tournament_end([True])
+        self.assertEqual(output, '"void"')
+        self.assertTrue(self.c1.is_tournament_over)
+        self.assertTrue(self.c1.won_tournament)
+
+    def test_handle_tournament_end_lost(self):
+        # tests a client handling a tournament end message where the client lost
+        output = self.c1._Client__handle_tournament_end([False])
+        self.assertEqual(output, '"void"')
+        self.assertTrue(self.c1.is_tournament_over)
+        self.assertFalse(self.c1.won_tournament)

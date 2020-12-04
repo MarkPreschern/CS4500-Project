@@ -46,7 +46,7 @@ class Strategy(object):
             raise TypeError('Expected State for state!')
 
         if not isinstance(player_color, Color):
-            raise TypeError('Expected int for player_color!')
+            raise TypeError('Expected Color for player_color!')
 
         # Find a place to pitch avatar according to strategy by cycling over
         # rows and columns

@@ -86,7 +86,7 @@ class JsonSerializer(object):
 
         elif type == 'take-turn':
             if not len(args) == 2:
-                raise JsonDecodeException('Invalid format for setup message.')
+                raise JsonDecodeException('Invalid format for take-turn message.')
             return type, [initialize_state(args[0]), [self.decode_action(action) for action in args[1]]]
         else:
             raise JsonDecodeException('Unknown type of JSON message.')
@@ -100,7 +100,7 @@ class JsonSerializer(object):
         if not len(position) == 2:
             raise JsonDecodeException('Tried to decode invalid position.')
         return Position(position[0], position[1])
-    
+
     ### ENCODING HELPERS (INTERNAL REPR. -> JSON) ###
     def encode_tournament_start(self, is_starting: bool) -> str:
         msg = ['start', [is_starting]]
@@ -132,7 +132,7 @@ class JsonSerializer(object):
         json_actions = [self.action_to_json(action) for action in actions]
         msg = ['take-turn', [_state_to_json(state), json_actions]]
         return json.dumps(msg)
-        
+
     ### UTILS ###
     def bytes_to_jsons(self, data: bytes):
         """
@@ -144,7 +144,7 @@ class JsonSerializer(object):
         """
         jsons = []
         decoder = json.JSONDecoder()
-        while(True):
+        while (True):
             try:
                 decoded = data.decode('ascii')
                 (json_val, cursor) = decoder.raw_decode(decoded)

@@ -195,7 +195,7 @@ class Client(object):
 
         # Validate message format
         try:
-            (msg_type, decoded_args) = self.__json_serializer.decode_message(json_msg)
+            msg_type, decoded_args = self.__json_serializer.decode_message(json_msg)
 
             if msg_type == 'start':
                 return self.__handle_tournament_start(decoded_args)
@@ -211,8 +211,10 @@ class Client(object):
                 return self.__handle_tournament_end(decoded_args)
             else:
                 return None
-        except TypeError as e:
-            print('Client received invalid JSON message.')
+        except Exception:
+            if Client.DEBUG:
+                print('Client received invalid JSON message: ', json_msg)
+            return None
 
     def __handle_tournament_start(self, args) -> str:
         """ 
@@ -276,14 +278,13 @@ class Client(object):
         """
         Handle the take-turn message (request for turn movement) from the remote player proxy.
         
-        :param args1: [State] representing the current state of the game
-        :param args2: [Action, ... , Action] representing an array of Actions represents the penguin moves since the
-                      last time the take-turn method was called. It is empty if this is the first call or a player was
-                      eliminated since the last call.
+        :param args: [State] representing the current state of the game and [Action, ... , Action] representing either
+                      an empty array or an array of Actions represents the penguin moves since the last time the
+                      take-turn method was called. It is empty if this is the first call or a player was eliminated
+                      since the last call.
         :return: the JSON-encoded Action message to send back to the RPP
         """
         state = args[0]
-        actions = args[1]
 
         if Client.DEBUG:
             print(f'[{self.name}] is calculating turn...')
