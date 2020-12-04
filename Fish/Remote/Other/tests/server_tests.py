@@ -31,6 +31,9 @@ class ServerTests(unittest.TestCase):
         client.sendall(to_send)
         client.close()
 
+    def __server_close(self, server):
+        server._Server__teardown_tournament()
+
     def test_init_fail1(self):
         # Tests failing init due to invalid signup_timeout
         with self.assertRaises(TypeError):
@@ -68,6 +71,7 @@ class ServerTests(unittest.TestCase):
         client.close()
 
         s_thread.join()
+        self.__server_close(server)
         self.assertEquals(len(server._remote_player_proxies), 1)
 
     def test_invalid_names(self):
@@ -91,7 +95,7 @@ class ServerTests(unittest.TestCase):
             thread.join()
 
         s_thread.join()
-
+        self.__server_close(server)
         self.assertEquals(len(server._remote_player_proxies), 1)
 
     def test_duplicate_names(self):
@@ -111,7 +115,7 @@ class ServerTests(unittest.TestCase):
             thread.join()
 
         s_thread.join()
-
+        self.__server_close(server)
         self.assertEquals(len(server._remote_player_proxies), 3)
 
     def test_tournament_will_start(self):
@@ -123,7 +127,7 @@ class ServerTests(unittest.TestCase):
 
         time.sleep(.1)
 
-        with patch.object(server, '_run_tournament', return_value=[]) as mock:
+        with patch.object(server, '_Server__run_tournament', return_value=[]) as mock:
 
             client_names = ['A', 'B', 'C', 'D', 'E']
             threads = []
@@ -142,6 +146,7 @@ class ServerTests(unittest.TestCase):
             mock.assert_called_once
             self.assertEquals(len(server._remote_player_proxies), 5)
             self.assertEquals(server._signup_periods, 1)
+            self.__server_close(server)
 
     def test_not_enough_players(self):
         # Tournament does not start with < min players
@@ -149,7 +154,7 @@ class ServerTests(unittest.TestCase):
 
         s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
 
-        with patch.object(server, '_run_tournament', return_value=[]) as mock:
+        with patch.object(server, '_Server__run_tournament', return_value=[]) as mock:
             s_thread.start()
 
             threads = [threading.Thread(target=self.__client_thread_func, args=('A'.encode('ascii'),)),
@@ -165,6 +170,7 @@ class ServerTests(unittest.TestCase):
             mock.assert_not_called
             self.assertEquals(len(server._remote_player_proxies), 2)
             self.assertEquals(server._signup_periods, 0)
+            self.__server_close(server)
 
     def test_can_tournament_run(self):
         # Dummy socket can be used because we aren't running the tournament
@@ -176,8 +182,8 @@ class ServerTests(unittest.TestCase):
 
         server = Server()
         server._remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
-        self.assertFalse(server._can_tournament_run())
+        self.assertFalse(server._Server__can_tournament_run())
 
         self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
         server._remote_player_proxies.append(self.rp5)
-        self.assertTrue(server._can_tournament_run())
+        self.assertTrue(server._Server__can_tournament_run())

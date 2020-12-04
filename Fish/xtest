@@ -19,7 +19,7 @@ from strategy_tests import StrategyTests
 from player_tests import PlayerTests
 from referee_tests import RefereeTests
 from manager_tests import ManagerTests
-from visualizer_tests import VisualizerTests
+from game_visualizer_tests import GameVisualizerTests
 from json_serializer_tests import JsonSerializerTests
 from server_tests import ServerTests
 from client_tests import ClientTests
@@ -58,7 +58,7 @@ if __name__ == '__main__':
         PlayerEntityTests,
         RefereeTests,
         ManagerTests,
-        VisualizerTests,
+        GameVisualizerTests,
         ServerTests,
         ClientTests,
         RemotePlayerProxyTests,

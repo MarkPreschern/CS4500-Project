@@ -1,6 +1,5 @@
 import unittest
 import sys
-import random
 
 sys.path.append('Player/')
 sys.path.append('Admin/')
@@ -11,6 +10,7 @@ from game_visualizer import GameVisualizer
 from player import Player
 from referee import Referee
 
+
 class GameVisualizerTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(GameVisualizerTests, self).__init__(*args, **kwargs)
@@ -19,13 +19,6 @@ class GameVisualizerTests(unittest.TestCase):
         self.__p2 = Player(name='b')
         self.__p3 = Player(name='c')
         self.__p4 = Player(name='d')
-
-        self.__p5 = Player(name='e', search_depth=5)
-        self.__p6 = Player(name='f', search_depth=5)
-
-        # Set seed to add some predictability as to what kind of board
-        # the referee is gonna setup
-        random.seed(900)
 
         Referee.DIFFICULTY_FACTOR = 1
 
@@ -37,40 +30,27 @@ class GameVisualizerTests(unittest.TestCase):
     def test_init_fail2(self):
         # Tests failing init due to invalid board_row_no
         with self.assertRaises(TypeError):
-            GameVisualizer([ self.__p1, self.__p2 ], 'nope')
+            GameVisualizer([self.__p1, self.__p2], 'nope')
 
     def test_init_fail3(self):
         # Tests failing init due to invalid board_col_no
         with self.assertRaises(TypeError):
-            GameVisualizer([ self.__p1, self.__p2 ], 2, 'nope')
+            GameVisualizer([self.__p1, self.__p2], 2, 'nope')
 
     def test_run1(self):
         # Tests that a game with 0 render timeout on a 5x5 board with 2 players completes
-        GameVisualizer.RENDER_TIMEOUT = 0
-
-        gameVisualizer = GameVisualizer([self.__p1, self.__p2])
-
-        gameVisualizer.run()
-
-        self.assertTrue(True) # assert that the game ran through completely
+        game_visualizer = GameVisualizer([self.__p1, self.__p2], render_timeout=0)
+        report = game_visualizer.run()
+        self.assertEqual([], report['cheating_players'])
 
     def test_run2(self):
+        # Tests that a game with 0 render timeout on a 5x5 board with 3 players completes
+        game_visualizer = GameVisualizer([self.__p1, self.__p2, self.__p3], render_timeout=0)
+        report = game_visualizer.run()
+        self.assertEqual([], report['cheating_players'])
+
+    def test_run3(self):
         # Tests that a game with 0 render timeout on a 5x5 board with 4 players completes
-        GameVisualizer.RENDER_TIMEOUT = 0
-
-        gameVisualizer = GameVisualizer([self.__p1, self.__p2, self.__p3, self.__p4])
-
-        gameVisualizer.run()
-
-        self.assertTrue(True)  # assert that the game ran through completely
-
-    def test_run_timeout_success(self):
-        # Tests that a game where all of it's players timeout still completes
-        GameVisualizer.RENDER_TIMEOUT = 0
-
-        gameVisualizer = GameVisualizer([self.__p5, self.__p6])
-
-        gameVisualizer.run()
-
-        self.assertTrue(True)  # assert that the game ran through completely
-
+        game_visualizer = GameVisualizer([self.__p1, self.__p2, self.__p3, self.__p4], render_timeout=0)
+        report = game_visualizer.run()
+        self.assertEqual([], report['cheating_players'])

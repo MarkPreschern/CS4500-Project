@@ -32,7 +32,8 @@ class GameVisualizer(object):
                     A frame is a container in which images can be placed and displayed
     """
 
-    def __init__(self, players: [IPlayer], board_row_no: int = DEFAULT_BOARD_ROWS, board_col_no: int = DEFAULT_BOARD_COLS, render_timeout: int = 1, num_fish: int = None):
+    def __init__(self, players: [IPlayer], board_row_no: int = DEFAULT_BOARD_ROWS,
+                 board_col_no: int = DEFAULT_BOARD_COLS, render_timeout: int = 1, num_fish: int = None):
         """
         Initializes the game visualizer with the list of IPlayer objects, board rows, and board columns.
         
