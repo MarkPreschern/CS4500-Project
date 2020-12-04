@@ -22,10 +22,10 @@ class ServerTests(unittest.TestCase):
         self.host = 'localhost'
         self.port = 3000
 
-    def server_thread_func(self, server, port):
+    def __server_thread_func(self, server, port):
         server.run(port)
 
-    def client_thread_func(self, to_send):
+    def __client_thread_func(self, to_send):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
         client.sendall(to_send)
@@ -34,37 +34,34 @@ class ServerTests(unittest.TestCase):
     def test_init_fail1(self):
         # Tests failing init due to invalid signup_timeout
         with self.assertRaises(TypeError):
-            Server({'not a int': 'duh'})
+            Server({'not a float': 'duh'})
 
     def test_init_fail2(self):
         # Tests failing init due to invalid signup_timeout value
         with self.assertRaises(ValueError):
-            Server(-1)
+            Server(-1.0)
 
     def test_init_fail3(self):
         # Tests failing init due to invalid min_clients and max_clients
         with self.assertRaises(ValueError):
-            Server(5, -1, -1, 5)
+            Server(5.0, -1, -1, 5)
 
     def test_init_fail4(self):
         # Tests failing init due to invalid signup_periods
         with self.assertRaises(ValueError):
-            Server(5, 5, 5, 0)
+            Server(5.0, 5, 5, 0)
 
     def test_init_fail5(self):
         # Tests failing init due min_clients being greater than max_clients
         with self.assertRaises(ValueError):
-            Server(5, 10, 5, 5)
+            Server(5.0, 10, 5, 5)
 
-    # Server can successfully sign up one player
     def test_signs_up_client(self):
-        server = Server(signup_timeout=3)
-        client = Client('test')
-        s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
+        # Server can successfully sign up one player
+        server = Server(signup_timeout=.1)
+        s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
         s_thread.start()
 
-        time.sleep(1)
-        
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
         client.sendall('my name'.encode('ascii'))
@@ -73,20 +70,20 @@ class ServerTests(unittest.TestCase):
         s_thread.join()
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # Server does not accept non-ascii characters, empty name, or name length > 12 characters
     def test_invalid_names(self):
-        server = Server(signup_timeout=3)
+        # Server does not accept non-ascii characters, empty name, or name length > 12 characters
+        server = Server(signup_timeout=.1)
 
-        s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
+        s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
         s_thread.start()
 
-        time.sleep(1)
+        time.sleep(.1)
 
-        threads = []
-        threads.append(threading.Thread(target=self.client_thread_func, args=('valid'.encode('ascii'),)))
-        threads.append(threading.Thread(target=self.client_thread_func, args=(''.encode('ascii'),)))
-        threads.append(threading.Thread(target=self.client_thread_func, args=('test test test test test'.encode('ascii'),)))
-        threads.append(threading.Thread(target=self.client_thread_func, args=('Á'.encode('utf-8'),)))
+        threads = [threading.Thread(target=self.__client_thread_func, args=('valid'.encode('ascii'),)),
+                   threading.Thread(target=self.__client_thread_func, args=(''.encode('ascii'),)),
+                   threading.Thread(target=self.__client_thread_func,
+                                    args=('test test test test test'.encode('ascii'),)),
+                   threading.Thread(target=self.__client_thread_func, args=('Á'.encode('utf-8'),))]
         for thread in threads:
             thread.start()
 
@@ -97,19 +94,16 @@ class ServerTests(unittest.TestCase):
 
         self.assertEquals(len(server._remote_player_proxies), 1)
 
-    # Test server does not sign up two players with the same name
     def test_duplicate_names(self):
-        server = Server(signup_timeout=3)
+        # Test server does sign up two players with the same name
+        server = Server(signup_timeout=.1)
 
-        s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
+        s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
         s_thread.start()
 
-        time.sleep(1)
-
-        threads = []
-        threads.append(threading.Thread(target=self.client_thread_func, args=('A'.encode('ascii'),)))
-        threads.append(threading.Thread(target=self.client_thread_func, args=('X'.encode('ascii'),)))
-        threads.append(threading.Thread(target=self.client_thread_func, args=('X'.encode('ascii'),)))
+        threads = [threading.Thread(target=self.__client_thread_func, args=('A'.encode('ascii'),)),
+                   threading.Thread(target=self.__client_thread_func, args=('X'.encode('ascii'),)),
+                   threading.Thread(target=self.__client_thread_func, args=('X'.encode('ascii'),))]
         for thread in threads:
             thread.start()
 
@@ -120,22 +114,22 @@ class ServerTests(unittest.TestCase):
 
         self.assertEquals(len(server._remote_player_proxies), 3)
 
-    # Test tournament will start with enough players
     def test_tournament_will_start(self):
-        server = Server(signup_timeout=3)
+        # Test tournament will start with enough players
+        server = Server(signup_timeout=.2)
 
-        s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
+        s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
         s_thread.start()
 
-        time.sleep(1)
-        
+        time.sleep(.1)
+
         with patch.object(server, '_run_tournament', return_value=[]) as mock:
 
             client_names = ['A', 'B', 'C', 'D', 'E']
             threads = []
 
             for name in client_names:
-                threads.append(threading.Thread(target=self.client_thread_func, args=(name.encode('ascii'),)))
+                threads.append(threading.Thread(target=self.__client_thread_func, args=(name.encode('ascii'),)))
 
             for thread in threads:
                 thread.start()
@@ -145,25 +139,21 @@ class ServerTests(unittest.TestCase):
 
             s_thread.join()
 
-            time.sleep(1)
             mock.assert_called_once
             self.assertEquals(len(server._remote_player_proxies), 5)
             self.assertEquals(server._signup_periods, 1)
-    
-    # Tournament does not start with < min players
-    def test_not_enough_players(self):
-        server = Server(signup_timeout=3)
 
-        s_thread = threading.Thread(target=self.server_thread_func, args=(server, self.port))
-        
-        with patch.object(server, '_run_tournament', return_value = []) as mock:
+    def test_not_enough_players(self):
+        # Tournament does not start with < min players
+        server = Server(signup_timeout=.1)
+
+        s_thread = threading.Thread(target=self.__server_thread_func, args=(server, self.port))
+
+        with patch.object(server, '_run_tournament', return_value=[]) as mock:
             s_thread.start()
 
-            time.sleep(1)
-
-            threads = []
-            threads.append(threading.Thread(target=self.client_thread_func, args=('A'.encode('ascii'),)))
-            threads.append(threading.Thread(target=self.client_thread_func, args=('B'.encode('ascii'),)))
+            threads = [threading.Thread(target=self.__client_thread_func, args=('A'.encode('ascii'),)),
+                       threading.Thread(target=self.__client_thread_func, args=('B'.encode('ascii'),))]
             for thread in threads:
                 thread.start()
 

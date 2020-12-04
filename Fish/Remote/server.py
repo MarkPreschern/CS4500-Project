@@ -43,7 +43,7 @@ class Server(object):
     # How long to wait for client to respond to messages
     CLIENT_TIMEOUT = 1
 
-    def __init__(self, signup_timeout: int = 30, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 2):
+    def __init__(self, signup_timeout: float = 30.0, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 2):
         """
         Initializes a server component using various default parameters.
 
@@ -53,8 +53,8 @@ class Server(object):
         :param signup_periods: the number of times to restart our signup_timeout length timer and wait for players (before shutting down if there are not enough players)
         """
         # Validate params
-        if not isinstance(signup_timeout, int):
-            raise TypeError('Expected int for signup_timeout')
+        if not isinstance(signup_timeout, float):
+            raise TypeError('Expected float for signup_timeout')
 
         if not isinstance(min_clients, int):
             raise TypeError('Expected int for min_clients')

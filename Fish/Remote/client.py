@@ -183,31 +183,31 @@ class Client(object):
                     if res:
                         self.__send_message(res)
 
-    def __handle_message(self, json) -> str:
+    def __handle_message(self, json_msg: json) -> str:
         """ 
         Handle a message from the remote player proxy and generate the proper response to send. It will 
         pass the arguments of that message off to that message type's handler, and if a response is 
         required it will return that string response, else will return None.
 
-        :param json: the JSON message received through the connection to the Fish admin server
+        :param json_msg: the JSON message received through the connection to the Fish admin server
         :return: If a response is required, return the JSON string response, else 'void'
         """
 
         # Validate message format
         try:
-            (type, decoded_args) = self.__json_serializer.decode_message(json)
+            (msg_type, decoded_args) = self.__json_serializer.decode_message(json_msg)
 
-            if type == 'start':
+            if msg_type == 'start':
                 return self.__handle_tournament_start(decoded_args)
-            elif type == 'playing-as':
+            elif msg_type == 'playing-as':
                 return self.__handle_playing_as(decoded_args)
-            elif type == 'playing-with':
+            elif msg_type == 'playing-with':
                 return self.__handle_playing_with(decoded_args)
-            elif type == 'setup':
+            elif msg_type == 'setup':
                 return self.__handle_setup(decoded_args)
-            elif type == 'take-turn':
+            elif msg_type == 'take-turn':
                 return self.__handle_take_turn(decoded_args)
-            elif type == 'end':
+            elif msg_type == 'end':
                 return self.__handle_tournament_end(decoded_args)
             else:
                 return None
