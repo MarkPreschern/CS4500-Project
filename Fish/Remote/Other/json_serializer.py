@@ -97,7 +97,7 @@ class JsonSerializer(object):
         return Action(self.decode_position(action[0]), self.decode_position(action[1]))
 
     def decode_position(self, position: json) -> Position:
-        if not len(position) == 2:
+        if not isinstance(position, list) or not len(position) == 2:
             raise JsonDecodeException('Tried to decode invalid position.')
         return Position(position[0], position[1])
 

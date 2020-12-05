@@ -218,7 +218,7 @@ class RemotePlayerProxy(IPlayer):
         ack = self.__receive_messages()
         return self.__is_ack(ack)
 
-    def __receive_messages(self) -> str:
+    def __receive_messages(self) -> [str]:
         """
         Receive JSON string message(s) from the remote player proxy and decode into a JSON-like Python object
         See JsonSerializer for details about this protocol, and communication process.
@@ -237,7 +237,7 @@ class RemotePlayerProxy(IPlayer):
             except Exception as e:
                 if RemotePlayerProxy.DEBUG:
                     print(f'Lost client {self.name} because: ', e)
-                return None
+                return []
 
     def __send_message(self, data):
         """
