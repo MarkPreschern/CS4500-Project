@@ -274,7 +274,6 @@ class RemotePlayerProxyTests(unittest.TestCase):
             time.sleep(.1)
             sock.sendall(bytes('"void"', 'ascii'))
             if sock:
-                sock.shutdown(socket.SHUT_RDWR)
                 sock.close()
 
         c_thread = threading.Thread(target=thread_func)

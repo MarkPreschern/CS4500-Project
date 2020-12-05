@@ -347,7 +347,6 @@ class Client(object):
         message that the tournament is over (and break out of the main loop).
         """
         if self.__client_socket:
-            self.__client_socket.shutdown(socket.SHUT_RDWR)
             self.__client_socket.close()
         if Client.DEBUG:
             print('** EXIT THREAD **')
