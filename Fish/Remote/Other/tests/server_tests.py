@@ -3,14 +3,12 @@ import unittest
 import socket
 import threading
 import time
-import random
 from unittest.mock import patch
 
 sys.path.append('Common/')
 sys.path.append('Remote/')
 
 from server import Server
-from client import Client
 from remote_player_proxy import RemotePlayerProxy
 
 
@@ -23,9 +21,11 @@ class ServerTests(unittest.TestCase):
         self.port = 3000
 
     def __server_thread_func(self, server, port):
+        # starts the server on the specified port
         server.run(port)
 
     def __client_thread_func(self, to_send):
+        # starts a client, sends msg 'to_send', and then closes the client
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((self.host, self.port))
         client.sendall(to_send)
@@ -72,7 +72,7 @@ class ServerTests(unittest.TestCase):
 
         s_thread.join()
         self.__server_close(server)
-        self.assertEquals(len(server._remote_player_proxies), 1)
+        self.assertEquals(len(server._Server__remote_player_proxies), 1)
 
     def test_invalid_names(self):
         # Server does not accept non-ascii characters, empty name, or name length > 12 characters
@@ -96,7 +96,7 @@ class ServerTests(unittest.TestCase):
 
         s_thread.join()
         self.__server_close(server)
-        self.assertEquals(len(server._remote_player_proxies), 1)
+        self.assertEquals(len(server._Server__remote_player_proxies), 1)
 
     def test_duplicate_names(self):
         # Test server does sign up two players with the same name
@@ -116,7 +116,7 @@ class ServerTests(unittest.TestCase):
 
         s_thread.join()
         self.__server_close(server)
-        self.assertEquals(len(server._remote_player_proxies), 3)
+        self.assertEquals(len(server._Server__remote_player_proxies), 3)
 
     def test_tournament_will_start(self):
         # Test tournament will start with enough players
@@ -144,8 +144,8 @@ class ServerTests(unittest.TestCase):
             s_thread.join()
 
             mock.assert_called_once
-            self.assertEquals(len(server._remote_player_proxies), 5)
-            self.assertEquals(server._signup_periods, 1)
+            self.assertEquals(len(server._Server__remote_player_proxies), 5)
+            self.assertEquals(server._Server__signup_periods, 1)
             self.__server_close(server)
 
     def test_not_enough_players(self):
@@ -168,8 +168,8 @@ class ServerTests(unittest.TestCase):
             s_thread.join()
 
             mock.assert_not_called
-            self.assertEquals(len(server._remote_player_proxies), 2)
-            self.assertEquals(server._signup_periods, 0)
+            self.assertEquals(len(server._Server__remote_player_proxies), 2)
+            self.assertEquals(server._Server__signup_periods, 0)
             self.__server_close(server)
 
     def test_can_tournament_run(self):
@@ -181,9 +181,9 @@ class ServerTests(unittest.TestCase):
         self.rp4 = RemotePlayerProxy('d', 4.0, self.dummy_sock)
 
         server = Server()
-        server._remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
+        server._Server__remote_player_proxies = [self.rp1, self.rp2, self.rp3, self.rp4]
         self.assertFalse(server._Server__can_tournament_run())
 
         self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
-        server._remote_player_proxies.append(self.rp5)
+        server._Server__remote_player_proxies.append(self.rp5)
         self.assertTrue(server._Server__can_tournament_run())
