@@ -31,8 +31,8 @@ Main
 - [x] Create unit tests for remote_player_proxy
 
 Cleanup
-- [ ] Sanity check specification vs. implementation
-- [ ] Test xclients and xserver on the Khoury Machines
+- [x] Sanity check specification vs. implementation
+- [x] Test xclients and xserver on the Khoury Machines
 - [x] Finish filling out this README
 
 
