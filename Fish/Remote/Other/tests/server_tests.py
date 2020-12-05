@@ -32,6 +32,7 @@ class ServerTests(unittest.TestCase):
         client.close()
 
     def __server_close(self, server):
+        # closes the server
         server._Server__teardown_tournament()
 
     def test_init_fail1(self):
@@ -187,3 +188,4 @@ class ServerTests(unittest.TestCase):
         self.rp5 = RemotePlayerProxy('e', 5.0, self.dummy_sock)
         server._Server__remote_player_proxies.append(self.rp5)
         self.assertTrue(server._Server__can_tournament_run())
+        self.__server_close(server)

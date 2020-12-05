@@ -2,16 +2,6 @@
 
 TODOS:
 Main
-- [ ] Create unit tests for server
-- [ ] Create unit tests for client
-- [ ] Create unit tests for remote_player_proxy
-
-Cleanup
-- [ ] Sanity check specification vs. implementation
-- [ ] Test xclients and xserver on the Khoury Machines
-- [ ] Finish filling out this README
-
-Done
 - [X] Create unit tests for JSON serializer
 - [X] Ensure that we can deal with both ill-formed and invalid JSON (on client and RPP side, receive_messages)
 - [X] Ensure that allocations to games are happening according to age
@@ -36,5 +26,13 @@ Done
 - [x] Find out where 'timed out' message is coming from and add it to debug
 - [x] clients don't close connection when kicked, fix this
 - [x] update repo level readme with 10/ info
+- [x] Create unit tests for server
+- [x] Create unit tests for client
+- [x] Create unit tests for remote_player_proxy
+
+Cleanup
+- [ ] Sanity check specification vs. implementation
+- [ ] Test xclients and xserver on the Khoury Machines
+- [x] Finish filling out this README
 
 

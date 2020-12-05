@@ -146,7 +146,8 @@ class RemotePlayerProxy(IPlayer):
             print(f'[{self.name}] was kicked for {reason}!')
 
         # close socket when a player is kicked, terminating the interaction between the server and client
-        self.__socket.close()
+        if self.__socket:
+            self.__socket.close()
 
         self.__player_kicked = True
 

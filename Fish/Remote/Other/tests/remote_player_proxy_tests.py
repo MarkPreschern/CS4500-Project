@@ -1,16 +1,16 @@
 import sys
 import unittest
 import socket
+import json
+import threading
+import time
 from unittest import mock
 from unittest.mock import patch
-import json
 
 sys.path.append('Common/')
 sys.path.append('Common/exceptions')
 sys.path.append('Remote/')
 
-from server import Server
-from client import Client
 from remote_player_proxy import RemotePlayerProxy
 from player_entity import PlayerEntity
 from board import Board
@@ -67,8 +67,6 @@ class RemotePlayerProxyTests(unittest.TestCase):
         # Tests failing init due to name that is too long
         with self.assertRaises(ValueError):
             RemotePlayerProxy("thisstringistoolong", 2.0, self.sock1)
-
-    # TODO unit test receive messages
 
     def test_valid_json_invalid_message(self):
         # Tests that valid JSON but invalid message returns JsonDecodeException
@@ -262,3 +260,59 @@ class RemotePlayerProxyTests(unittest.TestCase):
             ack = rpp.tournament_has_started()
             mock.assert_called_with(expected_client_request)
             self.assertEqual(ack, False)
+
+    def test_receive_messages_success(self):
+        # Tests that a remote proxy player can successfully receive a message from a client
+        server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_sock.bind(("localhost", 3001))
+        server_sock.listen()
+
+        # run client on separate thread
+        def thread_func():
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect(("localhost", 3001))
+            time.sleep(.1)
+            sock.sendall(bytes('"void"', 'ascii'))
+            if sock:
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+
+        c_thread = threading.Thread(target=thread_func)
+        c_thread.start()
+
+        client, address = server_sock.accept()
+        rpp = RemotePlayerProxy('name', 1.0, client)
+
+        response = rpp._RemotePlayerProxy__receive_messages()
+
+        # close sockets
+        if server_sock:
+            server_sock.close()
+        if rpp._RemotePlayerProxy__socket:
+            rpp._RemotePlayerProxy__socket.close()
+
+        self.assertEqual(response, ['void'])
+
+    def test_receive_messages_lost_connection(self):
+        # Tests that a remote proxy player can successfully receive a message from a client
+        rpp = RemotePlayerProxy('name', 1.0, self.dummy_socket)
+        response = rpp._RemotePlayerProxy__receive_messages()
+        self.assertEqual(response, [])
+
+    def test_is_ack_true(self):
+        # Tests a valid ack
+        rpp = RemotePlayerProxy('name', 1.0, self.dummy_socket)
+        is_ack = rpp._RemotePlayerProxy__is_ack(['void'])
+        self.assertTrue(is_ack)
+
+    def test_is_ack_false1(self):
+        # Tests an invalid ack
+        rpp = RemotePlayerProxy('name', 1.0, self.dummy_socket)
+        is_ack = rpp._RemotePlayerProxy__is_ack('void')
+        self.assertFalse(is_ack)
+
+    def test_is_ack_false2(self):
+        # Tests an invalid ack
+        rpp = RemotePlayerProxy('name', 1.0, self.dummy_socket)
+        is_ack = rpp._RemotePlayerProxy__is_ack([])
+        self.assertFalse(is_ack)

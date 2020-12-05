@@ -9,6 +9,7 @@ from manager import Manager
 from remote_player_proxy import RemotePlayerProxy
 from tournament_update_type import TournamentUpdateType
 
+
 class Server(object):
     """
     PURPOSE: The Server component allows for remote clients to establish a TCP connection to our Fish admin servers,
