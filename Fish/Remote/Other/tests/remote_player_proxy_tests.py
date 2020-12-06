@@ -27,7 +27,7 @@ class RemotePlayerProxyTests(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(RemotePlayerProxyTests, self).__init__(*args, **kwargs)
-        self.port = 3001
+        self.port = 3003
 
         # Initialize some players for testing
         self.__p1 = PlayerEntity("John", Color.RED)
@@ -264,19 +264,19 @@ class RemotePlayerProxyTests(unittest.TestCase):
     def test_receive_messages_success(self):
         # Tests that a remote proxy player can successfully receive a message from a client
         server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_sock.bind(("localhost", 3001))
+        server_sock.bind(("localhost", self.port))
         server_sock.listen()
 
         # run client on separate thread
-        def thread_func():
+        def thread_func(port):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(("localhost", 3001))
+            sock.connect(("localhost", port))
             time.sleep(.1)
             sock.sendall(bytes('"void"', 'ascii'))
             if sock:
                 sock.close()
 
-        c_thread = threading.Thread(target=thread_func)
+        c_thread = threading.Thread(target=thread_func, args=(self.port,))
         c_thread.start()
 
         client, address = server_sock.accept()

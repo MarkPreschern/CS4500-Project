@@ -44,14 +44,17 @@ class Server(object):
     # How long to wait for client to respond to messages
     CLIENT_TIMEOUT = 1
 
-    def __init__(self, signup_timeout: float = 30.0, min_clients: int = 5, max_clients: int = 10, signup_periods: int = 2):
+    def __init__(self, signup_timeout: float = 30.0, min_clients: int = 5, max_clients: int = 10,
+                 signup_periods: int = 2, host: str = 'localhost'):
         """
         Initializes a server component using various default parameters.
 
         :param signup_timeout: the number of seconds to wait for client signups in each waiting period
         :param min_clients: the minimum number of clients needed to stop signups and hand off to tournament manager
-        :param max_clients: the max number of client signups needed to immediately exit the waiting phase and hand them off to the tournament manager
-        :param signup_periods: the number of times to restart our signup_timeout length timer and wait for players (before shutting down if there are not enough players)
+        :param max_clients: the max number of client signups needed to immediately exit the waiting phase and hand
+                            them off to the tournament manager
+        :param signup_periods: the number of times to restart our signup_timeout length timer and wait for players
+                               (before shutting down if there are not enough players)
         """
         # Validate params
         if not isinstance(signup_timeout, float):
@@ -65,6 +68,9 @@ class Server(object):
 
         if not isinstance(signup_periods, int):
             raise TypeError('Expected int for signup_periods')
+
+        if not isinstance(host, str):
+            raise TypeError('Expected str for host')
 
         if signup_timeout <= 0:
             raise ValueError('signup_timeout must be greater than zero')
@@ -82,6 +88,7 @@ class Server(object):
         self.__min_clients = min_clients
         self.__max_clients = max_clients
         self.__signup_periods = signup_periods
+        self.__host = host
 
         self.__server_socket = None
         self.__remote_player_proxies = []
@@ -97,7 +104,7 @@ class Server(object):
         :param port: the port to open the server socket on (to accept client sign ups)
         """
         # create server socket on given port
-        self.__init_socket(port)
+        self.__init_socket(self.__host, port)
         # if the socket is created successfully, continue
         if self.__server_socket:
             # listen for sign-ups, return whether we have enough players to run a tournament
@@ -110,7 +117,7 @@ class Server(object):
             # tears down the tournament
             self.__teardown_tournament()
 
-    def __init_socket(self, port: int):
+    def __init_socket(self, host: str, port: int):
         """
         Helper function to initialize a TCP server socket on the given port.  This socket will be used to accept client
         connections (player signups) until we have either determined that not enough players have signed up to play, or 
@@ -123,18 +130,22 @@ class Server(object):
         server_sock.settimeout(self.__signup_timeout)
 
         try:
-            server_sock.bind(('localhost', port))
+            server_sock.bind((host, port))
             server_sock.listen(self.__max_clients)
             self.__server_socket = server_sock
         except Exception as e:
-            print(e)
+            if Server.DEBUG:
+                print(e)
 
     def __signup_players(self):
         """
-        Accept client connections (sign up players) for the specified number of sign up periods (and time per sign up period).
-        A signup round will be conducted if we have not exhausted all waiting periods, or if we have hit the max_clients limit.
+        Accept client connections (sign up players) for the specified number of sign up periods (and time per
+        sign up period). A signup round will be conducted if we have not exhausted all waiting periods, or if we have
+        hit the max_clients limit.
         """
-        while self.__signup_periods > 0 and len(self.__remote_player_proxies) < self.__min_clients and len(self.__remote_player_proxies) != self.__max_clients:
+        while self.__signup_periods > 0\
+                and len(self.__remote_player_proxies) < self.__min_clients\
+                and len(self.__remote_player_proxies) != self.__max_clients:
             self.__run_signup_period()
 
         if Server.DEBUG:

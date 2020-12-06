@@ -17,7 +17,7 @@ class ClientTests(unittest.TestCase):
         super(ClientTests, self).__init__(*args, **kwargs)
 
         self.host = "localhost"
-        self.port = 3001
+        self.port = 3002
 
         self.json_serializer = JsonSerializer()
 

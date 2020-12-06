@@ -60,6 +60,11 @@ class ServerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Server(5.0, 10, 5, 5)
 
+    def test_init_fail6(self):
+        # Tests failing init due to host not being a str
+        with self.assertRaises(TypeError):
+            Server(5.0, 10, 5, 5, {'not a str'})
+
     def test_signs_up_client(self):
         # Server can successfully sign up one player
         server = Server(signup_timeout=.1)
