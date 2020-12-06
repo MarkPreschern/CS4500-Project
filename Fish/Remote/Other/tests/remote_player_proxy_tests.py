@@ -141,7 +141,7 @@ class RemotePlayerProxyTests(unittest.TestCase):
         # Test that kicking the player sets their internal state to kicked, and returns None
         rpp = RemotePlayerProxy('name', 1.0, self.dummy_socket)
         res = rpp.kick('test')
-        self.assertTrue(rpp._RemotePlayerProxy__player_kicked)
+        self.assertTrue(rpp.kicked)
         self.assertEquals(res, None)
 
     def test_sync(self):

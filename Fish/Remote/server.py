@@ -216,8 +216,7 @@ class Server(object):
     def __teardown_tournament(self):
         """ Fired once the tournament is over, closes all open TCP socket connections """
         for rpp in self.__remote_player_proxies:
-            if not rpp.player_kicked and rpp.socket:
-                rpp.socket.close()
+            rpp.teardown()
 
         if self.__server_socket:
             self.__server_socket.close()

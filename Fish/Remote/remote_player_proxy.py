@@ -72,7 +72,7 @@ class RemotePlayerProxy(IPlayer):
         self.__state = None
         self.__json_serializer = JsonSerializer()
 
-        self.__player_kicked = False
+        self.__kicked = False
 
     @property
     def name(self):
@@ -95,9 +95,9 @@ class RemotePlayerProxy(IPlayer):
         return self.__color
 
     @property
-    def player_kicked(self):
+    def kicked(self):
         """ Retrieves whether the player was kicked or not """
-        return self.__player_kicked
+        return self.__kicked
 
     def get_placement(self, state: State) -> Position:
         """ Implements PlayerInterface.get_placement(State). """
@@ -145,11 +145,8 @@ class RemotePlayerProxy(IPlayer):
         if RemotePlayerProxy.DEBUG:
             print(f'[{self.name}] was kicked for {reason}!')
 
-        # close socket when a player is kicked, terminating the interaction between the server and client
-        if self.__socket:
-            self.__socket.close()
-
-        self.__player_kicked = True
+        self.teardown()
+        self.__kicked = True
 
         return None
 
@@ -218,6 +215,11 @@ class RemotePlayerProxy(IPlayer):
 
         ack = self.__receive_messages()
         return self.__is_ack(ack)
+
+    def teardown(self):
+        """ closes the socket, terminating the connection between the server and client """
+        if self.__socket:
+            self.__socket.close()
 
     def __receive_messages(self) -> [str]:
         """
