@@ -140,12 +140,10 @@ class Server(object):
     def __signup_players(self):
         """
         Accept client connections (sign up players) for the specified number of sign up periods (and time per
-        sign up period). A signup round will be conducted if we have not exhausted all waiting periods, or if we have
-        hit the max_clients limit.
+        sign up period). A signup round will be conducted if we have not exhausted all waiting periods, and
+        we do not yet have the required minimum client connections.
         """
-        while self.__signup_periods > 0\
-                and len(self.__remote_player_proxies) < self.__min_clients\
-                and len(self.__remote_player_proxies) != self.__max_clients:
+        while self.__signup_periods > 0 and len(self.__remote_player_proxies) < self.__min_clients:
             self.__run_signup_period()
 
         if Server.DEBUG:
