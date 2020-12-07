@@ -50,7 +50,7 @@ class Client(object):
     NO_MESSAGE_TIMEOUT = 75
     CONNECTION_RETRIES = 10
 
-    def __init__(self, name: str, lookahead_depth: int = 2):
+    def __init__(self, name: str, lookahead_depth: int = 1):
         """
         Initializes a client with the given name, for the purpose of connecting to the Fish servers and playing
         in a tournament of fish.
