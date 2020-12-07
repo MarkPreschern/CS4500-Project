@@ -16,10 +16,8 @@ When a sufficient number of clients are connected, the server signs them up with
 	- *json_serializer.py* utility encodes and decodes Fish.com related logic to/from json
 
 ## Modifications
-
 Modifications to pieces of code outside of the Remote/ directory
 
-## Modifications
 1. Added set_color to player_interface, as it is needed for any player to know what color they are in a given game.
 2. Added notify_opponent_colors to player interface, as we need to be able to inform players who they are playing against (according to the protocol given to us)
 3. Implemented set_color and notify_opponent_colors in player.py to conform to the player_interface changes
