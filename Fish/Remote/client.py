@@ -48,6 +48,7 @@ class Client(object):
 
     # large timeout because we want to client to be able to wait for tournament start after signing up
     NO_MESSAGE_TIMEOUT = 75
+    CONNECTION_RETRIES = 10
 
     def __init__(self, name: str, lookahead_depth: int = 2):
         """
@@ -137,7 +138,7 @@ class Client(object):
         :param port: The port number of the server to connect to (Fish admin server)
         """
         # Initialize socket
-        self.__init_socket(host, port)
+        self.__client_socket = self.__init_socket(host, port)
         # if the socket is created successfully, continue
         if self.__client_socket:
             # sends client's name
@@ -152,16 +153,31 @@ class Client(object):
         Creates a client TCP socket connected to the given host and port, and return it.
         If this fails, it returns None.
         """
-        client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            client_sock.connect((host, port))
-            client_sock.setblocking(0)
-            client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
-            self.__client_socket = client_sock
-        except Exception as e:
-            if Client.DEBUG:
-                print(e)
-            self.__lost_connection = True
+        
+        retry_no = self.CONNECTION_RETRIES
+        while retry_no > 0:
+            try:
+                client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_sock.connect((host, port))
+                client_sock.setblocking(0)
+                client_sock.settimeout(self.NO_MESSAGE_TIMEOUT)
+                if Client.DEBUG:
+                    print("Connected to server successfully..")
+                return client_sock 
+            except socket.error as e:
+                # error connecting to a socket
+                if Client.DEBUG:
+                    print(f'Connection failed, {retry_no} attempts left...')
+                    print(e)
+                if retry_no == 0:
+                    # if we failed to connect many times, lets shut down
+                    sys.exit(1)
+                retry_no -= 1
+                # wait a bit before performing next attempt to see if the server will come back up
+                time.sleep(1)
+            except Exception as ex:
+                print(ex)
+            
 
     def __listen_for_messages(self):
         """
@@ -169,7 +185,8 @@ class Client(object):
         messages, handle them and send a response accordingly.
         :return: None
         """
-        while not (self.__is_tournament_over or self.__lost_connection):
+
+        while not (self.__is_tournament_over):
             msgs = self.__receive_messages()
             if msgs is None or len(msgs) == 0:
                 # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
