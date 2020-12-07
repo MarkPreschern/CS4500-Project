@@ -186,7 +186,7 @@ class Client(object):
         :return: None
         """
 
-        while not (self.__is_tournament_over):
+        while not (self.__is_tournament_over or self.__lost_connection):
             msgs = self.__receive_messages()
             if msgs is None or len(msgs) == 0:
                 # Shutdown if we don't receive any messages in NO_MESSAGE_TIMEOUT seconds
