@@ -148,14 +148,19 @@ class Client(object):
             # tears down the socket
             self.__teardown()
 
-    def __init_socket(self, host: str, port: int):
+    def __init_socket(self, host: str, port: int) -> socket.SocketType:
         """
         Creates a client TCP socket connected to the given host and port, and return it.
         If this fails, it returns None.
+        :return socket being initialized
         """
-        
-        retry_no = self.CONNECTION_RETRIES
-        while retry_no > 0:
+
+        retry_no = Client.CONNECTION_RETRIES
+        while retry_no >= 0:
+            if retry_no != Client.CONNECTION_RETRIES:
+                # wait a bit before performing next attempt to see if the server will come back up, unless first try
+                time.sleep(1)
+
             try:
                 client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_sock.connect((host, port))
@@ -169,15 +174,13 @@ class Client(object):
                 if Client.DEBUG:
                     print(f'Connection failed, {retry_no} attempts left...')
                     print(e)
-                if retry_no == 0:
-                    # if we failed to connect many times, lets shut down
-                    sys.exit(1)
                 retry_no -= 1
-                # wait a bit before performing next attempt to see if the server will come back up
-                time.sleep(1)
             except Exception as ex:
                 print(ex)
-            
+
+        # if we failed to connect many times, lets shut down
+        self.__lost_connection = True
+        return None
 
     def __listen_for_messages(self):
         """

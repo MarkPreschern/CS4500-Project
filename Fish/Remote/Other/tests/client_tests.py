@@ -125,6 +125,7 @@ class ClientTests(unittest.TestCase):
     def test__teardown(self):
         server = self.__start_server()
         c1 = Client("a", 1)
+        Client.CONNECTION_RETRIES = 0
         c1._Client__init_socket(self.host, self.port)
         c1._Client__teardown()
         self.assertFalse(c1.lost_connection)
@@ -133,6 +134,7 @@ class ClientTests(unittest.TestCase):
     def test_init_socket_failed_connection(self):
         # tests initializing a client socket with a failed connection
         c1 = Client("a", 1)
+        Client.CONNECTION_RETRIES = 0
         c1._Client__init_socket(self.host, self.port)
         self.assertTrue(c1.lost_connection)
 
@@ -153,7 +155,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__listen_for_messages()
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
@@ -179,7 +182,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__listen_for_messages()
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
@@ -198,7 +202,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__listen_for_messages()
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
@@ -217,7 +222,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port, output):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             output[0] = client1._Client__receive_messages()
 
         output = [None]
@@ -245,7 +251,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port, output):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             output[0] = client1._Client__receive_messages()
 
         output = [None]
@@ -270,7 +277,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__receive_messages()
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
@@ -287,7 +295,9 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port):
-            client1._Client__init_socket(host, port)
+            Client.DEBUG = True
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__send_message("hi")
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
@@ -309,7 +319,8 @@ class ClientTests(unittest.TestCase):
 
         # run client on separate thread
         def thread_func(client1, host, port,):
-            client1._Client__init_socket(host, port)
+            Client.CONNECTION_RETRIES = 0
+            client1._Client__client_socket = client1._Client__init_socket(host, port)
             client1._Client__send_message("hi")
 
         c_thread = threading.Thread(target=thread_func, args=(c1, self.host, self.port,))
